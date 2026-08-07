@@ -10,10 +10,11 @@
 #include "WifiSelectionActivity.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
+#include "util/RadioManager.h"
 #include "util/TaskWatchdog.h"
 
 namespace {
-constexpr const char* HOSTNAME = "crosspoint";
+constexpr const char* HOSTNAME = "biscuit";
 }  // namespace
 
 void CalibreConnectActivity::onEnter() {
@@ -54,9 +55,9 @@ void CalibreConnectActivity::onExit() {
 
   MDNS.end();
 
-  if (WiFi.getMode() != WIFI_MODE_NULL) {
-    WiFi.disconnect(false);
-    delay(30);
+  const bool wasWifi = RADIO.getState() == RadioManager::RadioState::WIFI;
+  RADIO.shutdown();
+  if (wasWifi) {
     silentRestart();
   }
 }

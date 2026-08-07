@@ -201,6 +201,8 @@ inline std::vector<SettingInfo> getSettingsList(const SdCardFontRegistry* regist
     sleepScreenValues[CrossPointSettings::COVER_CUSTOM] = StrId::STR_COVER_CUSTOM;
     sleepScreenValues[CrossPointSettings::BLANK] = StrId::STR_NONE_OPT;
     sleepScreenValues[CrossPointSettings::QUICK_RESUME] = StrId::STR_QUICK_RESUME;
+    // STATUS is a valid render mode (see SleepActivity) but is not yet exposed
+    // as a selectable option here; leave its label unset like upstream.
 
     std::vector<StrId> statusBarClockValues(CrossPointSettings::STATUS_BAR_CLOCK_MODE_COUNT);
     statusBarClockValues[CrossPointSettings::STATUS_BAR_CLOCK_HIDE] = StrId::STR_HIDE;
@@ -228,9 +230,12 @@ inline std::vector<SettingInfo> getSettingsList(const SdCardFontRegistry* regist
             "refreshFrequency", StrId::STR_CAT_DISPLAY),
         SettingInfo::Enum(StrId::STR_UI_THEME, &CrossPointSettings::uiTheme,
                           {StrId::STR_THEME_CLASSIC, StrId::STR_THEME_LYRA, StrId::STR_THEME_LYRA_EXTENDED,
+                           StrId::STR_THEME_MILITARY, StrId::STR_THEME_NOIR, StrId::STR_THEME_RADAR,
                            StrId::STR_THEME_ROUNDEDRAFF},
                           "uiTheme", StrId::STR_CAT_DISPLAY),
         SettingInfo::Toggle(StrId::STR_SUNLIGHT_FADING_FIX, &CrossPointSettings::fadingFix, "fadingFix",
+                            StrId::STR_CAT_DISPLAY),
+        SettingInfo::Toggle(StrId::STR_DISPLAY_INVERT, &CrossPointSettings::displayInvert, "displayInvert",
                             StrId::STR_CAT_DISPLAY),
 
         // --- Reader ---

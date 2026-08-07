@@ -149,6 +149,60 @@ void BaseTheme::drawProgressBar(const GfxRenderer& renderer, Rect rect, const si
   renderer.drawCenteredText(UI_10_FONT_ID, rect.y + rect.height + 15, percentText.c_str());
 }
 
+void BaseTheme::drawSpinner(const GfxRenderer& renderer, int centerX, int centerY,
+                            const char* label, int frame) const {
+  // Draw optional label centered on centerX, 22px above centerY
+  if (label && label[0] != '\0') {
+    const int textWidth = renderer.getTextWidth(UI_10_FONT_ID, label);
+    renderer.drawText(UI_10_FONT_ID, centerX - textWidth / 2, centerY - 22, label);
+  }
+
+  // Dot drawing helper: filled disk or outlined circle, ~10px diameter
+  auto drawDot = [&](int cx, int cy, bool filled) {
+    static constexpr int hw[5] = {3, 4, 4, 4, 3};
+    for (int i = 0; i < 5; i++) {
+      const int dy = i - 2;
+      const int w  = hw[i];
+      if (filled || i == 0 || i == 4) {
+        renderer.drawLine(cx - w, cy + dy, cx + w, cy + dy, true);
+      } else {
+        renderer.drawPixel(cx - w, cy + dy, true);
+        renderer.drawPixel(cx + w, cy + dy, true);
+      }
+    }
+  };
+
+  const int activeDot = ((frame % 3) + 3) % 3;
+  const int dotCentersX[3] = {centerX - 14, centerX, centerX + 14};
+  for (int i = 0; i < 3; i++) {
+    drawDot(dotCentersX[i], centerY, i == activeDot);
+  }
+}
+
+bool BaseTheme::drawArrowIfNeeded(const GfxRenderer& renderer, const char* label, int cx, int cy, int size, bool black) {
+  if (!label || label[0] == '\0' || label[1] != '\0') return false;
+  switch (label[0]) {
+    case '^':
+      for (int i = 0; i < size; i++)
+        renderer.drawLine(cx - i, cy - size / 2 + i, cx + i, cy - size / 2 + i, black);
+      return true;
+    case 'v':
+      for (int i = 0; i < size; i++)
+        renderer.drawLine(cx - i, cy + size / 2 - i, cx + i, cy + size / 2 - i, black);
+      return true;
+    case '<':
+      for (int i = 0; i < size; i++)
+        renderer.drawLine(cx - size / 2 + i, cy - i, cx - size / 2 + i, cy + i, black);
+      return true;
+    case '>':
+      for (int i = 0; i < size; i++)
+        renderer.drawLine(cx + size / 2 - i, cy - i, cx + size / 2 - i, cy + i, black);
+      return true;
+    default:
+      return false;
+  }
+}
+
 void BaseTheme::drawButtonHints(GfxRenderer& renderer, const char* btn1, const char* btn2, const char* btn3,
                                 const char* btn4) const {
   if (gpio.hasTouch()) {
@@ -175,9 +229,11 @@ void BaseTheme::drawButtonHints(GfxRenderer& renderer, const char* btn1, const c
       const int x = buttonPositions[i];
       renderer.fillRect(x, pageHeight - buttonY, buttonWidth, buttonHeight, false);
       renderer.drawRect(x, pageHeight - buttonY, buttonWidth, buttonHeight);
-      const int textWidth = renderer.getTextWidth(UI_10_FONT_ID, labels[i]);
-      const int textX = x + (buttonWidth - 1 - textWidth) / 2;
-      renderer.drawText(UI_10_FONT_ID, textX, pageHeight - buttonY + textYOffset, labels[i]);
+      if (!drawArrowIfNeeded(renderer, labels[i], x + buttonWidth / 2, pageHeight - buttonY + buttonHeight / 2, 6, true)) {
+        const int textWidth = renderer.getTextWidth(UI_10_FONT_ID, labels[i]);
+        const int textX = x + (buttonWidth - 1 - textWidth) / 2;
+        renderer.drawText(UI_10_FONT_ID, textX, pageHeight - buttonY + textYOffset, labels[i]);
+      }
     }
   }
 
@@ -201,21 +257,25 @@ void BaseTheme::drawSideButtonHints(const GfxRenderer& renderer, const char* top
     if (topBtn != nullptr && topBtn[0] != '\0') {
       const int leftX = buttonMargin;
       renderer.drawRect(leftX, x3ButtonY, buttonWidth, buttonHeight);
-      const int textWidth = renderer.getTextWidth(SMALL_FONT_ID, topBtn);
-      const int textHeight = renderer.getTextHeight(SMALL_FONT_ID);
-      const int textX = leftX + (buttonWidth - textHeight) / 2;
-      const int textY = x3ButtonY + (buttonHeight + textWidth) / 2;
-      renderer.drawTextRotated90CW(SMALL_FONT_ID, textX, textY, topBtn);
+      if (!drawArrowIfNeeded(renderer, topBtn, leftX + buttonWidth / 2, x3ButtonY + buttonHeight / 2, 5, true)) {
+        const int textWidth = renderer.getTextWidth(SMALL_FONT_ID, topBtn);
+        const int textHeight = renderer.getTextHeight(SMALL_FONT_ID);
+        const int textX = leftX + (buttonWidth - textHeight) / 2;
+        const int textY = x3ButtonY + (buttonHeight + textWidth) / 2;
+        renderer.drawTextRotated90CW(SMALL_FONT_ID, textX, textY, topBtn);
+      }
     }
 
     if (bottomBtn != nullptr && bottomBtn[0] != '\0') {
       const int rightX = screenWidth - buttonMargin - buttonWidth;
       renderer.drawRect(rightX, x3ButtonY, buttonWidth, buttonHeight);
-      const int textWidth = renderer.getTextWidth(SMALL_FONT_ID, bottomBtn);
-      const int textHeight = renderer.getTextHeight(SMALL_FONT_ID);
-      const int textX = rightX + (buttonWidth - textHeight) / 2;
-      const int textY = x3ButtonY + (buttonHeight + textWidth) / 2;
-      renderer.drawTextRotated90CW(SMALL_FONT_ID, textX, textY, bottomBtn);
+      if (!drawArrowIfNeeded(renderer, bottomBtn, rightX + buttonWidth / 2, x3ButtonY + buttonHeight / 2, 5, true)) {
+        const int textWidth = renderer.getTextWidth(SMALL_FONT_ID, bottomBtn);
+        const int textHeight = renderer.getTextHeight(SMALL_FONT_ID);
+        const int textX = rightX + (buttonWidth - textHeight) / 2;
+        const int textY = x3ButtonY + (buttonHeight + textWidth) / 2;
+        renderer.drawTextRotated90CW(SMALL_FONT_ID, textX, textY, bottomBtn);
+      }
     }
   } else {
     // X4 layout: Both buttons stacked on right side
@@ -243,11 +303,13 @@ void BaseTheme::drawSideButtonHints(const GfxRenderer& renderer, const char* top
     for (int i = 0; i < 2; i++) {
       if (labels[i] != nullptr && labels[i][0] != '\0') {
         const int y = topButtonY + i * buttonHeight;
-        const int textWidth = renderer.getTextWidth(SMALL_FONT_ID, labels[i]);
-        const int textHeight = renderer.getTextHeight(SMALL_FONT_ID);
-        const int textX = x + (buttonWidth - textHeight) / 2;
-        const int textY = y + (buttonHeight + textWidth) / 2;
-        renderer.drawTextRotated90CW(SMALL_FONT_ID, textX, textY, labels[i]);
+        if (!drawArrowIfNeeded(renderer, labels[i], x + buttonWidth / 2, y + buttonHeight / 2, 5, true)) {
+          const int textWidth = renderer.getTextWidth(SMALL_FONT_ID, labels[i]);
+          const int textHeight = renderer.getTextHeight(SMALL_FONT_ID);
+          const int textX = x + (buttonWidth - textHeight) / 2;
+          const int textY = y + (buttonHeight + textWidth) / 2;
+          renderer.drawTextRotated90CW(SMALL_FONT_ID, textX, textY, labels[i]);
+        }
       }
     }
   }

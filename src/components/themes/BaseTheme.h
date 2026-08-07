@@ -226,4 +226,14 @@ class BaseTheme {
   static constexpr int batteryPercentSpacing = 4;
   static void drawBatteryOutline(const GfxRenderer& renderer, int x, int y, int battWidth, int rectHeight);
   static void drawBatteryLightningBolt(const GfxRenderer& renderer, int boltX, int boltY);
+
+  // Animated 3-dot loading spinner for unknown-duration operations.
+  // centerX/centerY — center of the dot row
+  // label          — caption drawn above the dots (e.g. "SCANNING..."). May be nullptr to omit.
+  // frame          — animation frame index. Caller advances it on a 600ms timer.
+  //                  frame % 3 selects which dot is filled; the others are outlined.
+  virtual void drawSpinner(const GfxRenderer& renderer, int centerX, int centerY,
+                           const char* label, int frame) const;
+
+  static bool drawArrowIfNeeded(const GfxRenderer& renderer, const char* label, int cx, int cy, int size = 5, bool black = true);
 };

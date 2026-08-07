@@ -10,6 +10,7 @@
 #include "components/UITheme.h"
 #include "fontIds.h"
 #include "network/OtaUpdater.h"
+#include "util/RadioManager.h"
 
 namespace {
 struct OtaActionRects {
@@ -88,9 +89,9 @@ void OtaUpdateActivity::onExit() {
   // (loop() above) so the new firmware boots normally. Back-out paths land
   // here with wifi still active; silent-restart to free the LWIP/mbedTLS
   // fragmentation, same as the other wifi activities.
-  if (WiFi.getMode() != WIFI_MODE_NULL) {
-    WiFi.disconnect(false);
-    delay(30);
+  const bool wasWifi = RADIO.getState() == RadioManager::RadioState::WIFI;
+  RADIO.shutdown();
+  if (wasWifi) {
     silentRestart();
   }
 }

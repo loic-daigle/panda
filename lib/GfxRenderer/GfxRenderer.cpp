@@ -1540,7 +1540,14 @@ void GfxRenderer::invertScreen() const {
 void GfxRenderer::displayBuffer(const HalDisplay::RefreshMode refreshMode) const {
   auto elapsed = millis() - start_ms;
   LOG_DBG("GFX", "Time = %lu ms from clearScreen to displayBuffer", elapsed);
+  if (inverted) {
+    invertScreen();
+  }
   display.displayBuffer(refreshMode, fadingFix);
+  if (inverted) {
+    // Restore so the next frame's drawing starts from a clean (non-inverted) state
+    invertScreen();
+  }
 }
 
 void GfxRenderer::displayBufferAsync(const HalDisplay::RefreshMode refreshMode) const {
@@ -2079,7 +2086,15 @@ void GfxRenderer::copyGrayscaleLsbBuffers() const { display.copyGrayscaleLsbBuff
 
 void GfxRenderer::copyGrayscaleMsbBuffers() const { display.copyGrayscaleMsbBuffers(frameBuffer); }
 
-void GfxRenderer::displayGrayBuffer() const { display.displayGrayBuffer(fadingFix); }
+void GfxRenderer::displayGrayBuffer() const {
+  if (inverted) {
+    invertScreen();
+  }
+  display.displayGrayBuffer(fadingFix);
+  if (inverted) {
+    invertScreen();
+  }
+}
 
 void GfxRenderer::writeGrayscalePlaneStrip(bool lsbPlane, const uint8_t* scratch, int yStart, int numRows) const {
   // Guard the uint16_t casts below: a negative would wrap to a huge length.

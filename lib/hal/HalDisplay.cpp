@@ -1,5 +1,5 @@
 #include <HalDisplay.h>
-#include <HalGPIO.h>
+#include <HalGPIO.h>  // EPD pin defines
 
 // Global HalDisplay instance
 HalDisplay display;
@@ -58,10 +58,6 @@ EInkDisplay::RefreshMode convertRefreshMode(HalDisplay::RefreshMode mode) {
 }
 
 void HalDisplay::displayBuffer(HalDisplay::RefreshMode mode, bool turnOffScreen) {
-  if (gpio.deviceIsX3() && mode == RefreshMode::HALF_REFRESH) {
-    einkDisplay.requestResync(1);
-  }
-
   einkDisplay.displayBuffer(convertRefreshMode(mode), turnOffScreen);
 }
 
@@ -78,10 +74,6 @@ void HalDisplay::waitRefreshComplete() { einkDisplay.waitRefreshComplete(); }
 bool HalDisplay::supportsAsyncRefresh() const { return einkDisplay.supportsAsyncRefresh(); }
 
 void HalDisplay::refreshDisplay(HalDisplay::RefreshMode mode, bool turnOffScreen) {
-  if (gpio.deviceIsX3() && mode == RefreshMode::HALF_REFRESH) {
-    einkDisplay.requestResync(1);
-  }
-
   einkDisplay.refreshDisplay(convertRefreshMode(mode), turnOffScreen);
 }
 
@@ -135,8 +127,8 @@ bool HalDisplay::supportsStripGrayscale() const { return einkDisplay.supportsStr
 
 uint16_t HalDisplay::getDisplayWidth() const { return einkDisplay.getDisplayWidth(); }
 
-uint16_t HalDisplay::getDisplayHeight() const { return einkDisplay.getDisplayHeight(); }
+uint16_t HalDisplay::getDisplayHeight() const { return EInkDisplay::DISPLAY_HEIGHT; }
 
-uint16_t HalDisplay::getDisplayWidthBytes() const { return einkDisplay.getDisplayWidthBytes(); }
+uint16_t HalDisplay::getDisplayWidthBytes() const { return EInkDisplay::DISPLAY_WIDTH_BYTES; }
 
-uint32_t HalDisplay::getBufferSize() const { return einkDisplay.getBufferSize(); }
+uint32_t HalDisplay::getBufferSize() const { return EInkDisplay::BUFFER_SIZE; }

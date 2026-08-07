@@ -30,7 +30,7 @@ relevant Discussion or issue so reviewers can see the history.**
 
 ### AI Usage
 
-While CrossPoint doesn't have restrictions on AI tools in contributing, please be transparent about their usage as it
+While Biscuit doesn't have restrictions on AI tools in contributing, please be transparent about their usage as it 
 helps set the right context for reviewers.
 
 Did you use AI tools to help write this code? _**< YES | PARTIALLY | NO >**_

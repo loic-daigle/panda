@@ -14,10 +14,9 @@ This document shows common issues and possible solutions while using the device 
 
 **Solutions:**
 
-1. Verify both devices are on the correct network
-   - Check your computer/phone Wi-Fi settings
-   - In **Join Network** mode, your computer/phone and CrossPoint Reader must be on the same Wi-Fi network
-   - In **Create Hotspot** mode, your computer/phone must be connected to the `CrossPoint-Reader` hotspot
+1. Verify both devices are on the **same WiFi network**
+   - Check your computer/phone WiFi settings
+   - Confirm the Biscuit Reader shows "Connected" status
 2. Double-check the IP address
    - Make sure you typed it correctly
    - Include `http://` at the beginning

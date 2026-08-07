@@ -1,8 +1,8 @@
-# CrossPoint User Guide
+# Biscuit User Guide
 
-Welcome to the **CrossPoint** firmware. This guide outlines the hardware controls, navigation, and reading features of the device.
+Welcome to the **Biscuit** firmware. This guide outlines the hardware controls, navigation, and reading features of the device.
 
-- [CrossPoint User Guide](#crosspoint-user-guide)
+- [Biscuit User Guide](#biscuit-user-guide)
   - [1. Hardware Overview](#1-hardware-overview)
     - [Button Layout](#button-layout)
     - [Taking a Screenshot](#taking-a-screenshot)
@@ -91,9 +91,14 @@ Upon turning the device on for the first time, you will be placed on the **[Home
 
 ## 3. Screens
 
-### 3.1 Home Screen
+### 3.1 Dashboard
 
-The Home screen is the main entry point to the firmware. From here you can navigate to **[Reading Mode](#4-reading-mode)** with the most recently read book, the **[Browse Files](#33-browse-files-screen)** screen, the **[Recent Books](#34-recent-books-screen)** screen, the **[File Transfer](#35-file-transfer-screen)** screen, or **[Settings](#36-settings)**.
+The Dashboard is the main screen. It shows 8 category tiles in a 2×4 grid:
+Network, Recon, Security, Comms, Tools, Games, System, Reader.
+
+A status bar at the top shows battery, heap, uptime, and WiFi status.
+
+Navigate tiles with Left/Right (front buttons) and Up/Down (side buttons). Press Confirm to enter a category.
 
 ### 3.2 Reading Mode
 
@@ -131,7 +136,7 @@ A **Wi-Fi signal strength indicator** (dBm) is displayed on-screen during joined
 
 ### 3.5.1 Calibre Wireless Transfers
 
-CrossPoint supports sending books from Calibre using the CrossPoint Reader device plugin.
+Biscuit supports sending books from Calibre using the Biscuit Reader device plugin.
 
 #### Installing the Plugin in Calibre
 
@@ -218,12 +223,9 @@ The Settings screen allows you to configure the device's behavior. There are a f
 - **Refresh Frequency**: Set how often the screen does a full refresh while reading to reduce ghosting; options are every 1, 5, 10, 15, or 30 pages.
 
 - **UI Theme**: Set which UI theme to use:
-  
-  - "Classic" - The original Crosspoint theme
-  - "Lyra" - The new theme for Crosspoint featuring rounded elements and menu icons
-  - "Lyra Extended" - Lyra, but displays 3 books instead of 1 on the **[Home Screen](#31-home-screen)**
-  - "RoundedRaff" - A rounded theme with additional visual styling
-
+  - "Classic" - The original theme
+  - "Lyra" - Theme featuring rounded elements and menu icons
+  - "Lyra Extended" - Lyra, but displays 3 books instead of 1 on the home screen
 - **Sunlight Fading Fix**: Configure whether to enable a software-fix for the issue where white X4 models may fade when used in direct sunlight:
   
   - "OFF" (default) - Disable the fix
@@ -307,62 +309,12 @@ The Settings screen allows you to configure the device's behavior. There are a f
 - **OPDS Servers**: Manage one or more OPDS [(Open Publication Distribution System)](https://en.wikipedia.org/wiki/Open_Publication_Distribution_System) libraries for browsing and downloading books. See [OPDS Servers (Multiple Libraries)](#365-opds-servers-multiple-libraries) below.
 
 - **Clear Reading Cache**: Clear the internal SD card cache.
+- **Check for updates**: Check for firmware updates over WiFi.
+- **Language**: Set the system language (see **[Supported Languages](#supported-languages)** for more information).
 
-- **Check for updates**: Check for Crosspoint firmware updates over Wi-Fi. Firmware can also be updated without a USB connection by placing a `firmware.bin` file on the SD card.
+#### 3.6.5 KOReader Sync Quick Setup
 
-- **Language**: Set the UI language. CrossPoint supports 24 languages: English, Spanish, French, German, Czech, Brazilian Portuguese, Russian, Swedish, Romanian, Catalan, Ukrainian, Belarusian, Italian, Polish, Finnish, Danish, Dutch, Turkish, Kazakh, Hungarian, Lithuanian, Slovenian, Valencian, and Hebrew.
-
-- **Manage Fonts**: Browse, download, and manage custom font families installed from the SD card. See [Custom Fonts (SD Card)](#38-custom-fonts-sd-card) for more information.
-
-#### 3.6.5 OPDS Servers (Multiple Libraries)
-
-CrossPoint supports saving multiple OPDS servers and switching between them when browsing catalogs.
-
-1. Open **Settings -> System -> OPDS Servers**.
-
-2. Select **Add Server** to create a new entry, or select an existing server to edit it.
-
-3. Configure these fields:
-   
-   - **Server Name**: Optional display name (for example, "Home Calibre" or "Public Catalog").
-   
-   - **OPDS Server URL**: Full catalog root URL (for Calibre Content Server, usually ends with `/opds`).
-   
-   - **Username / Password**: Optional credentials for authenticated servers.
-
-4. Use **Delete Server** inside a server entry to remove it.
-
-Behavior notes:
-
-- You can store up to 8 OPDS servers.
-- OPDS authentication supports HTTP Basic auth. If you use Calibre Content Server with authentication enabled, set it to Basic (not Digest).
-
-You can also manage OPDS servers from the web interface while in File Transfer mode:
-
-1. Connect to the device web UI.
-2. Open `http://<device-ip>/settings`.
-3. Use the **OPDS Servers** card to add, edit, or delete entries.
-
-For web-based Wi-Fi network management, see [Web Settings (Wi-Fi + OPDS)](#366-web-settings-wi-fi--opds).
-
-#### 3.6.6 Web Settings (Wi-Fi + OPDS)
-
-While in **File Transfer** mode, the web settings page includes management cards for both **Wi-Fi Networks** and **OPDS Servers**.
-
-1. On device: open **File Transfer** and connect through **Join a Network** or **Create Hotspot**.
-2. In a browser, open `http://<device-ip>/settings` or `http://crosspoint.local`.
-3. In **Wi-Fi Networks**, add, edit, or delete saved network entries (SSID + optional password).
-4. In **OPDS Servers**, add, edit, or delete OPDS catalogs.
-
-Behavior notes:
-
-- Passwords are never shown back in the web UI after saving.
-- Leaving Password blank while editing keeps the existing saved password unchanged.
-- The web UI can save hidden-network SSIDs, but connecting to hidden networks still depends on the device-side Wi-Fi connection flow.
-
-#### 3.6.7 KOReader Sync Quick Setup
-
-CrossPoint can sync reading progress with KOReader-compatible sync servers.
+Biscuit can sync reading progress with KOReader-compatible sync servers.
 It also interoperates with KOReader apps/devices when they use the same server and credentials.
 
 ##### Option A: CrossPoint Sync Server (`sync.crosspointreader.com`, default)
@@ -410,7 +362,17 @@ curl -i "https://sync.koreader.rocks/users/create" \
 
 When this returns `HTTP 402` with `{"code":2002,"message":"Username is already registered."}`, pick a different username or use that existing account.
 
-##### Option C: Self-Hosted Server (Docker Compose)
+2. On each Biscuit device:
+   - Go to **Settings -> System -> KOReader Sync**.
+   - Set **Username** and **Password** (enter the plain password; Biscuit computes MD5 internally, and use the same values on all devices).
+   - Set **Sync Server URL** to `https://sync.koreader.rocks`, or leave it empty (both use the same default KOReader sync server).
+   - Run **Authenticate**.
+
+3. While reading, press **Confirm** to open the reader menu, then select **Sync Progress**.
+   - Choose **Apply Remote** to jump to remote progress.
+   - Choose **Upload Local** to push current progress.
+
+##### Option B: Self-Hosted Server (Docker Compose)
 
 1. Start a sync server:
 
@@ -450,7 +412,7 @@ curl -H "Accept: application/vnd.koreader.v1+json" "http://<server-ip>:17200/hea
 ```
 
 3. Register a user once.
-   CrossPoint authenticates against KOReader Sync (`koreader/kosync`) using an MD5 key, so register using the MD5 of your password:
+Biscuit authenticates against KOReader Sync (`koreader/kosync`) using an MD5 key, so register using the MD5 of your password:
 
 > [!WARNING]
 > Sending a reusable MD5-derived password over plain HTTP is insecure.
@@ -471,12 +433,9 @@ curl -i "http://<server-ip>:17200/users/create" \
 
 If this returns `HTTP 402` with `{"code":2002,"message":"Username is already registered."}`, the account already exists.
 
-4. On each CrossPoint device:
-   
+4. On each Biscuit device:
    - Go to **Settings -> System -> KOReader Sync**.
-   
-   - Set **Username** and **Password** (enter the plain password; CrossPoint computes MD5 internally, and use the same values on all devices).
-   
+   - Set **Username** and **Password** (enter the plain password; Biscuit computes MD5 internally, and use the same values on all devices).
    - Set **Sync Server URL** to `http://<server-ip>:17200`.
    
    - Run **Authenticate**.
@@ -494,14 +453,14 @@ Once any of the options above is set up, press **Confirm** while reading to open
 
 The **Sleep Screen** setting controls what is displayed when the device goes to sleep:
 
-| Mode               | Behavior                                                                                                                     |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------- |
-| **Dark** (default) | The CrossPoint logo on a dark background.                                                                                    |
-| **Light**          | The CrossPoint logo on a white background.                                                                                   |
-| **Custom**         | A custom image from the SD card (see below). Falls back to **Dark** if no custom image is found.                             |
-| **Cover**          | The cover of the currently open book. Falls back to **Dark** if no book is open.                                             |
-| **Cover + Custom** | The cover of the currently open book, shown only while actively reading. Falls back to **Custom** behavior when not reading. |
-| **None**           | A blank screen.                                                                                                              |
+| Mode | Behavior |
+|------|----------|
+| **Dark** (default) | The Biscuit logo on a dark background. |
+| **Light** | The Biscuit logo on a white background. |
+| **Custom** | A custom image from the SD card (see below). Falls back to **Dark** if no custom image is found. |
+| **Cover** | The cover of the currently open book. Falls back to **Dark** if no book is open. |
+| **Cover + Custom** | The cover of the currently open book. Falls back to **Custom** behavior if no book is open. |
+| **None** | A blank screen. |
 
 #### Cover settings
 
@@ -590,7 +549,7 @@ If the device goes to sleep or you close the book while viewing a footnote, the 
 
 ### Supported Languages
 
-CrossPoint renders text using the following Unicode character blocks, enabling support for a wide range of languages:
+Biscuit renders text using the following Unicode character blocks, enabling support for a wide range of languages:
 
 * **Latin Script (Basic, Supplement, Extended-A/B):** Covers English, German, French, Spanish, Portuguese, Italian, Dutch, Swedish, Norwegian, Danish, Finnish, Polish, Czech, Hungarian, Romanian, Slovak, Slovenian, Turkish, Catalan, and others.
 * **Cyrillic Script (Standard and Extended):** Covers Russian, Ukrainian, Belarusian, Bulgarian, Serbian, Macedonian, Kazakh, Kyrgyz, Mongolian, and others.
@@ -653,50 +612,11 @@ Please note that this firmware is currently in active development. The following
 
 ## 7. Troubleshooting Issues & Escaping Bootloop
 
-If an issue or crash is encountered while using Crosspoint, feel free to raise an issue ticket and attach the logs.
-
-**Crash reports on SD card:** After a crash, CrossPoint automatically saves a crash report to the SD card (no USB connection needed). Check the root of the SD card for a crash log file and include it with any bug report.
-
-**Serial monitor logs:** For more detailed debugging, connect the device to a computer and run the custom debugging monitor script (requires Python 3 with `pyserial`, `colorama`, and `matplotlib`; install via `pip3 install pyserial colorama matplotlib`):
+If an issue or crash is encountered while using Biscuit, feel free to raise an issue ticket and attach the serial monitor logs. The logs can be obtained by connecting the device to a computer and starting a serial monitor. Either [Serial Monitor](https://www.serialmonitor.org/) or the following command can be used:
 
 ```
-python3 scripts/debugging_monitor.py
+pio device monitor
 ```
-
-The script auto-detects the serial port. You can also specify one explicitly:
-
-```
-python3 scripts/debugging_monitor.py /dev/ttyACM0        # Linux
-python3 scripts/debugging_monitor.py /dev/tty.usbmodem1  # macOS
-python3 scripts/debugging_monitor.py COM7                # Windows
-```
-
-**Features:**
-
-- Color-coded log output by category (errors, memory, display, EPUB parsing, etc.)
-- Live memory usage graph (free RAM, total RAM, max contiguous allocation) updated every second
-- Interactive command prompt — type a command and press Enter to send it to the device
-- Screenshot capture — saves the current display to `screenshot.bmp` when triggered by the device
-
-**Options:**
-
-| Option               | Description                                               |
-| -------------------- | --------------------------------------------------------- |
-| `--baud RATE`        | Baud rate (default: 115200)                               |
-| `--filter KEYWORD`   | Show only lines containing the keyword (case-insensitive) |
-| `--suppress KEYWORD` | Hide lines containing the keyword (case-insensitive)      |
-
-**Examples:**
-
-```
-# Show only memory-related log lines
-python3 scripts/debugging_monitor.py --filter MEM
-
-# Hide noisy SD card log lines
-python3 scripts/debugging_monitor.py --suppress "[SD]"
-```
-
-Press **Ctrl-C** or close the graph window to exit.
 
 If the device is stuck in a bootloop, press and release the Reset button. Then, press and hold on to the configured Back button and the Power Button to boot to the Home Screen.
 

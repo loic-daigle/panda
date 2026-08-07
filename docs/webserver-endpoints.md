@@ -1,14 +1,14 @@
 # Webserver Endpoints
 
 This document describes the HTTP, WebSocket, WebDAV, and discovery endpoints
-available while CrossPoint Reader is in File Transfer or Calibre Wireless mode.
+available while Biscuit is in File Transfer or Calibre Wireless mode.
 
 - HTTP server: port 80
 - WebSocket upload server: port 81
 - UDP discovery listener: port 8134
 - WebDAV: port 80, handled by the same HTTP server
 
-Examples use `crosspoint.local`. If mDNS does not resolve on your network, use
+Examples use `biscuit.local`. If mDNS does not resolve on your network, use
 the IP address shown on the device screen.
 
 ## HTTP Pages
@@ -26,7 +26,7 @@ the IP address shown on the device screen.
 ### `GET /api/status`
 
 ```bash
-curl http://crosspoint.local/api/status
+curl http://biscuit.local/api/status
 ```
 
 Response:
@@ -60,7 +60,11 @@ Response:
 Lists files and folders under a directory.
 
 ```bash
-curl "http://crosspoint.local/api/files?path=/Books"
+# List root directory
+curl http://biscuit.local/api/files
+
+# List specific directory
+curl "http://biscuit.local/api/files?path=/Books"
 ```
 
 Query parameters:
@@ -86,7 +90,7 @@ enabled. `System Volume Information` and `XTCache` are always hidden/protected.
 Downloads a file from the SD card.
 
 ```bash
-curl -OJ "http://crosspoint.local/download?path=/Books/MyBook.epub"
+curl -OJ "http://biscuit.local/download?path=/Books/MyBook.epub"
 ```
 
 Query parameters:
@@ -104,7 +108,11 @@ downloaded. EPUB files are served as `application/epub+zip`; other files use
 Uploads a file with HTTP multipart form data.
 
 ```bash
-curl -X POST -F "file=@mybook.epub" "http://crosspoint.local/upload?path=/Books"
+# Upload to root directory
+curl -X POST -F "file=@mybook.epub" http://biscuit.local/upload
+
+# Upload to specific directory
+curl -X POST -F "file=@mybook.epub" "http://biscuit.local/upload?path=/Books"
 ```
 
 Query parameters:
@@ -130,7 +138,7 @@ Notes:
 Creates a folder.
 
 ```bash
-curl -X POST -d "name=NewFolder&path=/" http://crosspoint.local/mkdir
+curl -X POST -d "name=NewFolder&path=/" http://biscuit.local/mkdir
 ```
 
 Form parameters:
@@ -145,7 +153,7 @@ Form parameters:
 Renames a file.
 
 ```bash
-curl -X POST -d "path=/Books/old.epub&name=new.epub" http://crosspoint.local/rename
+curl -X POST -d "path=/Books/old.epub&name=new.epub" http://biscuit.local/rename
 ```
 
 Form parameters:
@@ -163,7 +171,7 @@ cleared before the rename.
 Moves a file into an existing folder.
 
 ```bash
-curl -X POST -d "path=/Books/mybook.epub&dest=/Read" http://crosspoint.local/move
+curl -X POST -d "path=/Books/mybook.epub&dest=/Read" http://biscuit.local/move
 ```
 
 Form parameters:
@@ -181,9 +189,10 @@ cleared before the move.
 Deletes one or more files or empty folders.
 
 ```bash
-curl -X POST -d "path=/Books/mybook.epub" http://crosspoint.local/delete
-curl -X POST -d 'paths=["/Books/old.epub","/OldFolder"]' http://crosspoint.local/delete
+curl -X POST -d "path=/Books/mybook.epub" http://biscuit.local/delete
+curl -X POST -d 'paths=["/Books/old.epub","/OldFolder"]' http://biscuit.local/delete
 ```
+
 
 Form parameters:
 
@@ -203,7 +212,7 @@ Returns a streamed JSON array of editable settings. Each item contains common
 fields plus type-specific fields.
 
 ```bash
-curl http://crosspoint.local/api/settings
+curl http://biscuit.local/api/settings
 ```
 
 Example item:
@@ -244,7 +253,7 @@ Applies a partial settings update from a JSON object.
 curl -X POST \
   -H "Content-Type: application/json" \
   -d '{"fontSize":2,"showHiddenFiles":1}' \
-  http://crosspoint.local/api/settings
+  http://biscuit.local/api/settings
 ```
 
 Successful response:
@@ -260,7 +269,7 @@ Applied 2 setting(s)
 Lists installed SD-card font families.
 
 ```bash
-curl http://crosspoint.local/api/fonts
+curl http://biscuit.local/api/fonts
 ```
 
 Response:
@@ -288,7 +297,7 @@ Uploads one `.cpfont` file into a family folder.
 curl -X POST \
   -F "family=Literata" \
   -F "file=@Literata_12.cpfont" \
-  http://crosspoint.local/api/fonts/upload
+  http://biscuit.local/api/fonts/upload
 ```
 
 The handler validates the family name, `.cpfont` filename, and `CPFONT` magic
@@ -308,7 +317,7 @@ Deletes an installed font family.
 curl -X POST \
   -H "Content-Type: application/json" \
   -d '{"family":"Literata"}' \
-  http://crosspoint.local/api/fonts/delete
+  http://biscuit.local/api/fonts/delete
 ```
 
 Successful response:
@@ -324,7 +333,7 @@ Successful response:
 Lists saved OPDS servers. Passwords are never returned.
 
 ```bash
-curl http://crosspoint.local/api/opds
+curl http://biscuit.local/api/opds
 ```
 
 Response:
@@ -350,7 +359,7 @@ If `password` is omitted during an update, the existing password is preserved.
 curl -X POST \
   -H "Content-Type: application/json" \
   -d '{"name":"My Catalog","url":"http://calibre.local:8080/opds","username":"reader","password":"secret"}' \
-  http://crosspoint.local/api/opds
+  http://biscuit.local/api/opds
 ```
 
 ### `POST /api/opds/delete`
@@ -361,7 +370,7 @@ Deletes an OPDS server by index.
 curl -X POST \
   -H "Content-Type: application/json" \
   -d '{"index":0}' \
-  http://crosspoint.local/api/opds/delete
+  http://biscuit.local/api/opds/delete
 ```
 
 ## Wi-Fi Credential API
@@ -371,7 +380,7 @@ curl -X POST \
 Lists saved Wi-Fi networks. Passwords are never returned.
 
 ```bash
-curl http://crosspoint.local/api/wifi
+curl http://biscuit.local/api/wifi
 ```
 
 Response:
@@ -397,7 +406,7 @@ preserved.
 curl -X POST \
   -H "Content-Type: application/json" \
   -d '{"ssid":"HomeWiFi","password":"secret"}' \
-  http://crosspoint.local/api/wifi
+  http://biscuit.local/api/wifi
 ```
 
 ### `POST /api/wifi/delete`
@@ -408,7 +417,7 @@ Deletes a saved Wi-Fi network by index.
 curl -X POST \
   -H "Content-Type: application/json" \
   -d '{"index":0}' \
-  http://crosspoint.local/api/wifi/delete
+  http://biscuit.local/api/wifi/delete
 ```
 
 ## WebSocket Upload
@@ -421,7 +430,7 @@ Calibre plugin workflows.
 Connection:
 
 ```text
-ws://crosspoint.local:81/
+ws://biscuit.local:81/
 ```
 
 Protocol:
@@ -456,6 +465,12 @@ Error messages include:
 
 Incomplete WebSocket uploads are deleted on disconnect or error.
 
+**Example with `websocat`:**
+```bash
+# Interactive session
+websocat ws://biscuit.local:81
+```
+
 ## WebDAV
 
 The same HTTP server registers a WebDAV-compatible handler for file manager clients.
@@ -480,7 +495,7 @@ The server listens on UDP port `8134`. When it receives the text payload
 `hello`, it replies to the sender with:
 
 ```text
-crosspoint (on <hostname>);81
+biscuit (on <hostname>);81
 ```
 
 The final field is the WebSocket upload port.
@@ -490,12 +505,12 @@ The final field is the WebSocket upload port.
 ### Station Mode (STA)
 
 - Device joins an existing 2.4 GHz Wi-Fi network.
-- `crosspoint.local` is advertised with mDNS when available.
+- `biscuit.local` is advertised with mDNS when available.
 - `/api/status` returns `"mode": "STA"` and RSSI in dBm.
 
 ### Access Point Mode (AP)
 
-- Device creates an open hotspot named `CrossPoint-Reader`.
+- Device creates an open hotspot named `Biscuit-Reader`.
 - The device shows a Wi-Fi QR code and URL QR code.
 - The fallback IP is typically `192.168.4.1`.
 - `/api/status` returns `"mode": "AP"` and `"rssi": 0`.
@@ -504,3 +519,10 @@ The final field is the WebSocket upload port.
 
 Calibre Wireless starts the same web server in STA mode and displays setup
 instructions plus WebSocket upload progress on the device screen.
+
+## Notes
+
+- These examples use `biscuit.local`. If your network does not support mDNS or the address does not resolve, replace it with the specific **IP Address** displayed on your device screen (e.g., `http://192.168.1.102/`).
+- All paths on the SD card start with `/`
+- Trailing slashes are automatically stripped (except for root `/`)
+- The webserver uses chunked transfer encoding for file listings

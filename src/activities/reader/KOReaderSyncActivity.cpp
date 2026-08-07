@@ -23,6 +23,7 @@
 #include "activities/network/WifiSelectionActivity.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
+#include "util/RadioManager.h"
 
 namespace {
 std::string calculateDocumentHashForMethod(const std::string& path, const DocumentMatchMethod method) {
@@ -62,6 +63,12 @@ void syncTimeWithNTP() {
   } else {
     LOG_DBG("KOSync", "NTP sync timeout, using fallback");
   }
+}
+void wifiOff() {
+  if (esp_sntp_enabled()) {
+    esp_sntp_stop();
+  }
+  RADIO.shutdown();
 }
 }  // namespace
 
@@ -488,7 +495,7 @@ void KOReaderSyncActivity::render(RenderLock&&) {
                       tr(STR_UPLOAD_LOCAL), selectedOption != 1);
 
     // Bottom button hints
-    const auto labels = mappedInput.mapLabels(tr(STR_BACK), tr(STR_SELECT), tr(STR_DIR_UP), tr(STR_DIR_DOWN));
+    const auto labels = mappedInput.mapLabels(tr(STR_BACK), tr(STR_SELECT), "^", "v");
     GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
     renderer.displayBuffer();
     return;

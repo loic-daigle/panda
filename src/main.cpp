@@ -356,7 +356,7 @@ void setup() {
   }
 
   // First serial output only here to avoid timing inconsistencies for power button press duration verification
-  LOG_DBG("MAIN", "Starting CrossPoint version " CROSSPOINT_VERSION);
+  LOG_DBG("MAIN", "Starting Biscuit version " CROSSPOINT_VERSION);
 
   // Resolve the single boot-presentation decision. Skipping the splash also
   // skips the panel-clearing pass and the X3 initial-full-sync arming (see
@@ -466,6 +466,7 @@ void loop() {
   halTiltSensor.update(SETTINGS.tiltPageTurn, SETTINGS.orientation, activityManager.isReaderActivity());
 
   renderer.setFadingFix(SETTINGS.fadingFix);
+  renderer.setInverted(SETTINGS.displayInvert != 0);
 
   if (Serial && millis() - lastMemPrint >= 10000) {
     LOG_INF("MEM", "Free: %d bytes, Total: %d bytes, Min Free: %d bytes, MaxAlloc: %d bytes", ESP.getFreeHeap(),

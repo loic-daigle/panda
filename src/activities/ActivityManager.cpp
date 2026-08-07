@@ -12,6 +12,7 @@
 #include "home/CrashActivity.h"
 #include "home/FileBrowserActivity.h"
 #include "home/HomeActivity.h"
+#include "apps/AppsMenuActivity.h"
 #include "home/RecentBooksActivity.h"
 #include "network/CrossPointWebServerActivity.h"
 #include "reader/ReaderActivity.h"
@@ -223,22 +224,10 @@ void ActivityManager::goToFullScreenMessage(std::string message, EpdFontFamily::
   replaceActivity(std::make_unique<FullScreenMessageActivity>(renderer, mappedInput, std::move(message), style));
 }
 
-void ActivityManager::goHome(HomeMenuItem initialMenuItem) {
-  if (initialMenuItem == HomeMenuItem::NONE && currentActivity) {
-    const auto& activityName = currentActivity->name;
-    if (activityName == "FileBrowser") {
-      initialMenuItem = HomeMenuItem::FILE_BROWSER;
-    } else if (activityName == "RecentBooks") {
-      initialMenuItem = HomeMenuItem::RECENTS;
-    } else if (activityName == "OpdsBookBrowser") {
-      initialMenuItem = HomeMenuItem::OPDS_BROWSER;
-    } else if (activityName == "CrossPointWebServer") {
-      initialMenuItem = HomeMenuItem::FILE_TRANSFER;
-    } else if (activityName == "Settings") {
-      initialMenuItem = HomeMenuItem::SETTINGS_MENU;
-    }
-  }
-  replaceActivity(std::make_unique<HomeActivity>(renderer, mappedInput, initialMenuItem));
+void ActivityManager::goHome(HomeMenuItem /*initialMenuItem*/) {
+  // Biscuit's home is the AppsMenu dashboard, not upstream's single-list
+  // HomeActivity, so there is no per-item deep link to land on yet.
+  replaceActivity(std::make_unique<AppsMenuActivity>(renderer, mappedInput));
 }
 void ActivityManager::goToCrashReport() { replaceActivity(std::make_unique<CrashActivity>(renderer, mappedInput)); }
 
