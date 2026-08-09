@@ -311,11 +311,19 @@ bool MappedInputManager::wasHomeGesture() const {
 
 bool MappedInputManager::wasPressed(const Button button) const {
   if (button == Button::Back && wasBackGesture()) return true;
+  if (button == Button::Confirm && SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SAME_AS_SELECT &&
+      mapButton(Button::Power, &HalGPIO::wasPressed)) {
+    return true;
+  }
   return mapButton(button, &HalGPIO::wasPressed);
 }
 
 bool MappedInputManager::wasReleased(const Button button) const {
   if (button == Button::Back && wasBackGesture()) return true;
+  if (button == Button::Confirm && SETTINGS.shortPwrBtn == CrossPointSettings::SHORT_PWRBTN::SAME_AS_SELECT &&
+      mapButton(Button::Power, &HalGPIO::wasReleased)) {
+    return true;
+  }
   return mapButton(button, &HalGPIO::wasReleased);
 }
 
