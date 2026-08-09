@@ -2,10 +2,13 @@
 
 #include <cstddef>
 #include <functional>
+#include <memory>
 #include <string>
 
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
+
+#include <HalPowerManager.h>
 
 class Activity;
 class BLEServer;
@@ -56,6 +59,13 @@ class BangleGadgetbridgeServer {
 
   bool isConnected() const { return deviceConnected; }
 
+  // Sends jsonLine (a raw JSON object, no envelope) as one notify packet plus
+  // a trailing '\n', matching what real Bangle.js firmware sends back to
+  // Gadgetbridge (e.g. {"t":"force_calendar_sync","ids":[...]}) -- unlike the
+  // GB(...) wrapper Gadgetbridge uses for messages it sends us. No-op if not
+  // connected. Call from the main task (onLine/poll), never a BLE callback.
+  void send(const std::string& jsonLine);
+
   // One-shot flags: true the first time observed after the underlying BLE
   // event, false on every call after that (and after start()/stop()).
   bool consumeJustConnected();
@@ -80,6 +90,15 @@ class BangleGadgetbridgeServer {
 
   SemaphoreHandle_t rxMutex = nullptr;
   std::string rxBuffer;  // guarded by rxMutex; raw bytes appended by the BLE task
+
+  // Held for the duration of an active connection so HalPowerManager's idle
+  // CPU-frequency scaling (which only exempts WiFi, not BLE) can't drop the
+  // clock mid-connection and desync the BLE controller's connection-interval
+  // timing -- observed as Gadgetbridge pairing fine then dropping seconds
+  // later. Created/destroyed from poll() (main task) by watching
+  // deviceConnected, never from a BLE callback -- see the class-level comment
+  // on why BLE callbacks here must stay flag-only.
+  std::unique_ptr<HalPowerManager::Lock> powerLock;
 
   void handleLine(const std::string& rawLine);
 

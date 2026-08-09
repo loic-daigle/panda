@@ -97,11 +97,13 @@ void BangleGadgetbridgeServer::start(const char* deviceName) {
   RADIO.ensureBle(deviceName);
 
   BLESecurity* security = new BLESecurity();
-  // Bonding on, MITM off, secure connections on; IO_CAP_NONE => "Just Works"
-  // pairing since this device has no way to show/enter a passkey. Config
-  // proven working for phone pairing on this same hardware/SDK family by
-  // flowe-os's companion BLE service.
-  security->setAuthenticationMode(true, false, true);
+  // Bonding on, MITM off, secure connections off (legacy Just Works, not
+  // SC-only): IO_CAP_NONE => "Just Works" pairing since this device has no
+  // way to show/enter a passkey. SC-only Just Works (sc=true) authenticated
+  // but never reached encrypted=1 against a real Gadgetbridge/Android peer
+  // (onAuthenticationComplete fired with encrypted=0 bonded=0, immediate
+  // disconnect) -- legacy pairing is the broadly-compatible fallback.
+  security->setAuthenticationMode(true, false, false);
   security->setCapability(ESP_IO_CAP_NONE);
   security->setInitEncryptionKey(ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK);
   security->setRespEncryptionKey(ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK);
@@ -149,6 +151,15 @@ void BangleGadgetbridgeServer::stop() {
   deviceConnected = false;
   pendingConnect = false;
   pendingDisconnect = false;
+  powerLock.reset();  // safety net if stop() is called without a clean disconnect
+}
+
+void BangleGadgetbridgeServer::send(const std::string& jsonLine) {
+  if (!deviceConnected || !pTxChar) return;
+  std::string packet = jsonLine;
+  packet += '\n';
+  pTxChar->setValue(reinterpret_cast<const uint8_t*>(packet.data()), packet.size());
+  pTxChar->notify();
 }
 
 bool BangleGadgetbridgeServer::consumeJustConnected() {
@@ -164,6 +175,16 @@ bool BangleGadgetbridgeServer::consumePendingDisconnect() {
 }
 
 void BangleGadgetbridgeServer::poll() {
+  // Keep CPU at normal speed for as long as the BLE link is up -- see the
+  // powerLock member comment. Done here (main task), not in ServerCallbacks,
+  // since acquiring/releasing the lock does real work (mutex + frequency
+  // change), not just a flag flip.
+  if (deviceConnected && !powerLock) {
+    powerLock = std::make_unique<HalPowerManager::Lock>();
+  } else if (!deviceConnected && powerLock) {
+    powerLock.reset();
+  }
+
   std::string chunk;
   {
     xSemaphoreTake(rxMutex, portMAX_DELAY);

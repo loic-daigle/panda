@@ -25,17 +25,24 @@
 // other Bangle.js-protocol consumer) -- this class only interprets the
 // `"t":"calendar"` lines it hands back.
 //
-// Protocol notes (ported from research, not from any Bangle.js firmware):
+// Protocol notes (per Gadgetbridge's Bangle.js calendar-sync support and
+// espruino/EspruinoDocs info/Gadgetbridge.md -- this is a two-way handshake,
+// not a one-shot push):
 //  - Gadgetbridge writes newline-terminated text to the RX characteristic,
 //    mostly `\x10GB({...json...})\n` -- a JSON object wrapped in a GB() call
 //    meant to be eval()'d by a real Espruino REPL. We are not a JS
-//    interpreter: only lines containing `GB({"t":"calendar",...})` are
-//    handled, everything else (time sync, app queries, etc.) is discarded.
-//  - The add/remove ("type") semantics are not fully/crisply specified even
-//    in Gadgetbridge's own in-progress support for this -- type 0 (or
-//    absent) is treated as add/update, type 1 as delete, matching the
-//    Pebble calendar bridge this was adapted from. Verify against a real
-//    Gadgetbridge sync and adjust if needed.
+//    interpreter: only `"t":"calendar"`/`"calendar-"`/`"force_calendar_sync_start"`
+//    lines are handled, everything else (time sync, app queries, etc.) is
+//    discarded.
+//  - Gadgetbridge only starts pushing events after the watch asks for them:
+//    it sends `{"t":"force_calendar_sync_start"}` (usually right after
+//    connecting, as part of time sync -- requires "Sync time" enabled for
+//    this device in Gadgetbridge), we must reply with
+//    `{"t":"force_calendar_sync","ids":[...]}` listing the event ids we
+//    already have, then Gadgetbridge sends `{"t":"calendar",...}` per
+//    add/update and `{"t":"calendar-","id":...}` per delete. `type` in a
+//    "calendar" message is Gadgetbridge's event category (general/absence/
+//    birthday/alarm), not a delete flag -- deletion is its own message.
 class CalendarActivity final : public Activity {
  public:
   explicit CalendarActivity(GfxRenderer& renderer, MappedInputManager& mappedInput)
@@ -101,6 +108,10 @@ class CalendarActivity final : public Activity {
   void handleGbJson(const std::string& json);
   void upsertEvent(uint32_t id, int type, time_t timestamp, uint32_t durationSec, const char* title,
                     const char* location, bool allDay);
+  void removeEvent(uint32_t id);
+  // Replies to Gadgetbridge's "force_calendar_sync_start" with the ids we
+  // already have on file, per the protocol notes above.
+  void sendForceCalendarSync();
 
   uint32_t syncStartMs = 0;
   int eventsReceivedThisSync = 0;

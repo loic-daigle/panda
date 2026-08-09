@@ -44,7 +44,7 @@ void BeaconTestActivity::loadSsidsForMode() {
       break;
     case CUSTOM:
       loadCustomSsids();
-      if (ssids.empty()) ssids.push_back("biscuit.");
+      if (ssids.empty()) ssids.push_back("panda");
       break;
     case RICKROLL:
       ssids.push_back("Never Gonna Give You Up");
@@ -104,8 +104,7 @@ void BeaconTestActivity::loadCustomSsids() {
 }
 
 std::string BeaconTestActivity::generateRandomSsid() {
-  static const char cs[] =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  static const char cs[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   int len = 6 + (esp_random() % 10);
   std::string r;
   r.reserve(len);
@@ -140,8 +139,7 @@ void BeaconTestActivity::cycleNext() {
   }
 
   WiFi.softAPdisconnect(true);
-  WiFi.softAP(ssids[currentSsidIndex].c_str(), nullptr,
-              1 + (esp_random() % 11), 0, 0);
+  WiFi.softAP(ssids[currentSsidIndex].c_str(), nullptr, 1 + (esp_random() % 11), 0, 0);
 }
 
 void BeaconTestActivity::loop() {
@@ -203,9 +201,8 @@ void BeaconTestActivity::render(RenderLock&&) {
 
     static const char* modeNames[] = {"Random", "Custom (SD)", "Rickroll", "Funny"};
 
-    GUI.drawList(
-        renderer, Rect{0, contentTop, pageWidth, contentHeight}, 4, modeIndex,
-        [](int index) { return std::string(modeNames[index]); });
+    GUI.drawList(renderer, Rect{0, contentTop, pageWidth, contentHeight}, 4, modeIndex,
+                 [](int index) { return std::string(modeNames[index]); });
 
     const auto labels = mappedInput.mapLabels("Back", "Select", "^", "v");
     GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
@@ -227,8 +224,8 @@ void BeaconTestActivity::render(RenderLock&&) {
 
     // Stats
     char buf[64];
-    snprintf(buf, sizeof(buf), "SSID %d/%d  Cycle %d",
-             currentSsidIndex + 1, static_cast<int>(ssids.size()), cycleCount);
+    snprintf(buf, sizeof(buf), "SSID %d/%d  Cycle %d", currentSsidIndex + 1, static_cast<int>(ssids.size()),
+             cycleCount);
     renderer.drawCenteredText(UI_10_FONT_ID, centerY + 70, buf);
 
     snprintf(buf, sizeof(buf), "Interval: %lums", CYCLE_INTERVAL_MS);

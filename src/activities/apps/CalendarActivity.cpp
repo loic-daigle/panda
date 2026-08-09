@@ -85,6 +85,18 @@ void CalendarActivity::handleGbJson(const std::string& jsonPart) {
   }
 
   const char* t = doc["t"] | "";
+
+  if (strcmp(t, "force_calendar_sync_start") == 0) {
+    sendForceCalendarSync();
+    return;
+  }
+
+  if (strcmp(t, "calendar-") == 0) {
+    removeEvent(doc["id"].as<uint32_t>());
+    requestUpdate();
+    return;
+  }
+
   if (strcmp(t, "calendar") != 0) return;  // notifications/weather/etc. -- out of scope for this app
 
   // .as<T>() (rather than `| 0`, which lets ArduinoJson deduce a plain `int`
@@ -103,26 +115,36 @@ void CalendarActivity::handleGbJson(const std::string& jsonPart) {
   requestUpdate();
 }
 
+void CalendarActivity::sendForceCalendarSync() {
+  JsonDocument doc;
+  doc["t"] = "force_calendar_sync";
+  JsonArray ids = doc["ids"].to<JsonArray>();
+  for (int i = 0; i < data.eventCount; i++) ids.add(data.events[i].id);
+
+  std::string out;
+  serializeJson(doc, out);
+  bleServer.send(out);
+}
+
+void CalendarActivity::removeEvent(uint32_t id) {
+  for (int i = 0; i < data.eventCount; i++) {
+    if (data.events[i].id == id) {
+      for (int j = i; j < data.eventCount - 1; j++) data.events[j] = data.events[j + 1];
+      data.eventCount--;
+      return;
+    }
+  }
+}
+
 void CalendarActivity::upsertEvent(uint32_t id, int type, time_t timestamp, uint32_t durationSec, const char* title,
                                     const char* location, bool allDay) {
+  (void)type;  // event category (general/absence/birthday/alarm) -- not stored, not a delete flag
   int existing = -1;
   for (int i = 0; i < data.eventCount; i++) {
     if (data.events[i].id == id) {
       existing = i;
       break;
     }
-  }
-
-  // type==1 as "delete" matches the Pebble calendar bridge this was adapted
-  // from -- Gadgetbridge's own Bangle.js calendar support doesn't fully spec
-  // this yet (see CalendarActivity.h). Adjust if real-device testing shows
-  // otherwise.
-  if (type == 1) {
-    if (existing >= 0) {
-      for (int i = existing; i < data.eventCount - 1; i++) data.events[i] = data.events[i + 1];
-      data.eventCount--;
-    }
-    return;
   }
 
   CalendarEvent ev;

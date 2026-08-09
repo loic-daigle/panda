@@ -1,4 +1,4 @@
-# AUDIT REPORT -- biscuit. firmware
+# AUDIT REPORT -- panda firmware
 **Date:** 2026-04-06
 **Target:** ESP32-C3 custom firmware (Xteink X4 e-ink reader)
 **Scope:** Full codebase audit -- 7 phases, ~90 source files
