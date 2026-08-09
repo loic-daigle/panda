@@ -35,6 +35,7 @@ namespace {
 // card convention.
 constexpr const char* kBaseDir = "/biscuit/duckduckgo";
 constexpr const char* kWebsitesDir = "/biscuit/duckduckgo/websites";
+constexpr const char* kSearchTmpPath = "/biscuit/duckduckgo/search.tmp";
 constexpr const char* kDownloadTmpPath = "/biscuit/duckduckgo/download.tmp";
 
 std::string urlDecode(const std::string& src) {
@@ -139,18 +140,21 @@ std::string extractHref(const std::string& attribs) {
 }
 
 // Parses <a href="...">text</a> results out of the raw DuckDuckGo lite HTML
-// results page. Operates on the in-memory string returned by
-// HttpDownloader::fetchUrl (the page is small and bounded, so buffering it
-// is fine on this device's 380KB SRAM).
-bool parseDuckDuckGoResults(const std::string& html, std::vector<DuckLink>& links) {
+// results page, streaming it byte-at-a-time from the SD card rather than
+// buffering the whole response in RAM -- DDG's response can run to tens of
+// KB once sponsored results/tracking markup are included, which risks a
+// large contiguous heap allocation failing/fragmenting alongside the
+// WiFi/TLS buffers on this device's 380KB SRAM. Matches the original
+// crosspoint-reader-apps implementation's download-to-file-then-stream-parse
+// approach (see fetchSearchData()).
+bool parseDuckDuckGoResults(const std::string& htmlPath, std::vector<DuckLink>& links) {
   links.clear();
 
-  size_t pos = 0;
-  const size_t len = html.length();
-  auto nextChar = [&]() -> int {
-    if (pos >= len) return -1;
-    return static_cast<unsigned char>(html[pos++]);
-  };
+  HalFile file;
+  if (!Storage.openFileForRead("DDG", htmlPath.c_str(), file)) {
+    return false;
+  }
+  auto nextChar = [&]() -> int { return file.read(); };
 
   enum class ParserState { Scanning, InTag, InTagAttribs, InAnchorContent };
 
@@ -265,6 +269,7 @@ bool parseDuckDuckGoResults(const std::string& html, std::vector<DuckLink>& link
     }
   }
 
+  file.close();
   return !links.empty();
 }
 
@@ -483,23 +488,31 @@ void DuckDuckGoActivity::runBackgroundFetch() {
 }
 
 bool DuckDuckGoActivity::fetchSearchData() {
-  // lite.duckduckgo.com is a much smaller/simpler response than the html
-  // endpoint (direct result URLs, no /l/?uddg= redirect wrapper) — a better
-  // fit for this device's 380KB SRAM, and we already only display title+url
-  // (no snippet), so nothing is lost.
+  // lite.duckduckgo.com is a smaller/simpler response than the html endpoint,
+  // and we already only display title+url (no snippet), so nothing is lost.
+  // Some results (particularly sponsored ones) still come back wrapped in a
+  // /l/?uddg= redirect, same as the html endpoint -- parseDuckDuckGoResults
+  // handles both.
   std::string url = UrlUtils::encodeUnsafeUrlChars("https://lite.duckduckgo.com/lite/?q=" + searchQuery);
 
-  std::string html;
-  if (!HttpDownloader::fetchUrl(url, html)) {
+  // Download to SD and parse by streaming from the file rather than
+  // buffering the response in RAM (see parseDuckDuckGoResults) -- matches
+  // the original crosspoint-reader-apps implementation.
+  auto result = HttpDownloader::downloadToFile(url, kSearchTmpPath, nullptr, nullptr);
+  if (result != HttpDownloader::OK) {
     errorMessage = "Search request failed.";
+    Storage.remove(kSearchTmpPath);
     return false;
   }
 
   if (cancelFetch) {
+    Storage.remove(kSearchTmpPath);
     return false;
   }
 
-  return parseDuckDuckGoResults(html, bgSearchResults);
+  bool parsed = parseDuckDuckGoResults(kSearchTmpPath, bgSearchResults);
+  Storage.remove(kSearchTmpPath);
+  return parsed;
 }
 
 void DuckDuckGoActivity::downloadActivePost() {
