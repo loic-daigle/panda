@@ -20,6 +20,21 @@
 #include "network/HttpDownloader.h"
 #include "util/RadioManager.h"
 
+// OMIT_FONTS drops the Noto Sans family entirely (see builtinFonts/all.h) —
+// the weather card's hardcoded sizes fall back to the same-size Noto Serif,
+// which stays compiled in at every size.
+#ifdef OMIT_FONTS
+#define WEATHER_FONT_18 NOTOSERIF_18_FONT_ID
+#define WEATHER_FONT_16 NOTOSERIF_16_FONT_ID
+#define WEATHER_FONT_14 NOTOSERIF_14_FONT_ID
+#define WEATHER_FONT_12 NOTOSERIF_12_FONT_ID
+#else
+#define WEATHER_FONT_18 NOTOSANS_18_FONT_ID
+#define WEATHER_FONT_16 NOTOSANS_16_FONT_ID
+#define WEATHER_FONT_14 NOTOSANS_14_FONT_ID
+#define WEATHER_FONT_12 NOTOSANS_12_FONT_ID
+#endif
+
 namespace {
 
 struct City {
@@ -537,7 +552,7 @@ void drawWeatherIcon(const GfxRenderer& r, int cx, int cy, int code) {
 
     default:
       r.drawRoundedRect(cx - 20, cy - 20, 40, 40, 2, 20, true);
-      r.drawCenteredText(NOTOSANS_18_FONT_ID, cy - 9, "?", true, EpdFontFamily::BOLD);
+      r.drawCenteredText(WEATHER_FONT_18, cy - 9, "?", true, EpdFontFamily::BOLD);
       break;
   }
 }
@@ -758,17 +773,17 @@ void WeatherActivity::render(RenderLock&&) {
       char tempBuf[64];
       const double tempF = temp * 9.0 / 5.0 + 32.0;
       snprintf(tempBuf, sizeof(tempBuf), "%.1f \xc2\xb0" "C / %.1f \xc2\xb0" "F", temp, tempF);
-      renderer.drawCenteredText(NOTOSANS_18_FONT_ID, cardY + 145, tempBuf, true, EpdFontFamily::BOLD);
+      renderer.drawCenteredText(WEATHER_FONT_18, cardY + 145, tempBuf, true, EpdFontFamily::BOLD);
 
-      renderer.drawCenteredText(NOTOSANS_16_FONT_ID, cardY + 195, cityName.c_str(), true, EpdFontFamily::BOLD);
+      renderer.drawCenteredText(WEATHER_FONT_16, cardY + 195, cityName.c_str(), true, EpdFontFamily::BOLD);
 
       const char* desc = getWeatherDesc(weatherCode);
-      renderer.drawCenteredText(NOTOSANS_14_FONT_ID, cardY + 235, desc, true, EpdFontFamily::BOLD);
+      renderer.drawCenteredText(WEATHER_FONT_14, cardY + 235, desc, true, EpdFontFamily::BOLD);
 
       char windBuf[64];
       const double windspeedMph = windspeed * 0.621371;
       snprintf(windBuf, sizeof(windBuf), "Wind: %.1f km/h / %.1f mph", windspeed, windspeedMph);
-      renderer.drawCenteredText(NOTOSANS_12_FONT_ID, cardY + 275, windBuf, true, EpdFontFamily::REGULAR);
+      renderer.drawCenteredText(WEATHER_FONT_12, cardY + 275, windBuf, true, EpdFontFamily::REGULAR);
 
       char timeBuf[64];
       if (fetchTaskHandle != nullptr) {

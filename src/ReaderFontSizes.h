@@ -12,7 +12,8 @@
 // .cpfont files a user installed for an SD family.
 
 // The built-in Noto Serif / Noto Sans families are compiled in at exactly these
-// point sizes (see the global font objects in main.cpp).
+// point sizes (see the global font objects in main.cpp). Noto Serif ships all
+// four regardless of OMIT_FONTS (see builtinFonts/all.h).
 inline constexpr uint8_t BUILTIN_READER_POINT_SIZES[] = {12, 14, 16, 18};
 
 // Point sizes selectable for the active reader font, ascending: the SD family's

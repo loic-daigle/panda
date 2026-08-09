@@ -94,7 +94,13 @@ class CrossPointSettings : public PersistableStore<CrossPointSettings> {
   // Font family options (built-in fonts only; SD card fonts use sdFontFamilyName)
   enum FONT_FAMILY { NOTOSERIF = 0, NOTOSANS = 1, FONT_FAMILY_COUNT };
   static constexpr uint8_t LEGACY_OPENDYSLEXIC = 2;
+  // OMIT_FONTS compiles out the Noto Sans family entirely (see main.cpp /
+  // builtinFonts/all.h), so only NOTOSERIF is a valid selection in that build.
+#ifdef OMIT_FONTS
+  static constexpr uint8_t BUILTIN_FONT_COUNT = 1;
+#else
   static constexpr uint8_t BUILTIN_FONT_COUNT = FONT_FAMILY_COUNT;
+#endif
   // Reader font size is a point size, not an enum slot — see fontPointSize.
   // Legacy 1.4-and-earlier files stored a 0..3 SMALL/MEDIUM/LARGE/EXTRA_LARGE
   // slot; fromJson() folds that range up (see LEGACY_FONT_SIZE_MAX).
