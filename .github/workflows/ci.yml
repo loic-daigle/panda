@@ -90,7 +90,7 @@ jobs:
           key: pio-${{ runner.os }}-${{ hashFiles('platformio.ini') }}
           restore-keys: pio-${{ runner.os }}-
 
-      - name: Build Biscuit
+      - name: Build Panda
         run: |
           set -euo pipefail
           pio run -e default | tee pio.log

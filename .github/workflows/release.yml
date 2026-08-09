@@ -36,13 +36,13 @@ jobs:
           key: pio-${{ runner.os }}-${{ hashFiles('platformio.ini') }}
           restore-keys: pio-${{ runner.os }}-
 
-      - name: Build Biscuit
+      - name: Build Panda
         run: pio run -e gh_release
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          name: Biscuit ${{ github.ref_name }}
+          name: Panda ${{ github.ref_name }}
           draft: false
           prerelease: false
           generate_release_notes: true
@@ -54,7 +54,7 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Biscuit-${{ github.ref_name }}
+          name: Panda-${{ github.ref_name }}
           path: |
             .pio/build/gh_release/bootloader.bin
             .pio/build/gh_release/firmware.bin
