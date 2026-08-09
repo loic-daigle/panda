@@ -28,11 +28,11 @@ class AppsMenuActivity final : public Activity {
   // Cached system info (refreshed on enter + periodically)
   uint32_t freeHeap = 0;
   uint8_t batteryPercent = 0;
-  unsigned long uptimeSeconds = 0;
   bool wifiConnected = false;
   unsigned long lastInfoRefresh = 0;
   static constexpr unsigned long INFO_REFRESH_MS = 30000;
-  char uptimeStr[16] = "";
+  char clockStr[9] = "";
+  bool clockAvailable = false;
 
   // Badge counts (refreshed with system info)
   int badgeRecon = 0;       // tracker alerts count

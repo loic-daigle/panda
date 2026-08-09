@@ -1,5 +1,6 @@
 #include "AppsMenuActivity.h"
 
+#include <HalClock.h>
 #include <HalPowerManager.h>
 #include <HalStorage.h>
 #include <I18n.h>
@@ -454,14 +455,14 @@ void AppsMenuActivity::loop() {
     requestUpdate();
   }
 
-  // Periodic info refresh — only redraw if visible values changed
+  // Periodic info refresh — only redraw if visible values changed. Heap is no
+  // longer shown on this screen, so only a wifi status change is worth an
+  // e-ink repaint; the clock/battery caches ride along passively and are
+  // simply whatever they were as of the last repaint for any reason.
   if (millis() - lastInfoRefresh > INFO_REFRESH_MS) {
-    uint32_t oldHeap = freeHeap;
     bool oldWifi = wifiConnected;
     refreshSystemInfo();
-    // Only trigger e-ink refresh if KB-level heap changed or wifi status changed
-    bool heapChanged = (freeHeap / 1024) != (oldHeap / 1024);
-    if (heapChanged || (wifiConnected != oldWifi)) {
+    if (wifiConnected != oldWifi) {
       requestUpdate();
     }
   }
@@ -748,25 +749,15 @@ void AppsMenuActivity::render(RenderLock&&) {
   const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
-  // === STATUS BAR (top 44px) ===
+  // === STATUS BAR (top 40px) ===
   drawStatusBar();
-
-  // === STATUS INFO ROW (below separator, above tiles) ===
-  constexpr int statusRowY = 42;
-  char statusBuf[64];
-  if (wifiConnected) {
-    snprintf(statusBuf, sizeof(statusBuf), "WiFi: on | %luK | %s", (unsigned long)(freeHeap / 1024), uptimeStr);
-  } else {
-    snprintf(statusBuf, sizeof(statusBuf), "WiFi: off | %luK | %s", (unsigned long)(freeHeap / 1024), uptimeStr);
-  }
-  renderer.drawText(SMALL_FONT_ID, 14, statusRowY, statusBuf);
 
   // === TILE GRID ===
   constexpr int statusBarH = 40;
   constexpr int buttonHintsH = 40;
   constexpr int sidePad = 14;
-  constexpr int tileGap = 9;                // airier modern spacing between rounded tiles
-  constexpr int gridTop = statusBarH + 32;  // Below status info row (clearance for status text)
+  constexpr int tileGap = 12;               // airier modern spacing between rounded tiles
+  constexpr int gridTop = statusBarH + 16;  // breathing room below the separator line
   const int gridBottom = pageHeight - buttonHintsH - 2;
   const int gridHeight = gridBottom - gridTop;
 
@@ -791,17 +782,13 @@ void AppsMenuActivity::render(RenderLock&&) {
 
 void AppsMenuActivity::refreshSystemInfo() {
   freeHeap = esp_get_free_heap_size();
-  uptimeSeconds = (unsigned long)(esp_timer_get_time() / 1000000LL);
   batteryPercent = (uint8_t)powerManager.getBatteryPercentage();
   wifiConnected = (WiFi.status() == WL_CONNECTED);
   lastInfoRefresh = millis();
 
-  unsigned long hrs = uptimeSeconds / 3600;
-  unsigned long mins = (uptimeSeconds % 3600) / 60;
-  if (hrs > 0) {
-    snprintf(uptimeStr, sizeof(uptimeStr), "%luh%02lum", hrs, mins);
-  } else {
-    snprintf(uptimeStr, sizeof(uptimeStr), "%lum", mins);
+  clockAvailable = halClock.isAvailable();
+  if (clockAvailable) {
+    halClock.formatTime(clockStr, sizeof(clockStr), SETTINGS.clockUtcOffsetQ, SETTINGS.clockFormat != 0);
   }
 }
 
@@ -834,18 +821,18 @@ void AppsMenuActivity::drawStatusBar() const {
 
   // Right side: build right-to-left to avoid overlap
 
-  // Uptime (rightmost)
-  int uptimeW = renderer.getTextWidth(SMALL_FONT_ID, uptimeStr);
   int rightX = pageWidth - pad;
-  renderer.drawText(SMALL_FONT_ID, rightX - uptimeW, 14, uptimeStr);
-  rightX -= uptimeW + 10;
 
-  // Heap
-  char heapStr[16];
-  snprintf(heapStr, sizeof(heapStr), "%luK", (unsigned long)(freeHeap / 1024));
-  int heapW = renderer.getTextWidth(SMALL_FONT_ID, heapStr);
-  renderer.drawText(SMALL_FONT_ID, rightX - heapW, 14, heapStr);
-  rightX -= heapW + 10;
+  // Battery (rightmost) — drawBatteryRight draws the icon at rect.x and the
+  // percentage text further left of that, so reserve space for both (icon +
+  // spacing + percentage text width) before positioning anything else.
+  constexpr int batteryIconW = 15;
+  constexpr int batteryPercentSpacing = 4;
+  char battPctStr[8];
+  snprintf(battPctStr, sizeof(battPctStr), "%u%%", (unsigned)batteryPercent);
+  const int battPctW = renderer.getTextWidth(SMALL_FONT_ID, battPctStr);
+  GUI.drawBatteryRight(renderer, Rect{rightX - batteryIconW, 14, batteryIconW, 12});
+  rightX -= batteryIconW + batteryPercentSpacing + battPctW + 10;
 
   // WiFi dot — filled when connected, hollow ring when not (rounded to a true
   // circle rather than a hard-edged square, matching the tile grid below)
@@ -855,10 +842,15 @@ void AppsMenuActivity::drawStatusBar() const {
   } else {
     renderer.drawRoundedRect(rightX - dotSize, 15, dotSize, dotSize, 1, dotSize / 2, true);
   }
-  rightX -= dotSize + 8;
+  rightX -= dotSize + 10;
 
-  // Battery — drawBatteryRight draws percentage text at rect.y, icon at rect.y+6
-  GUI.drawBatteryRight(renderer, Rect{rightX - 16, 14, 15, 12});
+  // Clock (X3 only — DS3231 RTC; hidden entirely on X4 rather than shown broken).
+  // Value is cached from the last refreshSystemInfo() call and only redrawn when
+  // something else already triggers a repaint — never a repaint source itself.
+  if (clockAvailable && clockStr[0] != '\0') {
+    int clockW = renderer.getTextWidth(SMALL_FONT_ID, clockStr);
+    renderer.drawText(SMALL_FONT_ID, rightX - clockW, 14, clockStr);
+  }
 
   // Separator line
   renderer.drawLine(pad, 38, pageWidth - pad, 38, true);
@@ -872,7 +864,12 @@ void AppsMenuActivity::drawTile(int index, int x, int y, int w, int h, bool sele
   if (w / 3 < radius) radius = w / 3;
 
   if (selected) {
-    renderer.fillRoundedRect(x, y, w, h, radius, Color::Black);
+    // Dithered gray fill instead of a hard black invert — matches the
+    // selection style LyraTheme already uses for tab bars/lists elsewhere,
+    // so text stays legible without inverting it. A heavier outline keeps
+    // the focused tile unambiguous at a glance for button-only navigation.
+    renderer.fillRoundedRect(x, y, w, h, radius, Color::LightGray);
+    renderer.drawRoundedRect(x, y, w, h, 2, radius, true);
   } else {
     renderer.drawRoundedRect(x, y, w, h, 1, radius, true);
   }
@@ -928,9 +925,9 @@ void AppsMenuActivity::drawTile(int index, int x, int y, int w, int h, bool sele
       break;
   }
 
-  renderer.drawText(UI_12_FONT_ID, x + pad, nameY, name, !selected, EpdFontFamily::BOLD);
+  renderer.drawText(UI_12_FONT_ID, x + pad, nameY, name, true, EpdFontFamily::BOLD);
   nameY += renderer.getLineHeight(UI_12_FONT_ID) + 2;
-  renderer.drawText(SMALL_FONT_ID, x + pad, nameY, subtitle, !selected);
+  renderer.drawText(SMALL_FONT_ID, x + pad, nameY, subtitle, true);
 
   // --- Zone 2: Bottom-right — app count (skip for modules with 0) ---
   int countY = y + h - pad - renderer.getLineHeight(SMALL_FONT_ID);
@@ -938,7 +935,7 @@ void AppsMenuActivity::drawTile(int index, int x, int y, int w, int h, bool sele
     char countStr[16];
     snprintf(countStr, sizeof(countStr), "%d apps", appCount);
     int countW = renderer.getTextWidth(SMALL_FONT_ID, countStr);
-    renderer.drawText(SMALL_FONT_ID, x + w - pad - countW, countY, countStr, !selected);
+    renderer.drawText(SMALL_FONT_ID, x + w - pad - countW, countY, countStr, true);
   }
 
   // --- Badge indicator (top-right corner of tile) ---
@@ -959,10 +956,10 @@ void AppsMenuActivity::drawTile(int index, int x, int y, int w, int h, bool sele
     constexpr int badgeSize = 18;
     int badgeX = x + w - badgeSize - 6;
     int badgeY = y + 6;
-    // Circular badge chip, inverted relative to the tile so it always reads
-    // clearly against either a white or fully-black selected tile.
-    renderer.fillRoundedRect(badgeX, badgeY, badgeSize, badgeSize, badgeSize / 2,
-                             selected ? Color::White : Color::Black);
+    // Circular badge chip — always black-filled with white text now that
+    // tiles no longer invert to solid black on selection, so it reads
+    // clearly against either a white or dithered-gray tile background.
+    renderer.fillRoundedRect(badgeX, badgeY, badgeSize, badgeSize, badgeSize / 2, Color::Black);
     // Draw badge text
     char badgeStr[4];
     if (showBang) {
@@ -971,7 +968,7 @@ void AppsMenuActivity::drawTile(int index, int x, int y, int w, int h, bool sele
       snprintf(badgeStr, sizeof(badgeStr), "%d", badge);
     }
     int bw = renderer.getTextWidth(SMALL_FONT_ID, badgeStr);
-    renderer.drawText(SMALL_FONT_ID, badgeX + badgeSize / 2 - bw / 2, badgeY + 3, badgeStr, selected);
+    renderer.drawText(SMALL_FONT_ID, badgeX + badgeSize / 2 - bw / 2, badgeY + 3, badgeStr, false);
   }
 
   // --- Zone 3: Bottom-left — live status (selected tile only) ---
@@ -987,9 +984,6 @@ void AppsMenuActivity::drawTile(int index, int x, int y, int w, int h, bool sele
       case 2:  // DEFENSE
         snprintf(statusStr, sizeof(statusStr), "RF: %s", wifiConnected ? "active" : "silent");
         break;
-      case 4:  // TOOLS
-        snprintf(statusStr, sizeof(statusStr), "Heap: %luK", (unsigned long)(freeHeap / 1024));
-        break;
       case 5:  // GAMES
       case 6:  // READER
         if (lastUsedName[index][0] != '\0') {
@@ -1001,7 +995,7 @@ void AppsMenuActivity::drawTile(int index, int x, int y, int w, int h, bool sele
     }
     if (statusStr[0] != '\0') {
       int statusY = countY - renderer.getLineHeight(SMALL_FONT_ID) - 4;
-      renderer.drawText(SMALL_FONT_ID, x + pad, statusY, statusStr, !selected);
+      renderer.drawText(SMALL_FONT_ID, x + pad, statusY, statusStr, true);
     }
   }
 }
