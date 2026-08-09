@@ -2,6 +2,7 @@
 
 #include <Arduino.h>
 #include <Rtc.h>
+#include <time.h>
 
 class HalClock;
 extern HalClock halClock;  // Singleton
@@ -41,4 +42,12 @@ class HalClock {
   // Debouncing (skip if already synced once) is enforced by the caller, not here,
   // so the HAL stays free of any app-layer settings dependency.
   bool syncFromNTP();
+
+  // Write the RTC directly from an already-known UTC epoch, without an NTP
+  // round-trip -- for callers that get the time some other way (e.g. a BLE
+  // companion app/phone telling us the time). Does not touch the system
+  // clock (callers needing time(nullptr)/localtime_r to reflect this value
+  // immediately must call settimeofday() themselves).
+  // Returns true if the RTC was successfully updated.
+  bool setTimeUtc(time_t epochUtc);
 };

@@ -41,6 +41,10 @@ class BangleGadgetbridgeServer {
   // owner: used only to call requestUpdate() when connection state changes,
   // so the owning Activity's UI refreshes promptly.
   explicit BangleGadgetbridgeServer(Activity& owner);
+  // Out-of-line (see .cpp): the unique_ptr members below hold pointers to
+  // types (ServerCallbacks etc.) that are only forward-declared here, so the
+  // implicit destructor can't be generated in this header.
+  ~BangleGadgetbridgeServer();
 
   static constexpr size_t MAX_RX_BUFFER = 4096;
 
@@ -88,6 +92,21 @@ class BangleGadgetbridgeServer {
   volatile bool pendingConnect = false;
   volatile bool pendingDisconnect = false;
 
+  // Set by ServerCallbacks::onConnect(BLEServer*, ble_gap_conn_desc*) (BLE
+  // host task) with the just-connected conn_handle; poll() (main task) picks
+  // this up and calls BLESecurity::startSecurity() there. Must not call it
+  // directly from the host-task callback: it was doing so previously and
+  // that's the prime suspect for a heap-corruption crash (multi_heap_free
+  // assert, triggered later on an unrelated disconnect) -- see class-level
+  // comment above on why BLE callbacks here must stay flag-only.
+  volatile bool pendingSecurityStart = false;
+  uint16_t pendingSecurityConnHandle = 0;
+
+  // Set alongside pendingSecurityConnHandle by the same onConnect callback;
+  // read by stop() (main task) to disconnect the live peer before tearing
+  // down the BLE stack -- see stop()'s comment for why that ordering matters.
+  uint16_t currentConnHandle = 0;
+
   SemaphoreHandle_t rxMutex = nullptr;
   std::string rxBuffer;  // guarded by rxMutex; raw bytes appended by the BLE task
 
@@ -101,8 +120,22 @@ class BangleGadgetbridgeServer {
   std::unique_ptr<HalPowerManager::Lock> powerLock;
 
   void handleLine(const std::string& rawLine);
+  void handleSetTimeCommand(const std::string& line);
 
   class ServerCallbacks;
   class RxCallbacks;
   class SecurityCallbacks;
+
+  // Allocated once (lazily, in start()) and reused across every subsequent
+  // start()/stop() cycle -- these used to be `new`'d fresh on every start()
+  // with no matching delete anywhere, leaking a handful of small objects per
+  // "Sync with Phone" attempt. Harmless on any one attempt, but real-device
+  // testing showed free heap trending down across repeated attempts within
+  // the same app session. BLESecurity itself needs no such member: every
+  // method this class calls on it (setAuthenticationMode, setCapability,
+  // startSecurity, ...) is static, so start() calls BLESecurity:: directly
+  // rather than allocating an instance at all.
+  std::unique_ptr<ServerCallbacks> serverCallbacks;
+  std::unique_ptr<RxCallbacks> rxCallbacks;
+  std::unique_ptr<SecurityCallbacks> securityCallbacks;
 };

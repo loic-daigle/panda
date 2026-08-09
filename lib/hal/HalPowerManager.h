@@ -56,6 +56,15 @@ class HalPowerManager {
     explicit Lock();
     ~Lock();
 
+    // False if this Lock lost the race against another live Lock (only one
+    // can be held at a time -- see currentLockMode above) and is therefore
+    // not actually holding normal-speed CPU frequency. Callers that need the
+    // lock for longer than one immediate scope (e.g. for as long as a BLE
+    // connection stays up) should check this and retry construction on a
+    // later tick rather than assuming a held Lock object means power saving
+    // is actually suppressed.
+    bool held() const { return valid; }
+
     // Non-copyable and non-movable
     Lock(const Lock&) = delete;
     Lock& operator=(const Lock&) = delete;
