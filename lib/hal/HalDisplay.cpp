@@ -127,8 +127,8 @@ bool HalDisplay::supportsStripGrayscale() const { return einkDisplay.supportsStr
 
 uint16_t HalDisplay::getDisplayWidth() const { return einkDisplay.getDisplayWidth(); }
 
-uint16_t HalDisplay::getDisplayHeight() const { return EInkDisplay::DISPLAY_HEIGHT; }
+uint16_t HalDisplay::getDisplayHeight() const { return einkDisplay.getDisplayHeight(); }
 
-uint16_t HalDisplay::getDisplayWidthBytes() const { return EInkDisplay::DISPLAY_WIDTH_BYTES; }
+uint16_t HalDisplay::getDisplayWidthBytes() const { return einkDisplay.getDisplayWidthBytes(); }
 
-uint32_t HalDisplay::getBufferSize() const { return EInkDisplay::BUFFER_SIZE; }
+uint32_t HalDisplay::getBufferSize() const { return einkDisplay.getBufferSize(); }
