@@ -44,6 +44,11 @@
 #include "MatrixRainActivity.h"
 #include "MazeActivity.h"
 #include "CalculatorActivity.h"
+#include "WeatherActivity.h"
+#include "WikipediaActivity.h"
+#include "DuckDuckGoActivity.h"
+#include "CalendarActivity.h"
+#include "NotificationsActivity.h"
 #include "MdnsBrowserActivity.h"
 #include "TaskManagerActivity.h"
 #include "BatteryMonitorActivity.h"
@@ -217,8 +222,14 @@ void AppsMenuActivity::loop() {
                 {tr(STR_DNS_LOOKUP), "Resolve domain names", UIIcon::Wifi, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<DnsLookupActivity>(r, m); }},
                 {"HTTP Client", "Send GET/POST requests", UIIcon::Transfer, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<HttpClientActivity>(r, m); }},
                 {"mDNS Browser", "Discover local services", UIIcon::Wifi, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<MdnsBrowserActivity>(r, m); }},
+                AppCategoryActivity::SectionHeader("WEB"),
+                {"Weather", "Local forecast, cached offline", UIIcon::File, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<WeatherActivity>(r, m); }},
+                {"Wikipedia", "Search and download articles", UIIcon::Book, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<WikipediaActivity>(r, m); }},
+                {"DuckDuckGo", "Search the web", UIIcon::Wifi, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<DuckDuckGoActivity>(r, m); }},
                 AppCategoryActivity::SectionHeader("PRODUCTIVITY"),
                 {"Clock", "NTP clock / stopwatch / pomodoro", UIIcon::Recent, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<ClockActivity>(r, m); }},
+                {"Calendar", "Sync events from phone via Gadgetbridge", UIIcon::Text, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<CalendarActivity>(r, m); }},
+                {"Notifications", "Mirror phone notifications via Gadgetbridge", UIIcon::Text, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<NotificationsActivity>(r, m); }},
                 {"Calculator", "Basic calculator", UIIcon::File, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<CalculatorActivity>(r, m); }},
                 {tr(STR_QR_GENERATOR), "Generate QR codes from text", UIIcon::Image, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<QrGeneratorActivity>(r, m); }},
                 {tr(STR_MORSE_CODE), "Encode/decode morse", UIIcon::Text, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<MorseCodeActivity>(r, m); }},
@@ -437,8 +448,14 @@ void AppsMenuActivity::loop() {
               {tr(STR_DNS_LOOKUP), "Resolve domain names", UIIcon::Wifi, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<DnsLookupActivity>(r, m); }},
               {"HTTP Client", "Send GET/POST requests", UIIcon::Transfer, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<HttpClientActivity>(r, m); }},
               {"mDNS Browser", "Discover local services", UIIcon::Wifi, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<MdnsBrowserActivity>(r, m); }},
+              AppCategoryActivity::SectionHeader("WEB"),
+              {"Weather", "Local forecast, cached offline", UIIcon::File, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<WeatherActivity>(r, m); }},
+              {"Wikipedia", "Search and download articles", UIIcon::Book, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<WikipediaActivity>(r, m); }},
+              {"DuckDuckGo", "Search the web", UIIcon::Wifi, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<DuckDuckGoActivity>(r, m); }},
               AppCategoryActivity::SectionHeader("PRODUCTIVITY"),
               {"Clock", "NTP clock / stopwatch / pomodoro", UIIcon::Recent, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<ClockActivity>(r, m); }},
+              {"Calendar", "Sync events from phone via Gadgetbridge", UIIcon::Text, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<CalendarActivity>(r, m); }},
+              {"Notifications", "Mirror phone notifications via Gadgetbridge", UIIcon::Text, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<NotificationsActivity>(r, m); }},
               {"Calculator", "Basic calculator", UIIcon::File, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<CalculatorActivity>(r, m); }},
               {tr(STR_QR_GENERATOR), "Generate QR codes from text", UIIcon::Image, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<QrGeneratorActivity>(r, m); }},
               {tr(STR_MORSE_CODE), "Encode/decode morse", UIIcon::Text, [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<MorseCodeActivity>(r, m); }},
@@ -563,7 +580,7 @@ void AppsMenuActivity::render(RenderLock&&) {
   constexpr int statusBarH = 40;
   constexpr int buttonHintsH = 40;
   constexpr int sidePad = 14;
-  constexpr int tileGap = 6;
+  constexpr int tileGap = 9;  // airier modern spacing between rounded tiles
   constexpr int gridTop = statusBarH + 32;  // Below status info row (clearance for status text)
   const int gridBottom = pageHeight - buttonHintsH - 2;
   const int gridHeight = gridBottom - gridTop;
@@ -646,13 +663,15 @@ void AppsMenuActivity::drawStatusBar() const {
   renderer.drawText(SMALL_FONT_ID, rightX - heapW, 14, heapStr);
   rightX -= heapW + 10;
 
-  // WiFi dot
+  // WiFi dot — filled when connected, hollow ring when not (rounded to a true
+  // circle rather than a hard-edged square, matching the tile grid below)
+  constexpr int dotSize = 7;
   if (wifiConnected) {
-    renderer.fillRect(rightX - 6, 16, 6, 6, true);
+    renderer.fillRoundedRect(rightX - dotSize, 15, dotSize, dotSize, dotSize / 2, Color::Black);
   } else {
-    renderer.drawRect(rightX - 6, 16, 6, 6, true);
+    renderer.drawRoundedRect(rightX - dotSize, 15, dotSize, dotSize, 1, dotSize / 2, true);
   }
-  rightX -= 14;
+  rightX -= dotSize + 8;
 
   // Battery — drawBatteryRight draws percentage text at rect.y, icon at rect.y+6
   GUI.drawBatteryRight(renderer, Rect{rightX - 16, 14, 15, 12});
@@ -662,13 +681,19 @@ void AppsMenuActivity::drawStatusBar() const {
 }
 
 void AppsMenuActivity::drawTile(int index, int x, int y, int w, int h, bool selected) const {
+  // Rounded tile corners for a softer, more modern grid; radius is clamped
+  // so it never overwhelms a narrow/short tile.
+  int radius = 10;
+  if (h / 3 < radius) radius = h / 3;
+  if (w / 3 < radius) radius = w / 3;
+
   if (selected) {
-    renderer.fillRect(x, y, w, h, true);
+    renderer.fillRoundedRect(x, y, w, h, radius, Color::Black);
   } else {
-    renderer.drawRect(x, y, w, h, true);
+    renderer.drawRoundedRect(x, y, w, h, 1, radius, true);
   }
 
-  constexpr int pad = 10;
+  constexpr int pad = 12;
 
   // --- Zone 1: Top — category name + subtitle ---
   int nameY = y + pad;
@@ -681,7 +706,7 @@ void AppsMenuActivity::drawTile(int index, int x, int y, int w, int h, bool sele
     case 1: name = "OFFENSE";  subtitle = "Scan/profile/test";  appCount = 21; break;
     case 2: name = "DEFENSE";  subtitle = "Ghost & protect";    appCount = 12; break;
     case 3: name = "COMMS";    subtitle = "Chat & share";       appCount = 5;  break;
-    case 4: name = "TOOLS";    subtitle = "Utilities";          appCount = 32; break;
+    case 4: name = "TOOLS";    subtitle = "Utilities";          appCount = 37; break;
     case 5: name = "GAMES";    subtitle = "Entertainment";      appCount = 11; break;
     case 6: name = "READER";   subtitle = "Books & OPDS";       appCount = 5;  break;
     case 7: name = "SETTINGS"; subtitle = "System & config";    appCount = 7;  break;
@@ -710,10 +735,13 @@ void AppsMenuActivity::drawTile(int index, int x, int y, int w, int h, bool sele
   }
 
   if (badge > 0 || showBang) {
-    int badgeX = x + w - 24;
+    constexpr int badgeSize = 18;
+    int badgeX = x + w - badgeSize - 6;
     int badgeY = y + 6;
-    // Draw badge background (inverted relative to tile)
-    renderer.fillRect(badgeX, badgeY, 16, 16, !selected);
+    // Circular badge chip, inverted relative to the tile so it always reads
+    // clearly against either a white or fully-black selected tile.
+    renderer.fillRoundedRect(badgeX, badgeY, badgeSize, badgeSize, badgeSize / 2,
+                              selected ? Color::White : Color::Black);
     // Draw badge text
     char badgeStr[4];
     if (showBang) {
@@ -722,7 +750,7 @@ void AppsMenuActivity::drawTile(int index, int x, int y, int w, int h, bool sele
       snprintf(badgeStr, sizeof(badgeStr), "%d", badge);
     }
     int bw = renderer.getTextWidth(SMALL_FONT_ID, badgeStr);
-    renderer.drawText(SMALL_FONT_ID, badgeX + 8 - bw / 2, badgeY + 1, badgeStr, selected);
+    renderer.drawText(SMALL_FONT_ID, badgeX + badgeSize / 2 - bw / 2, badgeY + 3, badgeStr, selected);
   }
 
   // --- Zone 3: Bottom-left — live status (selected tile only) ---
