@@ -224,9 +224,36 @@ void ActivityManager::goToFullScreenMessage(std::string message, EpdFontFamily::
   replaceActivity(std::make_unique<FullScreenMessageActivity>(renderer, mappedInput, std::move(message), style));
 }
 
-void ActivityManager::goHome(HomeMenuItem /*initialMenuItem*/) {
-  // Biscuit's home is the AppsMenu dashboard, not upstream's single-list
-  // HomeActivity, so there is no per-item deep link to land on yet.
+void ActivityManager::goHome(HomeMenuItem initialMenuItem) {
+  // Panda's home is the AppsMenu dashboard, not upstream's single-list
+  // HomeActivity, so there's no tile to preselect for a deep link. Instead,
+  // jump straight to the requested destination the way callers (e.g. the
+  // OPDS server picker's Back button) expect.
+  switch (initialMenuItem) {
+    case HomeMenuItem::FILE_BROWSER:
+      goToFileBrowser();
+      return;
+    case HomeMenuItem::RECENTS:
+      goToRecentBooks();
+      return;
+    case HomeMenuItem::OPDS_BROWSER:
+      // Only jump straight back in when there's a single server: goToBrowser()
+      // would otherwise recreate the same multi-server picker the caller (the
+      // picker's own Back button) is trying to leave, trapping the user.
+      if (OPDS_STORE.getServers().size() == 1) {
+        goToBrowser();
+        return;
+      }
+      break;
+    case HomeMenuItem::FILE_TRANSFER:
+      goToFileTransfer();
+      return;
+    case HomeMenuItem::SETTINGS_MENU:
+      goToSettings();
+      return;
+    case HomeMenuItem::NONE:
+      break;
+  }
   replaceActivity(std::make_unique<AppsMenuActivity>(renderer, mappedInput));
 }
 void ActivityManager::goToCrashReport() { replaceActivity(std::make_unique<CrashActivity>(renderer, mappedInput)); }
