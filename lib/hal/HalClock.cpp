@@ -74,20 +74,38 @@ bool HalClock::syncFromNTP() {
     return false;
   }
 
+  // Stop SNTP if a previous sync left it running: configTzTime can't
+  // reconfigure while it's active, and an abandoned client would keep doing
+  // DNS/UDP work in the background, racing whatever network call comes next.
+  if (esp_sntp_enabled()) {
+    esp_sntp_stop();
+  }
+
   LOG_INF("CLK", "Starting NTP sync...");
   configTzTime("UTC0", "pool.ntp.org", "time.nist.gov");
 
   // Wait for SNTP sync to complete (up to 5 seconds)
   constexpr int maxAttempts = 50;
+  bool synced = false;
   for (int i = 0; i < maxAttempts; i++) {
     if (sntp_get_sync_status() == SNTP_SYNC_STATUS_COMPLETED) {
-      return setTimeUtc(time(nullptr));
+      synced = true;
+      break;
     }
     delay(100);
   }
 
-  LOG_ERR("CLK", "NTP sync timed out");
-  return false;
+  if (!synced) {
+    LOG_ERR("CLK", "NTP sync timed out");
+  }
+
+  // This is a one-shot sync, not a long-running clock discipline session;
+  // stop the client so it doesn't keep resolving/polling in the background.
+  if (esp_sntp_enabled()) {
+    esp_sntp_stop();
+  }
+
+  return synced && setTimeUtc(time(nullptr));
 }
 
 bool HalClock::setTimeUtc(time_t epochUtc) {
