@@ -35,10 +35,10 @@ class ApHistoryLoggerActivity final : public Activity {
   std::vector<uint64_t> seenBssids;  // max 200
 
   static constexpr unsigned long INTERVALS[] = {
-      60000UL,       // 1 min
-      300000UL,      // 5 min
-      600000UL,      // 10 min
-      1800000UL,     // 30 min
+      60000UL,    // 1 min
+      300000UL,   // 5 min
+      600000UL,   // 10 min
+      1800000UL,  // 30 min
   };
   static constexpr int NUM_INTERVALS = 4;
   static constexpr const char* INTERVAL_LABELS[] = {"1 min", "5 min", "10 min", "30 min"};

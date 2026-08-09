@@ -5,6 +5,7 @@
 #include <I18n.h>
 #include <Logging.h>
 #include <WiFi.h>
+
 #include <algorithm>
 #include <string>
 
@@ -17,24 +18,23 @@
 // ---- static data ----
 
 const MdnsBrowserActivity::ServiceType MdnsBrowserActivity::SERVICE_TYPES[NUM_SERVICES] = {
-    {"_http._tcp",          "Web Servers",      "HTTP services, routers, IoT dashboards"},
-    {"_https._tcp",         "Secure Web",       "HTTPS services"},
-    {"_printer._tcp",       "Printers",         "Network printers (IPP/AirPrint)"},
-    {"_ipp._tcp",           "IPP Printers",     "Internet Printing Protocol"},
-    {"_googlecast._tcp",    "Chromecast",       "Google Cast devices"},
-    {"_sonos._tcp",         "Sonos",            "Sonos speakers"},
-    {"_homeassistant._tcp", "Home Assistant",   "Home automation"},
-    {"_mqtt._tcp",          "MQTT Brokers",     "IoT message brokers"},
-    {"_ssh._tcp",           "SSH Servers",      "Secure Shell services"},
-    {"_ftp._tcp",           "FTP Servers",      "File Transfer Protocol"},
+    {"_http._tcp", "Web Servers", "HTTP services, routers, IoT dashboards"},
+    {"_https._tcp", "Secure Web", "HTTPS services"},
+    {"_printer._tcp", "Printers", "Network printers (IPP/AirPrint)"},
+    {"_ipp._tcp", "IPP Printers", "Internet Printing Protocol"},
+    {"_googlecast._tcp", "Chromecast", "Google Cast devices"},
+    {"_sonos._tcp", "Sonos", "Sonos speakers"},
+    {"_homeassistant._tcp", "Home Assistant", "Home automation"},
+    {"_mqtt._tcp", "MQTT Brokers", "IoT message brokers"},
+    {"_ssh._tcp", "SSH Servers", "Secure Shell services"},
+    {"_ftp._tcp", "FTP Servers", "File Transfer Protocol"},
 };
 
 // ---- helpers ----
 
 // Parse "_http._tcp" into type="http", proto="tcp"
 // Returns false if the format is unexpected.
-static bool parseServiceType(const char* full, char* typeOut, size_t typeLen,
-                             char* protoOut, size_t protoLen) {
+static bool parseServiceType(const char* full, char* typeOut, size_t typeLen, char* protoOut, size_t protoLen) {
   // Expected format: _<type>._<proto>
   // e.g. "_http._tcp"
   const char* p = full;
@@ -72,18 +72,17 @@ void MdnsBrowserActivity::onEnter() {
     state = CHECK_WIFI;
     requestUpdate();
     RADIO.ensureWifi();
-    startActivityForResult(
-        std::make_unique<WifiSelectionActivity>(renderer, mappedInput),
-        [this](const ActivityResult& result) {
-          if (!result.isCancelled && WiFi.status() == WL_CONNECTED) {
-            state = SERVICE_SELECT;
-            selectorIndex = 0;
-          } else {
-            finish();
-            return;
-          }
-          requestUpdate();
-        });
+    startActivityForResult(std::make_unique<WifiSelectionActivity>(renderer, mappedInput),
+                           [this](const ActivityResult& result) {
+                             if (!result.isCancelled && WiFi.status() == WL_CONNECTED) {
+                               state = SERVICE_SELECT;
+                               selectorIndex = 0;
+                             } else {
+                               finish();
+                               return;
+                             }
+                             requestUpdate();
+                           });
   }
 }
 
@@ -118,7 +117,10 @@ void MdnsBrowserActivity::queryService(const char* serviceType) {
     // Deduplicate by ip + port
     bool dup = false;
     for (const auto& r : results) {
-      if (r.ip == ip && r.port == port) { dup = true; break; }
+      if (r.ip == ip && r.port == port) {
+        dup = true;
+        break;
+      }
     }
     if (dup) continue;
 
@@ -390,8 +392,7 @@ void MdnsBrowserActivity::render(RenderLock&&) {
       const auto& r = results[detailIndex];
 
       const std::string headerTitle = r.hostname.empty() ? r.ip : r.hostname;
-      GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                     headerTitle.c_str());
+      GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, headerTitle.c_str());
 
       const int leftPad = metrics.contentSidePadding;
       int y = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing + 20;

@@ -2,6 +2,7 @@
 // Preview all casino screens — run: pio test -e native -f test_preview_casino
 
 #include <unity.h>
+
 #include "BitmapRenderer.h"
 
 static GfxRenderer renderer;
@@ -49,10 +50,8 @@ static void drawCard(int x, int y, const char* rank, const char* suit, bool face
   renderer.drawRect(x, y, cw, ch);
   renderer.drawRect(x + 1, y + 1, cw - 2, ch - 2);
   if (faceDown) {
-    for (int i = 6; i < cw - 6; i += 4)
-      renderer.drawLine(x + i, y + 6, x + i, y + ch - 6);
-    for (int j = 6; j < ch - 6; j += 4)
-      renderer.drawLine(x + 6, y + j, x + cw - 6, y + j);
+    for (int i = 6; i < cw - 6; i += 4) renderer.drawLine(x + i, y + 6, x + i, y + ch - 6);
+    for (int j = 6; j < ch - 6; j += 4) renderer.drawLine(x + 6, y + j, x + cw - 6, y + j);
     return;
   }
   renderer.drawText(UI_10_FONT_ID, x + 5, y + 4, rank);
@@ -78,7 +77,8 @@ static void drawResultOverlay(const char* msg, const char* amount, int credits) 
   renderer.drawRect(32, 282, 416, 176);
   renderer.drawCenteredText(UI_12_FONT_ID, 305, msg, true, 1);
   renderer.drawCenteredText(UI_10_FONT_ID, 350, amount);
-  char buf[32]; snprintf(buf, sizeof(buf), "Balance: %d", credits);
+  char buf[32];
+  snprintf(buf, sizeof(buf), "Balance: %d", credits);
   renderer.drawCenteredText(UI_10_FONT_ID, 390, buf);
   renderer.drawCenteredText(SMALL_FONT_ID, 425, "[OK] Continue");
 }
@@ -92,9 +92,12 @@ void preview_lobby() {
   drawCredits(2450);
 
   int y = 90;
-  drawListItem(y, "Slot Machine", false, "Spin 3 reels, match symbols"); y += 52;
-  drawListItem(y, "Blackjack", true, "Beat the dealer to 21"); y += 52;
-  drawListItem(y, "Coin Flip", false, "Pick heads or tails, 2x payout"); y += 52;
+  drawListItem(y, "Slot Machine", false, "Spin 3 reels, match symbols");
+  y += 52;
+  drawListItem(y, "Blackjack", true, "Beat the dealer to 21");
+  y += 52;
+  drawListItem(y, "Coin Flip", false, "Pick heads or tails, 2x payout");
+  y += 52;
   drawListItem(y, "Higher / Lower", false, "Guess the next card, streak bonus");
 
   drawHints("Exit", "Play", "Up", "Down");

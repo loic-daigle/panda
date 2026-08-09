@@ -7,14 +7,13 @@
 #include <I18n.h>
 #include <Logging.h>
 
-#include "util/RadioManager.h"
-
 #include <algorithm>
 #include <string>
 
 #include "MappedInputManager.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
+#include "util/RadioManager.h"
 
 // Static pointer for callback context
 static BleScannerActivity* activeScanner = nullptr;
@@ -174,12 +173,12 @@ void BleScannerActivity::enumerateCharacteristics(int serviceIndex) {
         info.uuid = cpair.first;
         const char* resolved = resolveCharName(cpair.first);
         info.name = resolved ? resolved : cpair.first;
-        info.canRead   = cpair.second->canRead();
-        info.canWrite  = cpair.second->canWrite() || cpair.second->canWriteNoResponse();
+        info.canRead = cpair.second->canRead();
+        info.canWrite = cpair.second->canWrite() || cpair.second->canWriteNoResponse();
         info.canNotify = cpair.second->canNotify();
         info.properties = 0;
-        if (info.canRead)   info.properties |= 0x02;
-        if (info.canWrite)  info.properties |= 0x08;
+        if (info.canRead) info.properties |= 0x02;
+        if (info.canWrite) info.properties |= 0x08;
         if (info.canNotify) info.properties |= 0x10;
         if (info.canRead) {
           info.value = "(press OK to read)";  // deferred: avoids blocking loop on enumerate
@@ -216,12 +215,9 @@ void BleScannerActivity::readCharacteristic(int charIndex) {
           String val = cpair.second->readValue();  // blocking read for this one char only
           CharInfo& info = characteristics[charIndex];
           if (val.length() > 0) {
-            std::string hex = bytesToHex(
-                reinterpret_cast<const uint8_t*>(val.c_str()),
-                static_cast<int>(val.length()));
-            std::string ascii = bytesToAsciiSafe(
-                reinterpret_cast<const uint8_t*>(val.c_str()),
-                static_cast<int>(val.length()));
+            std::string hex = bytesToHex(reinterpret_cast<const uint8_t*>(val.c_str()), static_cast<int>(val.length()));
+            std::string ascii =
+                bytesToAsciiSafe(reinterpret_cast<const uint8_t*>(val.c_str()), static_cast<int>(val.length()));
             info.value = hex;
             if (!ascii.empty()) {
               info.value += " (";
@@ -282,10 +278,10 @@ const char* BleScannerActivity::resolveCharName(const std::string& uuid) {
 
 std::string BleScannerActivity::propertiesToString(uint8_t props) {
   std::string result;
-  if (props & 0x02)        result += "R";
-  if (props & (0x08|0x04)) result += "W";
-  if (props & 0x10)        result += "N";
-  if (props & 0x20)        result += "I";
+  if (props & 0x02) result += "R";
+  if (props & (0x08 | 0x04)) result += "W";
+  if (props & 0x10) result += "N";
+  if (props & 0x20) result += "I";
   return result;
 }
 
@@ -345,10 +341,16 @@ void BleScannerActivity::loop() {
     const int svcCount = static_cast<int>(services.size());
 
     buttonNavigator.onNext([this, svcCount] {
-      if (svcCount > 0) { selectorIndex = ButtonNavigator::nextIndex(selectorIndex, svcCount); requestUpdate(); }
+      if (svcCount > 0) {
+        selectorIndex = ButtonNavigator::nextIndex(selectorIndex, svcCount);
+        requestUpdate();
+      }
     });
     buttonNavigator.onPrevious([this, svcCount] {
-      if (svcCount > 0) { selectorIndex = ButtonNavigator::previousIndex(selectorIndex, svcCount); requestUpdate(); }
+      if (svcCount > 0) {
+        selectorIndex = ButtonNavigator::previousIndex(selectorIndex, svcCount);
+        requestUpdate();
+      }
     });
 
     if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
@@ -375,10 +377,16 @@ void BleScannerActivity::loop() {
     const int charCount = static_cast<int>(characteristics.size());
 
     buttonNavigator.onNext([this, charCount] {
-      if (charCount > 0) { selectorIndex = ButtonNavigator::nextIndex(selectorIndex, charCount); requestUpdate(); }
+      if (charCount > 0) {
+        selectorIndex = ButtonNavigator::nextIndex(selectorIndex, charCount);
+        requestUpdate();
+      }
     });
     buttonNavigator.onPrevious([this, charCount] {
-      if (charCount > 0) { selectorIndex = ButtonNavigator::previousIndex(selectorIndex, charCount); requestUpdate(); }
+      if (charCount > 0) {
+        selectorIndex = ButtonNavigator::previousIndex(selectorIndex, charCount);
+        requestUpdate();
+      }
     });
 
     if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
@@ -445,8 +453,7 @@ void BleScannerActivity::loop() {
         BLEAdvertisedDevice dev = results->getDevice(i);
         std::string mac = dev.getAddress().toString().c_str();
 
-        auto it = std::find_if(devices.begin(), devices.end(),
-                               [&mac](const BleDevice& d) { return d.mac == mac; });
+        auto it = std::find_if(devices.begin(), devices.end(), [&mac](const BleDevice& d) { return d.mac == mac; });
         if (it != devices.end()) {
           it->rssi = dev.getRSSI();
           if (dev.haveName() && it->name == "Unknown") {
@@ -463,8 +470,7 @@ void BleScannerActivity::loop() {
       }
 
       // Sort by RSSI
-      std::sort(devices.begin(), devices.end(),
-                [](const BleDevice& a, const BleDevice& b) { return a.rssi > b.rssi; });
+      std::sort(devices.begin(), devices.end(), [](const BleDevice& a, const BleDevice& b) { return a.rssi > b.rssi; });
 
       scan->clearResults();
       requestUpdate();
@@ -523,8 +529,7 @@ void BleScannerActivity::render(RenderLock&&) {
   }
 
   if (state == CONNECTING) {
-    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                   tr(STR_BLE_SCANNER));
+    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, tr(STR_BLE_SCANNER));
     GUI.drawSpinner(renderer, pageWidth / 2, pageHeight / 2, "CONNECTING...", spinnerFrame);
     renderer.displayBuffer();
     return;
@@ -534,12 +539,11 @@ void BleScannerActivity::render(RenderLock&&) {
     const char* devName = (selectedDevice >= 0 && selectedDevice < static_cast<int>(devices.size()))
                               ? devices[selectedDevice].name.c_str()
                               : "Device";
-    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                   devName, "Services");
+    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, devName, "Services");
 
-    const int contentTop    = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
+    const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
     const int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
-    const int svcCount      = static_cast<int>(services.size());
+    const int svcCount = static_cast<int>(services.size());
 
     if (svcCount > 0) {
       GUI.drawList(
@@ -565,12 +569,11 @@ void BleScannerActivity::render(RenderLock&&) {
     const char* svcName = (selectedService >= 0 && selectedService < static_cast<int>(services.size()))
                               ? services[selectedService].name.c_str()
                               : "Service";
-    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                   svcName, "Characteristics");
+    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, svcName, "Characteristics");
 
-    const int contentTop    = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
+    const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
     const int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
-    const int charCount     = static_cast<int>(characteristics.size());
+    const int charCount = static_cast<int>(characteristics.size());
 
     if (charCount > 0) {
       GUI.drawList(
@@ -604,8 +607,7 @@ void BleScannerActivity::render(RenderLock&&) {
     const char* charName = (selectedChar >= 0 && selectedChar < static_cast<int>(characteristics.size()))
                                ? characteristics[selectedChar].name.c_str()
                                : "Characteristic";
-    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                   charName);
+    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, charName);
 
     const int leftPad = metrics.contentSidePadding;
     int y = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing + 10;
@@ -622,8 +624,8 @@ void BleScannerActivity::render(RenderLock&&) {
       renderer.drawText(SMALL_FONT_ID, leftPad, y, "Properties", true, EpdFontFamily::BOLD);
       y += 22;
       std::string props = propertiesToString(ch.properties);
-      if (ch.canRead)   props += "  Read";
-      if (ch.canWrite)  props += "  Write";
+      if (ch.canRead) props += "  Read";
+      if (ch.canWrite) props += "  Write";
       if (ch.canNotify) props += "  Notify";
       renderer.drawText(UI_10_FONT_ID, leftPad, y, props.c_str());
       y += lineH;

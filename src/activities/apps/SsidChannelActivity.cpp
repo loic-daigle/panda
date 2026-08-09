@@ -1,9 +1,9 @@
 #include "SsidChannelActivity.h"
 
-#include <WiFi.h>
-#include <esp_wifi.h>
 #include <I18n.h>
 #include <Logging.h>
+#include <WiFi.h>
+#include <esp_wifi.h>
 
 #include "MappedInputManager.h"
 #include "activities/util/KeyboardEntryActivity.h"
@@ -16,8 +16,7 @@
 // Kept in flash via static const table.
 // ---------------------------------------------------------------------------
 
-static const char kB64Chars[] =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+static const char kB64Chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 std::string SsidChannelActivity::base64Encode(const std::string& input) {
   std::string out;
@@ -153,7 +152,10 @@ void SsidChannelActivity::doScan() {
       if (!decoded.empty()) {
         bool found = false;
         for (const auto& m : received) {
-          if (m.text == decoded) { found = true; break; }
+          if (m.text == decoded) {
+            found = true;
+            break;
+          }
         }
         if (!found && static_cast<int>(received.size()) < MAX_RECEIVED) {
           received.push_back({decoded, static_cast<int8_t>(WiFi.RSSI(i)), millis()});
@@ -188,22 +190,21 @@ void SsidChannelActivity::loop() {
         // Send — launch keyboard to compose message
         state = SEND_COMPOSE;
         // Max 21 chars: base64(21) = 28 chars + "BC_" prefix (3) = 31 <= 32
-        startActivityForResult(
-            std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Enter Message", "", 21),
-            [this](const ActivityResult& result) {
-              if (!result.isCancelled) {
-                outMessage = std::get<KeyboardResult>(result.data).text;
-                if (!outMessage.empty()) {
-                  startSending();
-                } else {
-                  state = MODE_SELECT;
-                  requestUpdate();
-                }
-              } else {
-                state = MODE_SELECT;
-                requestUpdate();
-              }
-            });
+        startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Enter Message", "", 21),
+                               [this](const ActivityResult& result) {
+                                 if (!result.isCancelled) {
+                                   outMessage = std::get<KeyboardResult>(result.data).text;
+                                   if (!outMessage.empty()) {
+                                     startSending();
+                                   } else {
+                                     state = MODE_SELECT;
+                                     requestUpdate();
+                                   }
+                                 } else {
+                                   state = MODE_SELECT;
+                                   requestUpdate();
+                                 }
+                               });
       } else {
         startReceiving();
       }
@@ -286,11 +287,21 @@ void SsidChannelActivity::render(RenderLock&&) {
   renderer.clearScreen();
 
   switch (state) {
-    case MODE_SELECT:   renderModeSelect();  break;
-    case SEND_COMPOSE:  renderModeSelect();  break;  // keyboard overlaid by sub-activity
-    case SENDING:       renderSending();     break;
-    case RECEIVING:     renderReceiving();   break;
-    case MESSAGE_LIST:  renderReceiving();   break;
+    case MODE_SELECT:
+      renderModeSelect();
+      break;
+    case SEND_COMPOSE:
+      renderModeSelect();
+      break;  // keyboard overlaid by sub-activity
+    case SENDING:
+      renderSending();
+      break;
+    case RECEIVING:
+      renderReceiving();
+      break;
+    case MESSAGE_LIST:
+      renderReceiving();
+      break;
   }
 
   renderer.displayBuffer();
@@ -301,23 +312,17 @@ void SsidChannelActivity::renderModeSelect() const {
   const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
-  GUI.drawHeader(renderer,
-      Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-      "SSID Channel");
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "SSID Channel");
 
   const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
   const int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
 
   static const char* const kModeLabels[2] = {"Send Message", "Receive Messages"};
-  static const char* const kModeSubtitles[2] = {
-      "Broadcast encoded SSID",
-      "Scan for encoded SSIDs"
-  };
+  static const char* const kModeSubtitles[2] = {"Broadcast encoded SSID", "Scan for encoded SSIDs"};
 
   GUI.drawList(
       renderer, Rect{0, contentTop, pageWidth, contentHeight}, 2, modeIndex,
-      [](int i) -> std::string { return kModeLabels[i]; },
-      [](int i) -> std::string { return kModeSubtitles[i]; });
+      [](int i) -> std::string { return kModeLabels[i]; }, [](int i) -> std::string { return kModeSubtitles[i]; });
 
   const auto labels = mappedInput.mapLabels("Back", "Select", "^", "v");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
@@ -327,9 +332,8 @@ void SsidChannelActivity::renderSending() const {
   const auto& metrics = UITheme::getInstance().getMetrics();
   const auto pageWidth = renderer.getScreenWidth();
 
-  GUI.drawHeader(renderer,
-      Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-      "SSID Channel", "BROADCASTING");
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "SSID Channel",
+                 "BROADCASTING");
 
   const int leftPad = metrics.contentSidePadding;
   int y = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing + 20;
@@ -370,25 +374,21 @@ void SsidChannelActivity::renderReceiving() const {
     snprintf(subtitle, sizeof(subtitle), "Scanning...");
   } else {
     unsigned long elapsed = (lastScan > 0) ? (millis() - lastScan) / 1000 : 0;
-    snprintf(subtitle, sizeof(subtitle), "%d found | next: %lus",
-             static_cast<int>(received.size()),
+    snprintf(subtitle, sizeof(subtitle), "%d found | next: %lus", static_cast<int>(received.size()),
              (elapsed < SCAN_INTERVAL_MS / 1000) ? (SCAN_INTERVAL_MS / 1000 - elapsed) : 0UL);
   }
 
-  GUI.drawHeader(renderer,
-      Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-      "SSID Channel", subtitle);
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "SSID Channel", subtitle);
 
   const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
   const int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
 
   if (received.empty()) {
     renderer.drawCenteredText(UI_10_FONT_ID, contentTop + contentHeight / 2,
-        scanning ? "Scanning for BC_ SSIDs..." : "No messages found yet");
+                              scanning ? "Scanning for BC_ SSIDs..." : "No messages found yet");
   } else {
     GUI.drawList(
-        renderer, Rect{0, contentTop, pageWidth, contentHeight},
-        static_cast<int>(received.size()), msgIndex,
+        renderer, Rect{0, contentTop, pageWidth, contentHeight}, static_cast<int>(received.size()), msgIndex,
         [this](int i) -> std::string { return received[i].text; },
         [this](int i) -> std::string {
           char buf[24];

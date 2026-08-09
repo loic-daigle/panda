@@ -3,6 +3,7 @@
 #include <HalStorage.h>
 #include <Logging.h>
 #include <WiFi.h>
+
 #include <cstring>
 
 #include "MappedInputManager.h"
@@ -84,8 +85,8 @@ void WifiHeatMapActivity::processScanResults() {
     for (int i = 0; i < result && i < MAX_CURRENT; i++) {
       uint8_t* rawBssid = WiFi.BSSID(i);
       char bssidBuf[18];
-      snprintf(bssidBuf, sizeof(bssidBuf), "%02X:%02X:%02X:%02X:%02X:%02X",
-               rawBssid[0], rawBssid[1], rawBssid[2], rawBssid[3], rawBssid[4], rawBssid[5]);
+      snprintf(bssidBuf, sizeof(bssidBuf), "%02X:%02X:%02X:%02X:%02X:%02X", rawBssid[0], rawBssid[1], rawBssid[2],
+               rawBssid[3], rawBssid[4], rawBssid[5]);
 
       // Fill current readings for display
       ApReading& ap = currentReadings[currentCount];
@@ -126,8 +127,8 @@ void WifiHeatMapActivity::processScanResults() {
       if (f) {
         char line[128];
         const char* ssidToWrite = ssidStr.isEmpty() ? "" : ap.ssid;
-        snprintf(line, sizeof(line), "%d,%lu,\"%s\",\"%s\",%d,%u\n",
-                 sampleCount, now, bssidBuf, ssidToWrite, (int)ap.rssi, (unsigned)ap.channel);
+        snprintf(line, sizeof(line), "%d,%lu,\"%s\",\"%s\",%d,%u\n", sampleCount, now, bssidBuf, ssidToWrite,
+                 (int)ap.rssi, (unsigned)ap.channel);
         f.print(line);
         totalDataPoints++;
       }
@@ -145,8 +146,7 @@ void WifiHeatMapActivity::loop() {
   if (state == LOGGING) {
     processScanResults();
 
-    if (WiFi.scanComplete() != WIFI_SCAN_RUNNING &&
-        millis() - lastScanTime >= SCAN_INTERVAL_MS) {
+    if (WiFi.scanComplete() != WIFI_SCAN_RUNNING && millis() - lastScanTime >= SCAN_INTERVAL_MS) {
       WiFi.scanNetworks(true);
     }
   }
@@ -195,8 +195,7 @@ void WifiHeatMapActivity::render(RenderLock&&) {
   const int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
 
   if (state == IDLE) {
-    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                   "WiFi Heat Map");
+    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "WiFi Heat Map");
 
     int y = contentTop + 20;
     if (headerWriteFailed) {
@@ -219,23 +218,18 @@ void WifiHeatMapActivity::render(RenderLock&&) {
   } else if (state == LOGGING) {
     char subtitleBuf[40];
     snprintf(subtitleBuf, sizeof(subtitleBuf), "%d samples | %d points", sampleCount, totalDataPoints);
-    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                   "Heat Map", subtitleBuf);
+    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Heat Map", subtitleBuf);
 
     if (currentCount == 0) {
       renderer.drawCenteredText(UI_10_FONT_ID, pageHeight / 2, "Scanning...", true);
     } else {
       GUI.drawList(
-          renderer, Rect{0, contentTop, pageWidth, contentHeight},
-          currentCount, selectorIndex,
-          [this](int index) -> std::string {
-            return currentReadings[index].ssid;
-          },
+          renderer, Rect{0, contentTop, pageWidth, contentHeight}, currentCount, selectorIndex,
+          [this](int index) -> std::string { return currentReadings[index].ssid; },
           [this](int index) -> std::string {
             const auto& ap = currentReadings[index];
             char buf[40];
-            snprintf(buf, sizeof(buf), "%s  %d dBm  Ch%u",
-                     ap.bssid, (int)ap.rssi, (unsigned)ap.channel);
+            snprintf(buf, sizeof(buf), "%s  %d dBm  Ch%u", ap.bssid, (int)ap.rssi, (unsigned)ap.channel);
             return buf;
           });
     }
@@ -244,8 +238,7 @@ void WifiHeatMapActivity::render(RenderLock&&) {
     GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
 
   } else {  // SUMMARY
-    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                   "Heat Map — Summary");
+    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Heat Map — Summary");
 
     unsigned long duration = (millis() - startTime) / 1000;
     int y = contentTop + 16;

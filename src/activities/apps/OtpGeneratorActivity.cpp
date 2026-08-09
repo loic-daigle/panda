@@ -7,9 +7,7 @@
 #include "components/UITheme.h"
 #include "fontIds.h"
 
-void OtpGeneratorActivity::generatePage() {
-  esp_fill_random(pageData, sizeof(pageData));
-}
+void OtpGeneratorActivity::generatePage() { esp_fill_random(pageData, sizeof(pageData)); }
 
 void OtpGeneratorActivity::onEnter() {
   Activity::onEnter();
@@ -21,11 +19,18 @@ void OtpGeneratorActivity::onEnter() {
 void OtpGeneratorActivity::onExit() { Activity::onExit(); }
 
 void OtpGeneratorActivity::loop() {
-  if (mappedInput.wasPressed(MappedInputManager::Button::Back)) { finish(); return; }
+  if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
+    finish();
+    return;
+  }
 
   if (mappedInput.wasPressed(MappedInputManager::Button::Left) ||
       mappedInput.wasPressed(MappedInputManager::Button::Up)) {
-    if (pageNumber > 0) { pageNumber--; generatePage(); requestUpdate(); }
+    if (pageNumber > 0) {
+      pageNumber--;
+      generatePage();
+      requestUpdate();
+    }
     return;
   }
 

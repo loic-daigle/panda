@@ -2,9 +2,9 @@
 
 #include <GfxRenderer.h>
 #include <HalStorage.h>
-#include <string>
 
 #include <cstring>
+#include <string>
 
 #include "MappedInputManager.h"
 #include "components/UITheme.h"
@@ -72,7 +72,10 @@ void FlashcardActivity::onExit() { Activity::onExit(); }
 
 void FlashcardActivity::loop() {
   if (state == DECK_SELECT) {
-    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) { finish(); return; }
+    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
+      finish();
+      return;
+    }
     if (mappedInput.wasPressed(MappedInputManager::Button::Up)) {
       deckIndex = ButtonNavigator::previousIndex(deckIndex, (int)deckFiles.size());
       requestUpdate();
@@ -93,36 +96,52 @@ void FlashcardActivity::loop() {
 
   if (state == CARD_FRONT) {
     if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
-      state = DECK_SELECT; requestUpdate(); return;
+      state = DECK_SELECT;
+      requestUpdate();
+      return;
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
-      state = CARD_BACK; requestUpdate();
+      state = CARD_BACK;
+      requestUpdate();
     }
     return;
   }
 
   if (state == CARD_BACK) {
     if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
-      state = DECK_SELECT; requestUpdate(); return;
+      state = DECK_SELECT;
+      requestUpdate();
+      return;
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Left)) {
       cards[cardIndex].wrong++;
       cardIndex++;
-      if (cardIndex >= (int)cards.size()) { state = STATS; requestUpdate(); return; }
-      state = CARD_FRONT; requestUpdate();
+      if (cardIndex >= (int)cards.size()) {
+        state = STATS;
+        requestUpdate();
+        return;
+      }
+      state = CARD_FRONT;
+      requestUpdate();
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Right)) {
       cards[cardIndex].correct++;
       cardIndex++;
-      if (cardIndex >= (int)cards.size()) { state = STATS; requestUpdate(); return; }
-      state = CARD_FRONT; requestUpdate();
+      if (cardIndex >= (int)cards.size()) {
+        state = STATS;
+        requestUpdate();
+        return;
+      }
+      state = CARD_FRONT;
+      requestUpdate();
     }
     return;
   }
 
   if (state == STATS) {
     if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
-      state = DECK_SELECT; requestUpdate();
+      state = DECK_SELECT;
+      requestUpdate();
     }
     return;
   }
@@ -135,10 +154,18 @@ void FlashcardActivity::render(RenderLock&&) {
   GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Flashcards");
 
   switch (state) {
-    case DECK_SELECT: renderDeckSelect(); break;
-    case CARD_FRONT:  renderCardFront();  break;
-    case CARD_BACK:   renderCardBack();   break;
-    case STATS:       renderStats();      break;
+    case DECK_SELECT:
+      renderDeckSelect();
+      break;
+    case CARD_FRONT:
+      renderCardFront();
+      break;
+    case CARD_BACK:
+      renderCardBack();
+      break;
+    case STATS:
+      renderStats();
+      break;
   }
   renderer.displayBuffer();
 }
@@ -154,11 +181,11 @@ void FlashcardActivity::renderDeckSelect() const {
     renderer.drawCenteredText(UI_10_FONT_ID, listTop + listH / 2, "No decks in /biscuit/flashcards/");
   } else {
     GUI.drawList(renderer, Rect{0, listTop, pageWidth, listH}, (int)deckFiles.size(), deckIndex,
-      [this](int i) -> std::string {
-        const std::string& p = deckFiles[i];
-        size_t slash = p.rfind('/');
-        return (slash != std::string::npos) ? p.substr(slash + 1) : p;
-      });
+                 [this](int i) -> std::string {
+                   const std::string& p = deckFiles[i];
+                   size_t slash = p.rfind('/');
+                   return (slash != std::string::npos) ? p.substr(slash + 1) : p;
+                 });
   }
   const auto labels = mappedInput.mapLabels("Back", "Load", "^", "v");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
@@ -198,7 +225,11 @@ void FlashcardActivity::renderStats() const {
   const int top = metrics.topPadding + metrics.headerHeight + 30;
 
   int total = 0, correct = 0, wrong = 0;
-  for (const auto& c : cards) { total++; correct += c.correct; wrong += c.wrong; }
+  for (const auto& c : cards) {
+    total++;
+    correct += c.correct;
+    wrong += c.wrong;
+  }
   int pct = (total > 0) ? (correct * 100 / total) : 0;
 
   renderer.drawCenteredText(UI_12_FONT_ID, top, "Results", true, EpdFontFamily::BOLD);

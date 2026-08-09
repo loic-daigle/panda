@@ -374,7 +374,8 @@ void LyraTheme::drawButtonHints(GfxRenderer& renderer, const char* btn1, const c
       renderer.fillRoundedRect(x, pageHeight - buttonY, buttonWidth, buttonHeight, cornerRadius, Color::White);
       renderer.drawRoundedRect(x, pageHeight - buttonY, buttonWidth, buttonHeight, 1, cornerRadius, true, true, false,
                                false, true);
-      if (!BaseTheme::drawArrowIfNeeded(renderer, labels[i], x + buttonWidth / 2, pageHeight - buttonY + buttonHeight / 2, 5, true)) {
+      if (!BaseTheme::drawArrowIfNeeded(renderer, labels[i], x + buttonWidth / 2,
+                                        pageHeight - buttonY + buttonHeight / 2, 5, true)) {
         const int textWidth = renderer.getTextWidth(SMALL_FONT_ID, labels[i]);
         const int textX = x + (buttonWidth - 1 - textWidth) / 2;
         renderer.drawText(SMALL_FONT_ID, textX, pageHeight - buttonY + textYOffset, labels[i]);
@@ -408,7 +409,8 @@ void LyraTheme::drawSideButtonHints(const GfxRenderer& renderer, const char* top
     if (topBtn != nullptr && topBtn[0] != '\0') {
       renderer.drawRoundedRect(buttonMargin, x3ButtonY, buttonWidth, buttonHeight, 1, cornerRadius, false, true, false,
                                true, true);
-      if (!BaseTheme::drawArrowIfNeeded(renderer, topBtn, buttonMargin + buttonWidth / 2, x3ButtonY + buttonHeight / 2, 5, true)) {
+      if (!BaseTheme::drawArrowIfNeeded(renderer, topBtn, buttonMargin + buttonWidth / 2, x3ButtonY + buttonHeight / 2,
+                                        5, true)) {
         const int textWidth = renderer.getTextWidth(SMALL_FONT_ID, topBtn);
         renderer.drawTextRotated90CW(SMALL_FONT_ID, buttonMargin, x3ButtonY + (buttonHeight + textWidth) / 2, topBtn);
       }
@@ -418,7 +420,8 @@ void LyraTheme::drawSideButtonHints(const GfxRenderer& renderer, const char* top
       const int rightX = screenWidth - buttonWidth;
       renderer.drawRoundedRect(rightX, x3ButtonY, buttonWidth, buttonHeight, 1, cornerRadius, true, false, true, false,
                                true);
-      if (!BaseTheme::drawArrowIfNeeded(renderer, bottomBtn, rightX + buttonWidth / 2, x3ButtonY + buttonHeight / 2, 5, true)) {
+      if (!BaseTheme::drawArrowIfNeeded(renderer, bottomBtn, rightX + buttonWidth / 2, x3ButtonY + buttonHeight / 2, 5,
+                                        true)) {
         const int textWidth = renderer.getTextWidth(SMALL_FONT_ID, bottomBtn);
         renderer.drawTextRotated90CW(SMALL_FONT_ID, rightX, x3ButtonY + (buttonHeight + textWidth) / 2, bottomBtn);
       }

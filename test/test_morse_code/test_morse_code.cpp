@@ -3,27 +3,27 @@
 // Run: pio test -e native -f test_morse_code
 
 #include <unity.h>
-#include <string>
+
 #include <cctype>
+#include <string>
 
 // ---- extracted logic ----
 
-static const char* morseTable[36] = {
-    ".-","-...","-.-.","-..",".","..-.","--.","....","..",
-    ".---","-.-",".-..","--","-.","---",".--.","--.-",".-.",
-    "...","-","..-","...-",".--","-..-","-.--","--..",
-    "-----",".----","..---","...--","....-",".....","-....","--...","---..",
-    "----."
-};
-static const char morseChars[36] = {
-    'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R',
-    'S','T','U','V','W','X','Y','Z','0','1','2','3','4','5','6','7','8','9'
-};
+static const char* morseTable[36] = {".-",    "-...",  "-.-.",  "-..",   ".",     "..-.",  "--.",   "....",  "..",
+                                     ".---",  "-.-",   ".-..",  "--",    "-.",    "---",   ".--.",  "--.-",  ".-.",
+                                     "...",   "-",     "..-",   "...-",  ".--",   "-..-",  "-.--",  "--..",  "-----",
+                                     ".----", "..---", "...--", "....-", ".....", "-....", "--...", "---..", "----."};
+static const char morseChars[36] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L',
+                                    'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',
+                                    'Y', 'Z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
 std::string textToMorse(const std::string& text) {
   std::string result;
   for (char c : text) {
-    if (c == ' ') { result += "/ "; continue; }
+    if (c == ' ') {
+      result += "/ ";
+      continue;
+    }
     char upper = toupper(c);
     for (int i = 0; i < 36; i++) {
       if (morseChars[i] == upper) {
@@ -45,26 +45,18 @@ char morseToChar(const std::string& morse) {
 
 // ---- tests ----
 
-void test_encode_sos() {
-  TEST_ASSERT_EQUAL_STRING("... --- ...", textToMorse("SOS").c_str());
-}
+void test_encode_sos() { TEST_ASSERT_EQUAL_STRING("... --- ...", textToMorse("SOS").c_str()); }
 
-void test_encode_hello() {
-  TEST_ASSERT_EQUAL_STRING(".... . .-.. .-.. ---", textToMorse("HELLO").c_str());
-}
+void test_encode_hello() { TEST_ASSERT_EQUAL_STRING(".... . .-.. .-.. ---", textToMorse("HELLO").c_str()); }
 
 void test_encode_with_space() {
   std::string result = textToMorse("HI MOM");
   TEST_ASSERT_TRUE(result.find("/ ") != std::string::npos);  // word separator
 }
 
-void test_encode_numbers() {
-  TEST_ASSERT_EQUAL_STRING(".---- ..--- ...--", textToMorse("123").c_str());
-}
+void test_encode_numbers() { TEST_ASSERT_EQUAL_STRING(".---- ..--- ...--", textToMorse("123").c_str()); }
 
-void test_encode_lowercase() {
-  TEST_ASSERT_EQUAL_STRING("... --- ...", textToMorse("sos").c_str());
-}
+void test_encode_lowercase() { TEST_ASSERT_EQUAL_STRING("... --- ...", textToMorse("sos").c_str()); }
 
 void test_decode_single_chars() {
   TEST_ASSERT_EQUAL('A', morseToChar(".-"));

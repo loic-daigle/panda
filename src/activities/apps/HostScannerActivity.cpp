@@ -219,8 +219,8 @@ void HostScannerActivity::render(RenderLock&&) {
   }
 
   if (state == SCANNING_HOSTS) {
-    std::string progress = tr(STR_SCANNING_HOSTS) + std::string(" ") + std::to_string(scanProgress) + "/" +
-                           std::to_string(scanTotal);
+    std::string progress =
+        tr(STR_SCANNING_HOSTS) + std::string(" ") + std::to_string(scanProgress) + "/" + std::to_string(scanTotal);
     renderer.drawCenteredText(UI_10_FONT_ID, pageHeight / 2 - 20, progress.c_str());
     std::string found = std::to_string(hosts.size()) + " hosts found";
     renderer.drawCenteredText(UI_10_FONT_ID, pageHeight / 2 + 20, found.c_str());
@@ -231,8 +231,7 @@ void HostScannerActivity::render(RenderLock&&) {
   if (state == PORT_SCANNING) {
     std::string ip = ipToString(hosts[selectedHost].ip);
     renderer.drawCenteredText(UI_10_FONT_ID, pageHeight / 2 - 40, ip.c_str(), true, EpdFontFamily::BOLD);
-    std::string progress =
-        "Port " + std::to_string(portScanProgress) + "/" + std::to_string(NUM_PORTS);
+    std::string progress = "Port " + std::to_string(portScanProgress) + "/" + std::to_string(NUM_PORTS);
     renderer.drawCenteredText(UI_10_FONT_ID, pageHeight / 2, progress.c_str());
     std::string open = std::to_string(hosts[selectedHost].openPorts.size()) + " open";
     renderer.drawCenteredText(UI_10_FONT_ID, pageHeight / 2 + 40, open.c_str());

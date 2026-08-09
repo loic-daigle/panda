@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+
 #include "activities/Activity.h"
 #include "util/ButtonNavigator.h"
 
@@ -50,12 +51,12 @@ class BleContactExchangeActivity final : public Activity {
   // [16-29] phone (14 bytes, null-padded)
   // Total payload passed to setManufacturerData: 2 + 27 = 29 bytes
   static constexpr int MFG_NAME_OFFSET = 2;
-  static constexpr int MFG_NAME_LEN    = 14;
+  static constexpr int MFG_NAME_LEN = 14;
   static constexpr int MFG_PHONE_OFFSET = 16;
-  static constexpr int MFG_PHONE_LEN   = 13;
-  static constexpr int MFG_TOTAL       = 29;
+  static constexpr int MFG_PHONE_LEN = 13;
+  static constexpr int MFG_TOTAL = 29;
 
-  static constexpr const char* CONTACTS_PATH   = "/biscuit/contacts.csv";
+  static constexpr const char* CONTACTS_PATH = "/biscuit/contacts.csv";
   static constexpr const char* MY_CONTACT_PATH = "/biscuit/my_contact.dat";
 
   // Persistent contact data written to / read from flash

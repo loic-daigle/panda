@@ -156,8 +156,7 @@ void CrowdDensityActivity::render(RenderLock&&) {
   const auto pageHeight = renderer.getScreenHeight();
 
   if (state == READY) {
-    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                   "Crowd Density");
+    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Crowd Density");
     const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
     const int centerY = contentTop + (pageHeight - contentTop - metrics.buttonHintsHeight) / 2;
     renderer.drawCenteredText(UI_10_FONT_ID, centerY - 30, "Estimate nearby people via");
@@ -176,8 +175,7 @@ void CrowdDensityActivity::render(RenderLock&&) {
 
   char subtitle[24];
   snprintf(subtitle, sizeof(subtitle), "%d seen (30s window)", liveCount);
-  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 "Crowd Density", subtitle);
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Crowd Density", subtitle);
 
   const int headerBottom = metrics.topPadding + metrics.headerHeight;
   const int leftPad = metrics.contentSidePadding;
@@ -239,8 +237,7 @@ void CrowdDensityActivity::render(RenderLock&&) {
   }
 
   // Disclaimer
-  renderer.drawCenteredText(SMALL_FONT_ID,
-                            pageHeight - metrics.buttonHintsHeight - metrics.verticalSpacing - 16,
+  renderer.drawCenteredText(SMALL_FONT_ID, pageHeight - metrics.buttonHintsHeight - metrics.verticalSpacing - 16,
                             "Estimate only — MAC randomization reduces accuracy");
 
   const auto labels = mappedInput.mapLabels("Back", "", "", "");

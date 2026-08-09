@@ -131,10 +131,16 @@ void SecurityPinActivity::loop() {
   }
 
   switch (state) {
-    case ENTER_PIN:    handlePinEntry();    break;
+    case ENTER_PIN:
+      handlePinEntry();
+      break;
     case SET_PIN:
-    case SET_DURESS_PIN: handleSetPin();   break;
-    case SETTINGS_MENU: handleSettingsMenu(); break;
+    case SET_DURESS_PIN:
+      handleSetPin();
+      break;
+    case SETTINGS_MENU:
+      handleSettingsMenu();
+      break;
   }
 }
 
@@ -148,18 +154,24 @@ void SecurityPinActivity::handlePinEntry() {
   // Left/Right: cycle active digit value 0-9
   if (mappedInput.wasReleased(MappedInputManager::Button::Left)) {
     char cur = pinBuffer[pinPos];
-    if (cur == 0) cur = '9';
-    else if (cur == '0') cur = '9';
-    else cur--;
+    if (cur == 0)
+      cur = '9';
+    else if (cur == '0')
+      cur = '9';
+    else
+      cur--;
     pinBuffer[pinPos] = cur;
     requestUpdate();
     return;
   }
   if (mappedInput.wasReleased(MappedInputManager::Button::Right)) {
     char cur = pinBuffer[pinPos];
-    if (cur == 0) cur = '0';
-    else if (cur == '9') cur = '0';
-    else cur++;
+    if (cur == 0)
+      cur = '0';
+    else if (cur == '9')
+      cur = '0';
+    else
+      cur++;
     pinBuffer[pinPos] = cur;
     requestUpdate();
     return;
@@ -167,12 +179,18 @@ void SecurityPinActivity::handlePinEntry() {
 
   // Up: move position left (previous digit)
   if (mappedInput.wasReleased(MappedInputManager::Button::Up)) {
-    if (pinPos > 0) { pinPos--; requestUpdate(); }
+    if (pinPos > 0) {
+      pinPos--;
+      requestUpdate();
+    }
     return;
   }
   // Down: move position right (next digit)
   if (mappedInput.wasReleased(MappedInputManager::Button::Down)) {
-    if (pinPos < pinLength - 1) { pinPos++; requestUpdate(); }
+    if (pinPos < pinLength - 1) {
+      pinPos++;
+      requestUpdate();
+    }
     return;
   }
 
@@ -226,18 +244,24 @@ void SecurityPinActivity::handleSetPin() {
   // Left/Right: cycle active digit
   if (mappedInput.wasReleased(MappedInputManager::Button::Left)) {
     char cur = pinBuffer[pinPos];
-    if (cur == 0) cur = '9';
-    else if (cur == '0') cur = '9';
-    else cur--;
+    if (cur == 0)
+      cur = '9';
+    else if (cur == '0')
+      cur = '9';
+    else
+      cur--;
     pinBuffer[pinPos] = cur;
     requestUpdate();
     return;
   }
   if (mappedInput.wasReleased(MappedInputManager::Button::Right)) {
     char cur = pinBuffer[pinPos];
-    if (cur == 0) cur = '0';
-    else if (cur == '9') cur = '0';
-    else cur++;
+    if (cur == 0)
+      cur = '0';
+    else if (cur == '9')
+      cur = '0';
+    else
+      cur++;
     pinBuffer[pinPos] = cur;
     requestUpdate();
     return;
@@ -245,11 +269,17 @@ void SecurityPinActivity::handleSetPin() {
 
   // Up/Down: move between digit positions
   if (mappedInput.wasReleased(MappedInputManager::Button::Up)) {
-    if (pinPos > 0) { pinPos--; requestUpdate(); }
+    if (pinPos > 0) {
+      pinPos--;
+      requestUpdate();
+    }
     return;
   }
   if (mappedInput.wasReleased(MappedInputManager::Button::Down)) {
-    if (pinPos < pinLength - 1) { pinPos++; requestUpdate(); }
+    if (pinPos < pinLength - 1) {
+      pinPos++;
+      requestUpdate();
+    }
     return;
   }
 
@@ -313,11 +343,17 @@ void SecurityPinActivity::handleSettingsMenu() {
   }
 
   if (mappedInput.wasReleased(MappedInputManager::Button::Up)) {
-    if (menuIndex > 0) { menuIndex--; requestUpdate(); }
+    if (menuIndex > 0) {
+      menuIndex--;
+      requestUpdate();
+    }
     return;
   }
   if (mappedInput.wasReleased(MappedInputManager::Button::Down)) {
-    if (menuIndex < MENU_ITEMS - 1) { menuIndex++; requestUpdate(); }
+    if (menuIndex < MENU_ITEMS - 1) {
+      menuIndex++;
+      requestUpdate();
+    }
     return;
   }
 
@@ -366,10 +402,16 @@ void SecurityPinActivity::render(RenderLock&&) {
   renderer.clearScreen();
 
   switch (state) {
-    case ENTER_PIN:      renderPinEntry();    break;
+    case ENTER_PIN:
+      renderPinEntry();
+      break;
     case SET_PIN:
-    case SET_DURESS_PIN: renderSetPin();      break;
-    case SETTINGS_MENU:  renderSettingsMenu(); break;
+    case SET_DURESS_PIN:
+      renderSetPin();
+      break;
+    case SETTINGS_MENU:
+      renderSettingsMenu();
+      break;
   }
 
   renderer.displayBuffer();
@@ -379,7 +421,7 @@ void SecurityPinActivity::render(RenderLock&&) {
 void SecurityPinActivity::renderPinBoxes(int y, int length, int activePos, const char* digits) const {
   const int pageWidth = renderer.getScreenWidth();
   constexpr int BOX_SIZE = 56;
-  constexpr int BOX_GAP  = 10;
+  constexpr int BOX_GAP = 10;
 
   const int totalW = length * BOX_SIZE + (length - 1) * BOX_GAP;
   int startX = (pageWidth - totalW) / 2;
@@ -410,7 +452,7 @@ void SecurityPinActivity::renderPinBoxes(int y, int length, int activePos, const
 
 void SecurityPinActivity::renderPinEntry() const {
   const auto& metrics = UITheme::getInstance().getMetrics();
-  const auto pageWidth  = renderer.getScreenWidth();
+  const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
   GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Enter PIN");
@@ -439,7 +481,7 @@ void SecurityPinActivity::renderPinEntry() const {
 
 void SecurityPinActivity::renderSetPin() const {
   const auto& metrics = UITheme::getInstance().getMetrics();
-  const auto pageWidth  = renderer.getScreenWidth();
+  const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
   const char* title = (state == SET_PIN) ? "Set PIN" : "Set Duress PIN";
@@ -471,27 +513,20 @@ void SecurityPinActivity::renderSetPin() const {
 
 void SecurityPinActivity::renderSettingsMenu() const {
   const auto& metrics = UITheme::getInstance().getMetrics();
-  const auto pageWidth  = renderer.getScreenWidth();
+  const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
   GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "PIN Security");
 
-  const int listTop    = metrics.topPadding + metrics.headerHeight;
+  const int listTop = metrics.topPadding + metrics.headerHeight;
   const int listHeight = pageHeight - listTop - metrics.buttonHintsHeight;
 
   static constexpr const char* LABELS[MENU_ITEMS] = {
-      "Change PIN",
-      "Set Duress PIN",
-      "Toggle Auto-Wipe",
-      "Disable PIN",
-      "Back",
+      "Change PIN", "Set Duress PIN", "Toggle Auto-Wipe", "Disable PIN", "Back",
   };
 
   GUI.drawList(
-      renderer,
-      Rect{0, listTop, pageWidth, listHeight},
-      MENU_ITEMS,
-      menuIndex,
+      renderer, Rect{0, listTop, pageWidth, listHeight}, MENU_ITEMS, menuIndex,
       [](int i) -> std::string { return LABELS[i]; },
       [this](int i) -> std::string {
         if (i == 2) {

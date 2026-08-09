@@ -4,12 +4,11 @@
 #include <GfxRenderer.h>
 #include <HalStorage.h>
 #include <WiFi.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 
 #include <cctype>
 #include <cstdlib>
-
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
 
 #include "MappedInputManager.h"
 #include "SilentRestart.h"
@@ -429,8 +428,8 @@ bool loadCache(const std::string& cityNameIn, double& tempOut, double& windspeed
 bool fetchWeather(double lat, double lon, double& tempOut, double& windspeedOut, int& weathercodeOut,
                   std::string& timeStrOut) {
   char url[160];
-  snprintf(url, sizeof(url),
-           "http://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f&current_weather=true", lat, lon);
+  snprintf(url, sizeof(url), "http://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f&current_weather=true",
+           lat, lon);
   std::string response;
   if (!HttpDownloader::fetchUrl(url, response)) {
     return false;
@@ -772,7 +771,11 @@ void WeatherActivity::render(RenderLock&&) {
 
       char tempBuf[64];
       const double tempF = temp * 9.0 / 5.0 + 32.0;
-      snprintf(tempBuf, sizeof(tempBuf), "%.1f \xc2\xb0" "C / %.1f \xc2\xb0" "F", temp, tempF);
+      snprintf(tempBuf, sizeof(tempBuf),
+               "%.1f \xc2\xb0"
+               "C / %.1f \xc2\xb0"
+               "F",
+               temp, tempF);
       renderer.drawCenteredText(WEATHER_FONT_18, cardY + 145, tempBuf, true, EpdFontFamily::BOLD);
 
       renderer.drawCenteredText(WEATHER_FONT_16, cardY + 195, cityName.c_str(), true, EpdFontFamily::BOLD);

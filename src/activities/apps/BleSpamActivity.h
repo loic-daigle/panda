@@ -16,14 +16,7 @@ class BleSpamActivity final : public Activity {
 
  private:
   enum State { DISCLAIMER, MENU, BROADCASTING };
-  enum AdvType {
-    APPLE_PROXIMITY,
-    ANDROID_FAST_PAIR,
-    WINDOWS_SWIFT_PAIR,
-    SAMSUNG_BUDS,
-    RANDOM_ALL,
-    ADV_TYPE_COUNT
-  };
+  enum AdvType { APPLE_PROXIMITY, ANDROID_FAST_PAIR, WINDOWS_SWIFT_PAIR, SAMSUNG_BUDS, RANDOM_ALL, ADV_TYPE_COUNT };
 
   State state = DISCLAIMER;
   AdvType advType = RANDOM_ALL;

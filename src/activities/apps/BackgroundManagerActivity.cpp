@@ -117,8 +117,7 @@ void BackgroundManagerActivity::render(RenderLock&&) {
 
   GUI.drawList(
       renderer, Rect{0, contentTop, pageWidth, contentHeight}, count, selectorIndex,
-      [this](int i) -> std::string { return items[i].name; },
-      [this](int i) -> std::string { return items[i].status; });
+      [this](int i) -> std::string { return items[i].name; }, [this](int i) -> std::string { return items[i].status; });
 
   GUI.drawButtonHints(renderer, "Back", "Refresh", "Up", "Down");
 

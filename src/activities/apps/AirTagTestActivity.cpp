@@ -85,9 +85,8 @@ void AirTagTestActivity::sendAirTagAdvertisement() {
   uint8_t findMyPayload[] = {
       0x12, 0x19,  // Find My type and length
       0x10,        // Status byte
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
       0x00,  // First byte of public key bits
       0x00,  // Hint
   };
@@ -171,9 +170,8 @@ void AirTagTestActivity::render(RenderLock&&) {
     const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
     const int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
 
-    GUI.drawList(
-        renderer, Rect{0, contentTop, pageWidth, contentHeight}, MODE_COUNT, modeIndex,
-        [](int index) { return std::string(MODE_NAMES[index]); });
+    GUI.drawList(renderer, Rect{0, contentTop, pageWidth, contentHeight}, MODE_COUNT, modeIndex,
+                 [](int index) { return std::string(MODE_NAMES[index]); });
 
     const auto labels = mappedInput.mapLabels("Back", "Select", "^", "v");
     GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);

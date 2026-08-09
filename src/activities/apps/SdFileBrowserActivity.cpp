@@ -3,6 +3,7 @@
 #include <HalStorage.h>
 #include <I18n.h>
 #include <Logging.h>
+
 #include <algorithm>
 
 #include "MappedInputManager.h"
@@ -170,9 +171,8 @@ bool SdFileBrowserActivity::isTextFile(const std::string& name) {
   }
 
   static const char* const textExts[] = {
-      ".txt", ".csv",  ".json", ".html", ".htm",  ".md",   ".log",
-      ".xml", ".ini",  ".cfg",  ".yml",  ".yaml", ".toml", ".conf",
-      ".sh",  ".bat",  ".py",   ".js",   ".css",
+      ".txt", ".csv",  ".json", ".html", ".htm", ".md",  ".log", ".xml", ".ini", ".cfg",
+      ".yml", ".yaml", ".toml", ".conf", ".sh",  ".bat", ".py",  ".js",  ".css",
   };
   for (const char* e : textExts) {
     if (ext == e) return true;
@@ -318,8 +318,7 @@ void SdFileBrowserActivity::render(RenderLock&&) {
       renderer.drawCenteredText(UI_10_FONT_ID, pageHeight / 2, "Empty directory");
     } else {
       GUI.drawList(
-          renderer, Rect{0, contentTop, pageWidth, contentHeight},
-          static_cast<int>(entries.size()), selectorIndex,
+          renderer, Rect{0, contentTop, pageWidth, contentHeight}, static_cast<int>(entries.size()), selectorIndex,
           [this](int index) -> std::string {
             const auto& e = entries[index];
             return e.isDir ? (e.name + "/") : e.name;

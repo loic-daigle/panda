@@ -45,7 +45,10 @@ void VehicleFinderActivity::loadSpot() {
   auto f = Storage.open(SAVE_PATH);
   if (!f) return;
   uint8_t count = 0;
-  if (f.read(&count, 1) != 1 || count == 0 || count > 10) { f.close(); return; }
+  if (f.read(&count, 1) != 1 || count == 0 || count > 10) {
+    f.close();
+    return;
+  }
   savedApCount = count;
   f.read(reinterpret_cast<uint8_t*>(savedAps), sizeof(Fingerprint) * savedApCount);
   f.close();
@@ -92,7 +95,10 @@ float VehicleFinderActivity::calcMatch(const Fingerprint* current, int count) co
 void VehicleFinderActivity::doScan() {
   static Fingerprint buf[20];
   int n = WiFi.scanNetworks(false, true);
-  if (n <= 0) { WiFi.scanDelete(); return; }
+  if (n <= 0) {
+    WiFi.scanDelete();
+    return;
+  }
   int total = (n > 20) ? 20 : n;
 
   // Sort descending by RSSI
@@ -103,7 +109,9 @@ void VehicleFinderActivity::doScan() {
   for (int i = 0; i < total - 1; i++)
     for (int j = i + 1; j < total; j++)
       if (buf[j].rssi > buf[i].rssi) {
-        Fingerprint tmp = buf[i]; buf[i] = buf[j]; buf[j] = tmp;
+        Fingerprint tmp = buf[i];
+        buf[i] = buf[j];
+        buf[j] = tmp;
       }
 
   prevMatch = currentMatch;
@@ -111,8 +119,10 @@ void VehicleFinderActivity::doScan() {
 
   // Trend: +1 up, -1 down, 0 stable
   int trend = 0;
-  if (currentMatch > prevMatch + 1.0f) trend = 1;
-  else if (currentMatch < prevMatch - 1.0f) trend = -1;
+  if (currentMatch > prevMatch + 1.0f)
+    trend = 1;
+  else if (currentMatch < prevMatch - 1.0f)
+    trend = -1;
   trendHistory[trendHead] = trend;
   trendHead = (trendHead + 1) % 5;
   if (trendCount < 5) trendCount++;
@@ -126,7 +136,10 @@ void VehicleFinderActivity::doScan() {
 
 void VehicleFinderActivity::loop() {
   if (state == IDLE) {
-    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) { finish(); return; }
+    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) {
+      finish();
+      return;
+    }
     if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
       // First option: Save Spot
       int n = WiFi.scanNetworks(false, true);
@@ -157,7 +170,11 @@ void VehicleFinderActivity::loop() {
   }
 
   if (state == SAVED) {
-    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) { state = IDLE; requestUpdate(); return; }
+    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) {
+      state = IDLE;
+      requestUpdate();
+      return;
+    }
     if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
       currentMatch = 0.0f;
       prevMatch = 0.0f;
@@ -171,7 +188,11 @@ void VehicleFinderActivity::loop() {
   }
 
   if (state == FINDING) {
-    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) { state = IDLE; requestUpdate(); return; }
+    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) {
+      state = IDLE;
+      requestUpdate();
+      return;
+    }
     unsigned long now = millis();
     if (now - lastScan >= 3000) {
       lastScan = now;
@@ -189,9 +210,15 @@ void VehicleFinderActivity::loop() {
 void VehicleFinderActivity::render(RenderLock&&) {
   renderer.clearScreen();
   switch (state) {
-    case IDLE:    renderIdle();    break;
-    case SAVED:   renderSaved();   break;
-    case FINDING: renderFinding(); break;
+    case IDLE:
+      renderIdle();
+      break;
+    case SAVED:
+      renderSaved();
+      break;
+    case FINDING:
+      renderFinding();
+      break;
   }
   renderer.displayBuffer();
 }
@@ -253,8 +280,10 @@ void VehicleFinderActivity::renderFinding() const {
 
   // Direction indicator
   const char* direction = "STABLE";
-  if (currentMatch > prevMatch + 1.0f) direction = "GETTING CLOSER";
-  else if (currentMatch < prevMatch - 1.0f) direction = "WRONG WAY";
+  if (currentMatch > prevMatch + 1.0f)
+    direction = "GETTING CLOSER";
+  else if (currentMatch < prevMatch - 1.0f)
+    direction = "WRONG WAY";
   renderer.drawCenteredText(UI_10_FONT_ID, y, direction);
   y += 45;
 

@@ -59,16 +59,20 @@ void BatteryMonitorActivity::render(RenderLock&&) {
   // Large centered percentage
   char buf[16];
   snprintf(buf, sizeof(buf), "%u%%", (unsigned)currentPercent);
-  int midY = metrics.topPadding + metrics.headerHeight + (pageHeight - metrics.topPadding - metrics.headerHeight
-             - metrics.buttonHintsHeight - 120) / 2;
+  int midY = metrics.topPadding + metrics.headerHeight +
+             (pageHeight - metrics.topPadding - metrics.headerHeight - metrics.buttonHintsHeight - 120) / 2;
   renderer.drawCenteredText(UI_12_FONT_ID, midY, buf, true, EpdFontFamily::BOLD);
 
   // Sub-label
   const char* label;
-  if (currentPercent >= 80) label = "Excellent";
-  else if (currentPercent >= 50) label = "Good";
-  else if (currentPercent >= 20) label = "Low";
-  else label = "Critical";
+  if (currentPercent >= 80)
+    label = "Excellent";
+  else if (currentPercent >= 50)
+    label = "Good";
+  else if (currentPercent >= 20)
+    label = "Low";
+  else
+    label = "Critical";
   renderer.drawCenteredText(UI_10_FONT_ID, midY + 50, label);
 
   // Graph area at bottom — show history as a simple line graph

@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+
 #include "activities/Activity.h"
 
 class BarcodeActivity final : public Activity {

@@ -37,11 +37,16 @@ static const char LOREM_TEXT[] =
 
 const char* ScreenDecoyActivity::decoyName(DecoyType type) {
   switch (type) {
-    case FAKE_SHUTDOWN: return "Fake Shutdown";
-    case FAKE_ERROR:    return "Fake Error";
-    case FAKE_READING:  return "Fake Reading";
-    case BLANK:         return "Blank Screen";
-    default:            return "Unknown";
+    case FAKE_SHUTDOWN:
+      return "Fake Shutdown";
+    case FAKE_ERROR:
+      return "Fake Error";
+    case FAKE_READING:
+      return "Fake Reading";
+    case BLANK:
+      return "Blank Screen";
+    default:
+      return "Unknown";
   }
 }
 
@@ -55,22 +60,20 @@ void ScreenDecoyActivity::onEnter() {
   previewMode = true;
 
   buttonNavigator.onNext([this] {
-    selectedType = static_cast<DecoyType>(ButtonNavigator::nextIndex(
-        static_cast<int>(selectedType), static_cast<int>(DECOY_COUNT)));
+    selectedType = static_cast<DecoyType>(
+        ButtonNavigator::nextIndex(static_cast<int>(selectedType), static_cast<int>(DECOY_COUNT)));
     requestUpdate();
   });
   buttonNavigator.onPrevious([this] {
-    selectedType = static_cast<DecoyType>(ButtonNavigator::previousIndex(
-        static_cast<int>(selectedType), static_cast<int>(DECOY_COUNT)));
+    selectedType = static_cast<DecoyType>(
+        ButtonNavigator::previousIndex(static_cast<int>(selectedType), static_cast<int>(DECOY_COUNT)));
     requestUpdate();
   });
 
   requestUpdate();
 }
 
-void ScreenDecoyActivity::onExit() {
-  Activity::onExit();
-}
+void ScreenDecoyActivity::onExit() { Activity::onExit(); }
 
 // ---------------------------------------------------------------------------
 // Loop
@@ -90,15 +93,15 @@ void ScreenDecoyActivity::loop() {
     // Left/Right navigate the list
     if (mappedInput.wasReleased(MappedInputManager::Button::Left) ||
         mappedInput.wasReleased(MappedInputManager::Button::Up)) {
-      selectedType = static_cast<DecoyType>(ButtonNavigator::previousIndex(
-          static_cast<int>(selectedType), static_cast<int>(DECOY_COUNT)));
+      selectedType = static_cast<DecoyType>(
+          ButtonNavigator::previousIndex(static_cast<int>(selectedType), static_cast<int>(DECOY_COUNT)));
       requestUpdate();
       return;
     }
     if (mappedInput.wasReleased(MappedInputManager::Button::Right) ||
         mappedInput.wasReleased(MappedInputManager::Button::Down)) {
-      selectedType = static_cast<DecoyType>(ButtonNavigator::nextIndex(
-          static_cast<int>(selectedType), static_cast<int>(DECOY_COUNT)));
+      selectedType = static_cast<DecoyType>(
+          ButtonNavigator::nextIndex(static_cast<int>(selectedType), static_cast<int>(DECOY_COUNT)));
       requestUpdate();
       return;
     }
@@ -144,20 +147,23 @@ void ScreenDecoyActivity::renderSelection() const {
   const int listTop = metrics.topPadding + metrics.headerHeight;
   const int listBottom = pageHeight - metrics.buttonHintsHeight - metrics.verticalSpacing;
 
-  GUI.drawList(renderer,
-               Rect{0, listTop, pageWidth, listBottom - listTop},
-               static_cast<int>(DECOY_COUNT),
-               static_cast<int>(selectedType),
-               [](int i) -> std::string { return decoyName(static_cast<DecoyType>(i)); },
-               [](int i) -> std::string {
-                 switch (i) {
-                   case FAKE_SHUTDOWN: return "Battery critical, shutting down";
-                   case FAKE_ERROR:    return "SD card not found error screen";
-                   case FAKE_READING:  return "Realistic e-reader book page";
-                   case BLANK:         return "White blank screen";
-                   default:            return "";
-                 }
-               });
+  GUI.drawList(
+      renderer, Rect{0, listTop, pageWidth, listBottom - listTop}, static_cast<int>(DECOY_COUNT),
+      static_cast<int>(selectedType), [](int i) -> std::string { return decoyName(static_cast<DecoyType>(i)); },
+      [](int i) -> std::string {
+        switch (i) {
+          case FAKE_SHUTDOWN:
+            return "Battery critical, shutting down";
+          case FAKE_ERROR:
+            return "SD card not found error screen";
+          case FAKE_READING:
+            return "Realistic e-reader book page";
+          case BLANK:
+            return "White blank screen";
+          default:
+            return "";
+        }
+      });
 
   const auto labels = mappedInput.mapLabels("Back", "Preview", "Prev", "Next");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
@@ -174,11 +180,20 @@ void ScreenDecoyActivity::renderDecoyPreview() const {
 
   // Draw the actual decoy content first so the user sees exactly what will appear
   switch (selectedType) {
-    case FAKE_SHUTDOWN: renderFakeShutdown(); break;
-    case FAKE_ERROR:    renderFakeError();    break;
-    case FAKE_READING:  renderFakeReading();  break;
-    case BLANK:         renderBlank();        break;
-    default:            break;
+    case FAKE_SHUTDOWN:
+      renderFakeShutdown();
+      break;
+    case FAKE_ERROR:
+      renderFakeError();
+      break;
+    case FAKE_READING:
+      renderFakeReading();
+      break;
+    case BLANK:
+      renderBlank();
+      break;
+    default:
+      break;
   }
 
   // Overlay a small confirmation bar at the very bottom so the user knows
@@ -189,9 +204,7 @@ void ScreenDecoyActivity::renderDecoyPreview() const {
 
   // Text on the black band — inverted (white-on-black = black=false param)
   const int textY = pageHeight - barH + (barH - renderer.getTextHeight(SMALL_FONT_ID)) / 2;
-  renderer.drawCenteredText(SMALL_FONT_ID, textY,
-                            "PREVIEW  |  Confirm = activate & sleep  |  Back = cancel",
-                            false);
+  renderer.drawCenteredText(SMALL_FONT_ID, textY, "PREVIEW  |  Confirm = activate & sleep  |  Back = cancel", false);
 }
 
 // ---------------------------------------------------------------------------
@@ -202,11 +215,20 @@ void ScreenDecoyActivity::activateDecoy() {
   renderer.clearScreen();
 
   switch (selectedType) {
-    case FAKE_SHUTDOWN: renderFakeShutdown(); break;
-    case FAKE_ERROR:    renderFakeError();    break;
-    case FAKE_READING:  renderFakeReading();  break;
-    case BLANK:         renderBlank();        break;
-    default:            break;
+    case FAKE_SHUTDOWN:
+      renderFakeShutdown();
+      break;
+    case FAKE_ERROR:
+      renderFakeError();
+      break;
+    case FAKE_READING:
+      renderFakeReading();
+      break;
+    case BLANK:
+      renderBlank();
+      break;
+    default:
+      break;
   }
 
   // Full refresh produces the cleanest image for a persistent decoy
@@ -216,7 +238,8 @@ void ScreenDecoyActivity::activateDecoy() {
   powerManager.startDeepSleep(gpio);
 
   // Unreachable, but keeps the compiler quiet
-  while (true) {}
+  while (true) {
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -224,7 +247,7 @@ void ScreenDecoyActivity::activateDecoy() {
 // ---------------------------------------------------------------------------
 
 void ScreenDecoyActivity::renderFakeShutdown() const {
-  const auto pageWidth  = renderer.getScreenWidth();
+  const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
   // Centre everything vertically in the lower third — like a real shutdown notice
@@ -234,8 +257,8 @@ void ScreenDecoyActivity::renderFakeShutdown() const {
   // Body: 60 x 30, terminal nub: 6 x 12
   constexpr int iconW = 60;
   constexpr int iconH = 30;
-  constexpr int nubW  = 6;
-  constexpr int nubH  = 12;
+  constexpr int nubW = 6;
+  constexpr int nubH = 12;
 
   const int iconX = pageWidth / 2 - iconW / 2;
   const int iconY = centerY - 80;
@@ -249,10 +272,8 @@ void ScreenDecoyActivity::renderFakeShutdown() const {
 
   // "1%" label inside the icon, centred
   const int pctTW = renderer.getTextWidth(SMALL_FONT_ID, "1%");
-  renderer.drawText(SMALL_FONT_ID,
-                    iconX + (iconW - pctTW) / 2,
-                    iconY + (iconH - renderer.getTextHeight(SMALL_FONT_ID)) / 2,
-                    "1%", true);
+  renderer.drawText(SMALL_FONT_ID, iconX + (iconW - pctTW) / 2,
+                    iconY + (iconH - renderer.getTextHeight(SMALL_FONT_ID)) / 2, "1%", true);
 
   // "Battery Critical" heading
   int y = iconY + iconH + 20;
@@ -270,9 +291,9 @@ void ScreenDecoyActivity::renderFakeShutdown() const {
 // ---------------------------------------------------------------------------
 
 void ScreenDecoyActivity::renderFakeError() const {
-  const auto pageWidth  = renderer.getScreenWidth();
+  const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
-  const auto& metrics   = UITheme::getInstance().getMetrics();
+  const auto& metrics = UITheme::getInstance().getMetrics();
 
   // Draw a thick header band to mimic an OS error screen
   constexpr int bandH = 56;
@@ -280,9 +301,7 @@ void ScreenDecoyActivity::renderFakeError() const {
 
   // "System Error" in inverted white-on-black
   const int titleTW = renderer.getTextWidth(UI_12_FONT_ID, "System Error", EpdFontFamily::BOLD);
-  renderer.drawText(UI_12_FONT_ID,
-                    (pageWidth - titleTW) / 2,
-                    (bandH - renderer.getTextHeight(UI_12_FONT_ID)) / 2,
+  renderer.drawText(UI_12_FONT_ID, (pageWidth - titleTW) / 2, (bandH - renderer.getTextHeight(UI_12_FONT_ID)) / 2,
                     "System Error", false, EpdFontFamily::BOLD);
 
   int y = bandH + 30;
@@ -319,16 +338,16 @@ void ScreenDecoyActivity::renderFakeError() const {
 // ---------------------------------------------------------------------------
 
 void ScreenDecoyActivity::renderFakeReading() const {
-  const auto pageWidth  = renderer.getScreenWidth();
+  const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
   // Generous margins matching typical e-reader layout
-  constexpr int marginH = 36;   // left/right
+  constexpr int marginH = 36;  // left/right
   constexpr int marginTop = 40;
   constexpr int marginBottom = 50;  // leaves room for page number
 
   const int textWidth = pageWidth - marginH * 2;
-  const int maxLines  = (pageHeight - marginTop - marginBottom) / renderer.getLineHeight(UI_10_FONT_ID);
+  const int maxLines = (pageHeight - marginTop - marginBottom) / renderer.getLineHeight(UI_10_FONT_ID);
 
   // Word-wrap the lorem text to fit the page
   auto lines = renderer.wrappedText(UI_10_FONT_ID, LOREM_TEXT, textWidth, maxLines);

@@ -65,9 +65,8 @@ void SignalTriangulationActivity::processInitialScan() {
 
       uint8_t* bssidBytes = WiFi.BSSID(i);
       if (bssidBytes) {
-        snprintf(ap.bssid, sizeof(ap.bssid), "%02X:%02X:%02X:%02X:%02X:%02X",
-                 bssidBytes[0], bssidBytes[1], bssidBytes[2],
-                 bssidBytes[3], bssidBytes[4], bssidBytes[5]);
+        snprintf(ap.bssid, sizeof(ap.bssid), "%02X:%02X:%02X:%02X:%02X:%02X", bssidBytes[0], bssidBytes[1],
+                 bssidBytes[2], bssidBytes[3], bssidBytes[4], bssidBytes[5]);
       } else {
         ap.bssid[0] = '\0';
       }
@@ -100,8 +99,7 @@ void SignalTriangulationActivity::processReadingScan() {
       uint8_t* bssidBytes = WiFi.BSSID(i);
       if (!bssidBytes) continue;
       char bssidStr[18];
-      snprintf(bssidStr, sizeof(bssidStr), "%02X:%02X:%02X:%02X:%02X:%02X",
-               bssidBytes[0], bssidBytes[1], bssidBytes[2],
+      snprintf(bssidStr, sizeof(bssidStr), "%02X:%02X:%02X:%02X:%02X:%02X", bssidBytes[0], bssidBytes[1], bssidBytes[2],
                bssidBytes[3], bssidBytes[4], bssidBytes[5]);
       if (strcmp(bssidStr, targetBssid) == 0) {
         rssiAccumulator += WiFi.RSSI(i);
@@ -252,10 +250,8 @@ void SignalTriangulationActivity::render(RenderLock&&) {
         [this](int i) -> std::string { return apList[i].ssid; },
         [this](int i) -> std::string {
           char buf[48];
-          snprintf(buf, sizeof(buf), "%d dBm  Ch%d  %s",
-                   static_cast<int>(apList[i].rssi),
-                   static_cast<int>(apList[i].channel),
-                   apList[i].bssid);
+          snprintf(buf, sizeof(buf), "%d dBm  Ch%d  %s", static_cast<int>(apList[i].rssi),
+                   static_cast<int>(apList[i].channel), apList[i].bssid);
           return buf;
         });
 
@@ -329,11 +325,13 @@ void SignalTriangulationActivity::render(RenderLock&&) {
   const int diagTop = headerBottom + 20;
 
   // Positions for the three circles
-  struct Pos { int x, y; };
+  struct Pos {
+    int x, y;
+  };
   const Pos pts[3] = {
-    { diagCenterX,          diagTop + CIRCLE_R },           // Point 1: top center
-    { diagCenterX - 70,     diagTop + 90 + CIRCLE_R },      // Point 2: bottom left
-    { diagCenterX + 70,     diagTop + 90 + CIRCLE_R },      // Point 3: bottom right
+      {diagCenterX, diagTop + CIRCLE_R},            // Point 1: top center
+      {diagCenterX - 70, diagTop + 90 + CIRCLE_R},  // Point 2: bottom left
+      {diagCenterX + 70, diagTop + 90 + CIRCLE_R},  // Point 3: bottom right
   };
 
   // Draw connecting lines between points

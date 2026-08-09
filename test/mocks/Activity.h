@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 #include <utility>
+
 #include "ActivityManager.h"
 #include "ActivityResult.h"
 #include "GfxRenderer.h"

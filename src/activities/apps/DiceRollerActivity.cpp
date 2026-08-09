@@ -11,15 +11,13 @@
 // 25% gray (light dither) for die face texture
 static void fillDithered25(GfxRenderer& r, int x, int y, int w, int h) {
   for (int dy = 0; dy < h; dy += 2)
-    for (int dx = ((dy/2) % 2); dx < w; dx += 2)
-      r.drawPixel(x + dx, y + dy, true);
+    for (int dx = ((dy / 2) % 2); dx < w; dx += 2) r.drawPixel(x + dx, y + dy, true);
 }
 
 // 50% gray (medium) — for shadow dithering
 static void fillDithered50(GfxRenderer& r, int x, int y, int w, int h) {
   for (int dy = 0; dy < h; dy++)
-    for (int dx = (dy % 2); dx < w; dx += 2)
-      r.drawPixel(x + dx, y + dy, true);
+    for (int dx = (dy % 2); dx < w; dx += 2) r.drawPixel(x + dx, y + dy, true);
 }
 
 constexpr int DiceRollerActivity::DIE_TYPES[];
@@ -51,21 +49,35 @@ void DiceRollerActivity::doRoll() {
 
 void DiceRollerActivity::loop() {
   if (state == SELECT) {
-    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) { finish(); return; }
+    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
+      finish();
+      return;
+    }
     if (mappedInput.wasPressed(MappedInputManager::Button::Up)) {
-      dieTypeIndex = ButtonNavigator::previousIndex(dieTypeIndex, NUM_DIE_TYPES); requestUpdate();
+      dieTypeIndex = ButtonNavigator::previousIndex(dieTypeIndex, NUM_DIE_TYPES);
+      requestUpdate();
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Down)) {
-      dieTypeIndex = ButtonNavigator::nextIndex(dieTypeIndex, NUM_DIE_TYPES); requestUpdate();
+      dieTypeIndex = ButtonNavigator::nextIndex(dieTypeIndex, NUM_DIE_TYPES);
+      requestUpdate();
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Left)) {
-      if (dieCount > 1) { dieCount--; requestUpdate(); }
+      if (dieCount > 1) {
+        dieCount--;
+        requestUpdate();
+      }
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Right)) {
-      if (dieCount < 6) { dieCount++; requestUpdate(); }
+      if (dieCount < 6) {
+        dieCount++;
+        requestUpdate();
+      }
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
-      state = ROLLING; animFrame = 0; animStartMs = millis(); requestUpdate();
+      state = ROLLING;
+      animFrame = 0;
+      animStartMs = millis();
+      requestUpdate();
     }
     return;
   }
@@ -74,14 +86,18 @@ void DiceRollerActivity::loop() {
     unsigned long elapsed = millis() - animStartMs;
     int frame = static_cast<int>(elapsed / ANIM_FRAME_MS);
     if (frame >= ANIM_FRAMES) {
-      doRoll(); state = RESULT; requestUpdate();
+      doRoll();
+      state = RESULT;
+      requestUpdate();
     } else if (frame != animFrame) {
       animFrame = frame;
-      diceResults.clear(); total = 0;
+      diceResults.clear();
+      total = 0;
       int sides = DIE_TYPES[dieTypeIndex];
       for (int i = 0; i < dieCount; i++) {
         int val = static_cast<int>(randomRange(sides));
-        diceResults.push_back(val); total += val;
+        diceResults.push_back(val);
+        total += val;
       }
       requestUpdate();
     }
@@ -89,9 +105,16 @@ void DiceRollerActivity::loop() {
   }
 
   if (state == RESULT) {
-    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) { state = SELECT; requestUpdate(); return; }
+    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
+      state = SELECT;
+      requestUpdate();
+      return;
+    }
     if (mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
-      state = ROLLING; animFrame = 0; animStartMs = millis(); requestUpdate();
+      state = ROLLING;
+      animFrame = 0;
+      animStartMs = millis();
+      requestUpdate();
     }
   }
 }
@@ -201,9 +224,11 @@ static void drawDieFace(GfxRenderer& r, int x, int y, int size, int value, int s
 }
 
 // Compute scattered positions for dice (looks like thrown on table)
-struct DiePos { int x, y; };
-static void computeScatteredPositions(DiePos* out, int count, int screenW, int screenH,
-                                       int dieSize, int headerBottom, const std::vector<int>& values) {
+struct DiePos {
+  int x, y;
+};
+static void computeScatteredPositions(DiePos* out, int count, int screenW, int screenH, int dieSize, int headerBottom,
+                                      const std::vector<int>& values) {
   // Area available for dice
   const int areaTop = headerBottom + 20;
   const int areaH = screenH - areaTop - 140;  // leave room for total at bottom
@@ -217,9 +242,16 @@ static void computeScatteredPositions(DiePos* out, int count, int screenW, int s
 
   // Grid layout with jitter
   int cols, rows;
-  if (count <= 2) { cols = 2; rows = 1; }
-  else if (count <= 4) { cols = 2; rows = 2; }
-  else { cols = 3; rows = 2; }
+  if (count <= 2) {
+    cols = 2;
+    rows = 1;
+  } else if (count <= 4) {
+    cols = 2;
+    rows = 2;
+  } else {
+    cols = 3;
+    rows = 2;
+  }
 
   int spacingX = areaW / cols;
   int spacingY = areaH / rows;
@@ -247,9 +279,15 @@ void DiceRollerActivity::render(RenderLock&&) {
   GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, tr(STR_DICE_ROLLER));
 
   switch (state) {
-    case SELECT: renderSelect(); break;
-    case ROLLING: renderRolling(); break;
-    case RESULT: renderResult(); break;
+    case SELECT:
+      renderSelect();
+      break;
+    case ROLLING:
+      renderRolling();
+      break;
+    case RESULT:
+      renderResult();
+      break;
   }
   renderer.displayBuffer();
 }
@@ -290,10 +328,14 @@ void DiceRollerActivity::renderRolling() const {
 
   // Size dice based on count
   int dieSize;
-  if (count == 1) dieSize = 140;
-  else if (count <= 2) dieSize = 120;
-  else if (count <= 4) dieSize = 100;
-  else dieSize = 85;
+  if (count == 1)
+    dieSize = 140;
+  else if (count <= 2)
+    dieSize = 120;
+  else if (count <= 4)
+    dieSize = 100;
+  else
+    dieSize = 85;
 
   DiePos positions[6];
   computeScatteredPositions(positions, count, pageWidth, pageHeight, dieSize, headerBottom, diceResults);
@@ -322,10 +364,14 @@ void DiceRollerActivity::renderResult() const {
 
   // Size dice based on count
   int dieSize;
-  if (count == 1) dieSize = 140;
-  else if (count <= 2) dieSize = 120;
-  else if (count <= 4) dieSize = 100;
-  else dieSize = 85;
+  if (count == 1)
+    dieSize = 140;
+  else if (count <= 2)
+    dieSize = 120;
+  else if (count <= 4)
+    dieSize = 100;
+  else
+    dieSize = 85;
 
   // Draw scattered dice
   DiePos positions[6];

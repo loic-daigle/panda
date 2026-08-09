@@ -7,14 +7,13 @@
 #include <I18n.h>
 #include <Logging.h>
 
-#include "util/RadioManager.h"
-
 #include <algorithm>
 #include <string>
 
 #include "MappedInputManager.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
+#include "util/RadioManager.h"
 
 // Static pointer for callback context
 static BleProximityActivity* activeProximity = nullptr;
@@ -65,12 +64,9 @@ void BleProximityActivity::startBleScan() {
 
 void BleProximityActivity::pruneStale() {
   const unsigned long now = millis();
-  devices.erase(
-      std::remove_if(devices.begin(), devices.end(),
-                     [now](const BleTarget& d) {
-                       return (now - d.lastSeen) > STALE_TIMEOUT_MS;
-                     }),
-      devices.end());
+  devices.erase(std::remove_if(devices.begin(), devices.end(),
+                               [now](const BleTarget& d) { return (now - d.lastSeen) > STALE_TIMEOUT_MS; }),
+                devices.end());
 }
 
 void BleProximityActivity::processScanResults() {
@@ -106,8 +102,7 @@ void BleProximityActivity::loop() {
         BLEAdvertisedDevice dev = results->getDevice(i);
         std::string mac = dev.getAddress().toString().c_str();
 
-        auto it = std::find_if(devices.begin(), devices.end(),
-                               [&mac](const BleTarget& d) { return d.mac == mac; });
+        auto it = std::find_if(devices.begin(), devices.end(), [&mac](const BleTarget& d) { return d.mac == mac; });
         if (it != devices.end()) {
           it->rssi = dev.getRSSI();
           it->lastSeen = now;
@@ -130,8 +125,7 @@ void BleProximityActivity::loop() {
       pruneStale();
 
       // Sort by RSSI descending (strongest signal first)
-      std::sort(devices.begin(), devices.end(),
-                [](const BleTarget& a, const BleTarget& b) { return a.rssi > b.rssi; });
+      std::sort(devices.begin(), devices.end(), [](const BleTarget& a, const BleTarget& b) { return a.rssi > b.rssi; });
 
       // Clamp selector index to valid range
       const int devCount = static_cast<int>(devices.size());
@@ -186,8 +180,7 @@ void BleProximityActivity::render(RenderLock&&) {
 
   char subtitle[32];
   snprintf(subtitle, sizeof(subtitle), "%zu devices", devices.size());
-  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 "BLE Proximity", subtitle);
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "BLE Proximity", subtitle);
 
   const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
   const int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
@@ -196,16 +189,11 @@ void BleProximityActivity::render(RenderLock&&) {
     renderer.drawCenteredText(UI_10_FONT_ID, pageHeight / 2, tr(STR_SCANNING_BLE));
   } else {
     GUI.drawList(
-        renderer, Rect{0, contentTop, pageWidth, contentHeight},
-        static_cast<int>(devices.size()), selectorIndex,
-        [this](int index) -> std::string {
-          return devices[index].name;
-        },
+        renderer, Rect{0, contentTop, pageWidth, contentHeight}, static_cast<int>(devices.size()), selectorIndex,
+        [this](int index) -> std::string { return devices[index].name; },
         [this](int index) -> std::string {
           char buf[64];
-          snprintf(buf, sizeof(buf), "%s  %d dBm%s",
-                   devices[index].mac.c_str(),
-                   static_cast<int>(devices[index].rssi),
+          snprintf(buf, sizeof(buf), "%s  %d dBm%s", devices[index].mac.c_str(), static_cast<int>(devices[index].rssi),
                    devices[index].active ? "" : " (stale)");
           return std::string(buf);
         });

@@ -11,8 +11,7 @@
 // 25% gray (light) — every other pixel in checkerboard on even rows only
 static void fillDithered25(GfxRenderer& r, int x, int y, int w, int h) {
   for (int dy = 0; dy < h; dy += 2)
-    for (int dx = ((dy / 2) % 2); dx < w; dx += 2)
-      r.drawPixel(x + dx, y + dy, true);
+    for (int dx = ((dy / 2) % 2); dx < w; dx += 2) r.drawPixel(x + dx, y + dy, true);
 }
 
 void SnakeActivity::onEnter() {
@@ -181,16 +180,16 @@ void SnakeActivity::renderPlaying() const {
       // Head — filled with eyes
       renderer.fillRect(px + 1, py + 1, CELL_SIZE - 2, CELL_SIZE - 2);
       // Eyes based on direction
-      if (dirX == 1) { // right
+      if (dirX == 1) {  // right
         renderer.drawPixel(px + CELL_SIZE - 3, py + 2, false);
         renderer.drawPixel(px + CELL_SIZE - 3, py + CELL_SIZE - 3, false);
-      } else if (dirX == -1) { // left
+      } else if (dirX == -1) {  // left
         renderer.drawPixel(px + 2, py + 2, false);
         renderer.drawPixel(px + 2, py + CELL_SIZE - 3, false);
-      } else if (dirY == -1) { // up
+      } else if (dirY == -1) {  // up
         renderer.drawPixel(px + 2, py + 2, false);
         renderer.drawPixel(px + CELL_SIZE - 3, py + 2, false);
-      } else { // down
+      } else {  // down
         renderer.drawPixel(px + 2, py + CELL_SIZE - 3, false);
         renderer.drawPixel(px + CELL_SIZE - 3, py + CELL_SIZE - 3, false);
       }
@@ -211,8 +210,10 @@ void SnakeActivity::renderPlaying() const {
     for (int dy = -r; dy <= r; dy++) {
       int dx = 0;
       while ((dx + 1) * (dx + 1) + dy * dy <= r * r) dx++;
-      if (dx > 0) renderer.fillRect(cx - dx, cy + dy, dx * 2 + 1, 1, true);
-      else renderer.drawPixel(cx, cy + dy, true);
+      if (dx > 0)
+        renderer.fillRect(cx - dx, cy + dy, dx * 2 + 1, 1, true);
+      else
+        renderer.drawPixel(cx, cy + dy, true);
     }
     // Stem on top
     renderer.fillRect(cx, cy - r - 2, 2, 3, true);

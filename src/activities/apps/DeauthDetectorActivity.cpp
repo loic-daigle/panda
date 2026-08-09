@@ -24,14 +24,14 @@ void DeauthDetectorActivity::onPacket(const uint8_t* data, uint16_t len, int rss
   if (len < 24) return;  // minimum 802.11 management header
 
   uint8_t frameType = (data[0] >> 2) & 0x03;
-  uint8_t subType   = (data[0] >> 4) & 0x0F;
+  uint8_t subType = (data[0] >> 4) & 0x0F;
 
   if (frameType != 0) return;  // not a management frame
 
   portENTER_CRITICAL_ISR(&statsMux);
   totalFrames++;
 
-  bool isDeauth   = (subType == 0x0C);  // Deauthentication
+  bool isDeauth = (subType == 0x0C);    // Deauthentication
   bool isDisassoc = (subType == 0x0A);  // Disassociation
 
   if (isDeauth || isDisassoc) {
@@ -45,7 +45,7 @@ void DeauthDetectorActivity::onPacket(const uint8_t* data, uint16_t len, int rss
     // Log into ring buffer (no heap, fixed array)
     int idx = eventLogHead;
     memcpy(eventLog[idx].srcMac, data + 10, 6);  // Address 2 = transmitter
-    memcpy(eventLog[idx].dstMac, data + 4,  6);  // Address 1 = receiver
+    memcpy(eventLog[idx].dstMac, data + 4, 6);   // Address 1 = receiver
     eventLog[idx].type = isDeauth ? 0 : 1;
     eventLog[idx].rssi = static_cast<int8_t>(rssi);
     eventLogHead = (eventLogHead + 1) % EVENT_LOG_SIZE;
@@ -59,19 +59,19 @@ void DeauthDetectorActivity::onPacket(const uint8_t* data, uint16_t len, int rss
 // ---------------------------------------------------------------------------
 void DeauthDetectorActivity::onEnter() {
   Activity::onEnter();
-  state           = IDLE;
-  deauthCount     = 0;
-  disassocCount   = 0;
-  totalFrames     = 0;
-  intervalDeauth  = 0;
-  eventLogHead    = 0;
-  eventLogCount   = 0;
-  spikeCount      = 0;
-  currentChannel  = 1;
-  autoHop         = true;
-  selectorIndex   = 0;
-  lastUpdateTime  = millis();
-  lastHopTime     = millis();
+  state = IDLE;
+  deauthCount = 0;
+  disassocCount = 0;
+  totalFrames = 0;
+  intervalDeauth = 0;
+  eventLogHead = 0;
+  eventLogCount = 0;
+  spikeCount = 0;
+  currentChannel = 1;
+  autoHop = true;
+  selectorIndex = 0;
+  lastUpdateTime = millis();
+  lastHopTime = millis();
   memset(eventLog, 0, sizeof(eventLog));
   requestUpdate();
 }
@@ -98,9 +98,9 @@ void DeauthDetectorActivity::startMonitor() {
   esp_wifi_set_promiscuous(true);
   esp_wifi_set_promiscuous_rx_cb(deauthCallback);
   esp_wifi_set_channel(currentChannel, WIFI_SECOND_CHAN_NONE);
-  lastHopTime    = millis();
+  lastHopTime = millis();
   lastUpdateTime = millis();
-  state          = MONITORING;
+  state = MONITORING;
 }
 
 void DeauthDetectorActivity::stopMonitor() {
@@ -152,8 +152,8 @@ void DeauthDetectorActivity::loop() {
     lastUpdateTime = now;
 
     portENTER_CRITICAL(&statsMux);
-    uint32_t recent  = intervalDeauth;
-    intervalDeauth   = 0;
+    uint32_t recent = intervalDeauth;
+    intervalDeauth = 0;
     int currentCount = eventLogCount;
     portEXIT_CRITICAL(&statsMux);
 
@@ -164,7 +164,7 @@ void DeauthDetectorActivity::loop() {
 
     if (recent >= static_cast<uint32_t>(SPIKE_THRESHOLD)) {
       spikeCount = recent;
-      state      = ALERT_SPIKE;
+      state = ALERT_SPIKE;
     }
     requestUpdate();
   }
@@ -206,8 +206,7 @@ void DeauthDetectorActivity::loop() {
 // Render helpers
 // ---------------------------------------------------------------------------
 static void formatMac(char* buf, int bufLen, const uint8_t* mac) {
-  snprintf(buf, bufLen, "%02X:%02X:%02X:%02X:%02X:%02X",
-           mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  snprintf(buf, bufLen, "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 }
 
 // ---------------------------------------------------------------------------
@@ -215,22 +214,18 @@ static void formatMac(char* buf, int bufLen, const uint8_t* mac) {
 // ---------------------------------------------------------------------------
 void DeauthDetectorActivity::render(RenderLock&&) {
   const auto& metrics = UITheme::getInstance().getMetrics();
-  const auto pageWidth  = renderer.getScreenWidth();
+  const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
   renderer.clearScreen();
 
   // ---- IDLE ----------------------------------------------------------------
   if (state == IDLE) {
-    GUI.drawHeader(renderer,
-                   Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                   "Deauth Detector");
+    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Deauth Detector");
 
     const int midY = (metrics.topPadding + metrics.headerHeight + pageHeight - metrics.buttonHintsHeight) / 2;
-    renderer.drawCenteredText(UI_10_FONT_ID, midY - 30,
-                              "WiFi deauth/disassoc frame detector.");
-    renderer.drawCenteredText(UI_10_FONT_ID, midY,
-                              "Press OK to start monitoring.");
+    renderer.drawCenteredText(UI_10_FONT_ID, midY - 30, "WiFi deauth/disassoc frame detector.");
+    renderer.drawCenteredText(UI_10_FONT_ID, midY, "Press OK to start monitoring.");
 
     const auto labels = mappedInput.mapLabels("Back", "Start", "", "");
     GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
@@ -240,9 +235,7 @@ void DeauthDetectorActivity::render(RenderLock&&) {
 
   // ---- ALERT_SPIKE ---------------------------------------------------------
   if (state == ALERT_SPIKE) {
-    GUI.drawHeader(renderer,
-                   Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                   "Deauth Detector");
+    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Deauth Detector");
 
     const int midY = (metrics.topPadding + metrics.headerHeight + pageHeight - metrics.buttonHintsHeight) / 2;
     renderer.drawCenteredText(UI_12_FONT_ID, midY - 40, "SPIKE DETECTED", true, EpdFontFamily::BOLD);
@@ -262,22 +255,20 @@ void DeauthDetectorActivity::render(RenderLock&&) {
   // Both reads happen inside the same critical section to prevent torn reads
   // from the promiscuous ISR callback writing concurrently.
   portENTER_CRITICAL(&statsMux);
-  uint32_t snapTotal    = totalFrames;
-  uint32_t snapDeauth   = deauthCount;
+  uint32_t snapTotal = totalFrames;
+  uint32_t snapDeauth = deauthCount;
   uint32_t snapDisassoc = disassocCount;
-  int      snapCount    = eventLogCount;
+  int snapCount = eventLogCount;
   DeauthEvent displayEvents[EVENT_LOG_SIZE];
-  int         displayCount = min(snapCount, (int)EVENT_LOG_SIZE);
-  int         displayHead  = eventLogHead;
+  int displayCount = min(snapCount, (int)EVENT_LOG_SIZE);
+  int displayHead = eventLogHead;
   memcpy(displayEvents, eventLog, sizeof(displayEvents));
   portEXIT_CRITICAL(&statsMux);
 
   // Header with channel info
   char chBuf[16];
   snprintf(chBuf, sizeof(chBuf), "Ch:%u%s", currentChannel, autoHop ? " auto" : "");
-  GUI.drawHeader(renderer,
-                 Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 "Deauth Detector", chBuf);
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Deauth Detector", chBuf);
 
   const int leftPad = metrics.contentSidePadding;
   int y = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing + 6;
@@ -285,10 +276,8 @@ void DeauthDetectorActivity::render(RenderLock&&) {
 
   // Stats row
   char statBuf[80];
-  snprintf(statBuf, sizeof(statBuf), "Frames: %lu   Deauth: %lu   Disassoc: %lu",
-           static_cast<unsigned long>(snapTotal),
-           static_cast<unsigned long>(snapDeauth),
-           static_cast<unsigned long>(snapDisassoc));
+  snprintf(statBuf, sizeof(statBuf), "Frames: %lu   Deauth: %lu   Disassoc: %lu", static_cast<unsigned long>(snapTotal),
+           static_cast<unsigned long>(snapDeauth), static_cast<unsigned long>(snapDisassoc));
   renderer.drawText(UI_10_FONT_ID, leftPad, y, statBuf, true, EpdFontFamily::BOLD);
   y += fontH + 8;
 
@@ -303,21 +292,17 @@ void DeauthDetectorActivity::render(RenderLock&&) {
     // index 0 in our logical list = most recent event
     // logical index i maps to array index: (head - 1 - i + SIZE) % SIZE
     const int listAreaTop = y;
-    const int listAreaH   = pageHeight - metrics.buttonHintsHeight - listAreaTop - 4;
+    const int listAreaH = pageHeight - metrics.buttonHintsHeight - listAreaTop - 4;
 
     GUI.drawList(
-        renderer,
-        Rect{0, listAreaTop, pageWidth, listAreaH},
-        displayCount,
-        selectorIndex,
+        renderer, Rect{0, listAreaTop, pageWidth, listAreaH}, displayCount, selectorIndex,
         [&](int i) -> std::string {
           int arrIdx = (displayHead - 1 - i + EVENT_LOG_SIZE) % EVENT_LOG_SIZE;
           const DeauthEvent& ev = displayEvents[arrIdx];
           char label[32];
           char mac[18];
           formatMac(mac, sizeof(mac), ev.srcMac);
-          snprintf(label, sizeof(label), "%s  %s",
-                   ev.type == 0 ? "DEAUTH" : "DISASSOC", mac);
+          snprintf(label, sizeof(label), "%s  %s", ev.type == 0 ? "DEAUTH" : "DISASSOC", mac);
           return label;
         },
         [&](int i) -> std::string {

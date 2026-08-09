@@ -76,7 +76,10 @@ void EventLoggerActivity::onExit() { Activity::onExit(); }
 
 void EventLoggerActivity::loop() {
   if (state == LOG_LIST) {
-    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) { finish(); return; }
+    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
+      finish();
+      return;
+    }
     if (mappedInput.wasPressed(MappedInputManager::Button::Up)) {
       selectedIndex = ButtonNavigator::previousIndex(selectedIndex, (int)entries.size());
       requestUpdate();
@@ -91,17 +94,16 @@ void EventLoggerActivity::loop() {
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Right)) {
       state = COMPOSE;
-      startActivityForResult(
-          std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "New Note", "", 127),
-          [this](const ActivityResult& r) {
-            state = LOG_LIST;
-            if (!r.isCancelled) {
-              const auto& text = std::get<KeyboardResult>(r.data).text;
-              saveEntry(text.c_str());
-              loadEntries();
-              selectedIndex = 0;
-            }
-          });
+      startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "New Note", "", 127),
+                             [this](const ActivityResult& r) {
+                               state = LOG_LIST;
+                               if (!r.isCancelled) {
+                                 const auto& text = std::get<KeyboardResult>(r.data).text;
+                                 saveEntry(text.c_str());
+                                 loadEntries();
+                                 selectedIndex = 0;
+                               }
+                             });
     }
     return;
   }
@@ -121,8 +123,10 @@ void EventLoggerActivity::render(RenderLock&&) {
   const int pageWidth = renderer.getScreenWidth();
   GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Event Logger");
 
-  if (state == LOG_LIST) renderList();
-  else if (state == VIEW_ENTRY) renderView();
+  if (state == LOG_LIST)
+    renderList();
+  else if (state == VIEW_ENTRY)
+    renderView();
 
   renderer.displayBuffer();
 }
@@ -137,13 +141,14 @@ void EventLoggerActivity::renderList() const {
   if (entries.empty()) {
     renderer.drawCenteredText(UI_10_FONT_ID, listTop + listH / 2, "No entries. Right=Compose");
   } else {
-    GUI.drawList(renderer, Rect{0, listTop, pageWidth, listH}, (int)entries.size(), selectedIndex,
-      [this](int i) -> std::string { return entries[i].text; },
-      [this](int i) -> std::string {
-        char buf[16];
-        formatTimestamp(entries[i].timestampMs, buf, sizeof(buf));
-        return buf;
-      });
+    GUI.drawList(
+        renderer, Rect{0, listTop, pageWidth, listH}, (int)entries.size(), selectedIndex,
+        [this](int i) -> std::string { return entries[i].text; },
+        [this](int i) -> std::string {
+          char buf[16];
+          formatTimestamp(entries[i].timestampMs, buf, sizeof(buf));
+          return buf;
+        });
   }
 
   const auto labels = mappedInput.mapLabels("Back", "View", "", "New");

@@ -15,7 +15,7 @@
 class AppCategoryActivity final : public Activity {
  public:
   struct AppEntry {
-    const char* nameStrId;  // will be resolved via tr() at render time
+    const char* nameStrId;    // will be resolved via tr() at render time
     const char* description;  // one-line description shown as subtitle
     UIIcon icon;
     std::function<std::unique_ptr<Activity>(GfxRenderer&, MappedInputManager&)> factory;
@@ -23,12 +23,10 @@ class AppCategoryActivity final : public Activity {
     std::function<bool()> hasActiveState = nullptr;  // returns true if app has saved state
   };
 
-  static AppEntry SectionHeader(const char* label) {
-    return AppEntry{label, nullptr, UIIcon::File, nullptr, true};
-  }
+  static AppEntry SectionHeader(const char* label) { return AppEntry{label, nullptr, UIIcon::File, nullptr, true}; }
 
   explicit AppCategoryActivity(GfxRenderer& renderer, MappedInputManager& mappedInput, const char* title,
-                                std::vector<AppEntry> entries, bool requiresDisclaimer = false, int categoryIndex = -1)
+                               std::vector<AppEntry> entries, bool requiresDisclaimer = false, int categoryIndex = -1)
       : Activity("AppCategory", renderer, mappedInput),
         title(title),
         entries(std::move(entries)),

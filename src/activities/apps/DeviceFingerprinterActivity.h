@@ -1,8 +1,9 @@
 #pragma once
-#include <cstdint>
-#include <vector>
 #include <esp_wifi.h>
 #include <freertos/portmacro.h>
+
+#include <cstdint>
+#include <vector>
 
 #include "activities/Activity.h"
 #include "util/ButtonNavigator.h"

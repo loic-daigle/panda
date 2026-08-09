@@ -76,9 +76,9 @@ void MilitaryTheme::drawHeader(const GfxRenderer& renderer, Rect rect, const cha
   const bool showBatteryPercentage =
       SETTINGS.hideBatteryPercentage != CrossPointSettings::HIDE_BATTERY_PERCENTAGE::HIDE_ALWAYS;
   const int batteryX = rect.x + rect.width - 12 - MilitaryMetrics::values.batteryWidth;
-  drawBatteryRight(renderer,
-                   Rect{batteryX, rect.y + 5, MilitaryMetrics::values.batteryWidth, MilitaryMetrics::values.batteryHeight},
-                   showBatteryPercentage);
+  drawBatteryRight(
+      renderer, Rect{batteryX, rect.y + 5, MilitaryMetrics::values.batteryWidth, MilitaryMetrics::values.batteryHeight},
+      showBatteryPercentage);
 
   if (title) {
     // Convert title to uppercase
@@ -128,9 +128,9 @@ void MilitaryTheme::drawSubHeader(const GfxRenderer& renderer, Rect rect, const 
   for (auto& c : upperLabel) {
     c = static_cast<char>(toupper(static_cast<unsigned char>(c)));
   }
-  auto truncatedLabel = renderer.truncatedText(
-      UI_10_FONT_ID, upperLabel.c_str(), rect.width - MilitaryMetrics::values.contentSidePadding - rightSpace,
-      EpdFontFamily::BOLD);
+  auto truncatedLabel =
+      renderer.truncatedText(UI_10_FONT_ID, upperLabel.c_str(),
+                             rect.width - MilitaryMetrics::values.contentSidePadding - rightSpace, EpdFontFamily::BOLD);
   renderer.drawText(UI_10_FONT_ID, currentX, rect.y, truncatedLabel.c_str(), true, EpdFontFamily::BOLD);
 
   // Dashed line under the sub-header
@@ -151,8 +151,8 @@ void MilitaryTheme::drawTabBar(const GfxRenderer& renderer, const Rect rect, con
       c = static_cast<char>(toupper(static_cast<unsigned char>(c)));
     }
 
-    const int textWidth =
-        renderer.getTextWidth(UI_10_FONT_ID, upperLabel.c_str(), tab.selected ? EpdFontFamily::BOLD : EpdFontFamily::REGULAR);
+    const int textWidth = renderer.getTextWidth(UI_10_FONT_ID, upperLabel.c_str(),
+                                                tab.selected ? EpdFontFamily::BOLD : EpdFontFamily::REGULAR);
     const int lineHeight = renderer.getLineHeight(UI_10_FONT_ID);
 
     if (tab.selected) {
@@ -180,8 +180,8 @@ void MilitaryTheme::drawList(const GfxRenderer& renderer, Rect rect, int itemCou
                              const std::function<UIIcon(int index)>& rowIcon,
                              const std::function<std::string(int index)>& rowValue, bool highlightValue,
                              const std::function<bool(int index)>& /*rowDimmed*/) const {
-  const int rowHeight =
-      (rowSubtitle != nullptr) ? MilitaryMetrics::values.listWithSubtitleRowHeight : MilitaryMetrics::values.listRowHeight;
+  const int rowHeight = (rowSubtitle != nullptr) ? MilitaryMetrics::values.listWithSubtitleRowHeight
+                                                 : MilitaryMetrics::values.listRowHeight;
   const int pageItems = rect.height / rowHeight;
 
   // Scroll indicators
@@ -313,8 +313,9 @@ void MilitaryTheme::drawButtonMenu(GfxRenderer& renderer, Rect rect, int buttonC
                                    const std::function<std::string(int index)>& buttonLabel,
                                    const std::function<UIIcon(int index)>& rowIcon) const {
   for (int i = 0; i < buttonCount; ++i) {
-    const int tileY = MilitaryMetrics::values.verticalSpacing + rect.y +
-                      static_cast<int>(i) * (MilitaryMetrics::values.menuRowHeight + MilitaryMetrics::values.menuSpacing);
+    const int tileY =
+        MilitaryMetrics::values.verticalSpacing + rect.y +
+        static_cast<int>(i) * (MilitaryMetrics::values.menuRowHeight + MilitaryMetrics::values.menuSpacing);
 
     const bool selected = selectedIndex == i;
 
@@ -396,8 +397,8 @@ void MilitaryTheme::fillPopupProgress(const GfxRenderer& renderer, const Rect& l
 }
 
 // --- Text field: sharp brackets ---
-void MilitaryTheme::drawTextField(const GfxRenderer& renderer, Rect rect, const int textWidth,
-                                  bool /*cursorMode*/, int /*contentStartX*/, int /*contentWidth*/) const {
+void MilitaryTheme::drawTextField(const GfxRenderer& renderer, Rect rect, const int textWidth, bool /*cursorMode*/,
+                                  int /*contentStartX*/, int /*contentWidth*/) const {
   renderer.drawText(UI_10_FONT_ID, rect.x + 8, rect.y, "[");
   renderer.drawText(UI_10_FONT_ID, rect.x + rect.width - 14, rect.y + rect.height, "]");
   // Draw underline for the input area

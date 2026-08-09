@@ -149,8 +149,7 @@ void BaseTheme::drawProgressBar(const GfxRenderer& renderer, Rect rect, const si
   renderer.drawCenteredText(UI_10_FONT_ID, rect.y + rect.height + 15, percentText.c_str());
 }
 
-void BaseTheme::drawSpinner(const GfxRenderer& renderer, int centerX, int centerY,
-                            const char* label, int frame) const {
+void BaseTheme::drawSpinner(const GfxRenderer& renderer, int centerX, int centerY, const char* label, int frame) const {
   // Draw optional label centered on centerX, 22px above centerY
   if (label && label[0] != '\0') {
     const int textWidth = renderer.getTextWidth(UI_10_FONT_ID, label);
@@ -162,7 +161,7 @@ void BaseTheme::drawSpinner(const GfxRenderer& renderer, int centerX, int center
     static constexpr int hw[5] = {3, 4, 4, 4, 3};
     for (int i = 0; i < 5; i++) {
       const int dy = i - 2;
-      const int w  = hw[i];
+      const int w = hw[i];
       if (filled || i == 0 || i == 4) {
         renderer.drawLine(cx - w, cy + dy, cx + w, cy + dy, true);
       } else {
@@ -179,24 +178,21 @@ void BaseTheme::drawSpinner(const GfxRenderer& renderer, int centerX, int center
   }
 }
 
-bool BaseTheme::drawArrowIfNeeded(const GfxRenderer& renderer, const char* label, int cx, int cy, int size, bool black) {
+bool BaseTheme::drawArrowIfNeeded(const GfxRenderer& renderer, const char* label, int cx, int cy, int size,
+                                  bool black) {
   if (!label || label[0] == '\0' || label[1] != '\0') return false;
   switch (label[0]) {
     case '^':
-      for (int i = 0; i < size; i++)
-        renderer.drawLine(cx - i, cy - size / 2 + i, cx + i, cy - size / 2 + i, black);
+      for (int i = 0; i < size; i++) renderer.drawLine(cx - i, cy - size / 2 + i, cx + i, cy - size / 2 + i, black);
       return true;
     case 'v':
-      for (int i = 0; i < size; i++)
-        renderer.drawLine(cx - i, cy + size / 2 - i, cx + i, cy + size / 2 - i, black);
+      for (int i = 0; i < size; i++) renderer.drawLine(cx - i, cy + size / 2 - i, cx + i, cy + size / 2 - i, black);
       return true;
     case '<':
-      for (int i = 0; i < size; i++)
-        renderer.drawLine(cx - size / 2 + i, cy - i, cx - size / 2 + i, cy + i, black);
+      for (int i = 0; i < size; i++) renderer.drawLine(cx - size / 2 + i, cy - i, cx - size / 2 + i, cy + i, black);
       return true;
     case '>':
-      for (int i = 0; i < size; i++)
-        renderer.drawLine(cx + size / 2 - i, cy - i, cx + size / 2 - i, cy + i, black);
+      for (int i = 0; i < size; i++) renderer.drawLine(cx + size / 2 - i, cy - i, cx + size / 2 - i, cy + i, black);
       return true;
     default:
       return false;
@@ -229,7 +225,8 @@ void BaseTheme::drawButtonHints(GfxRenderer& renderer, const char* btn1, const c
       const int x = buttonPositions[i];
       renderer.fillRect(x, pageHeight - buttonY, buttonWidth, buttonHeight, false);
       renderer.drawRect(x, pageHeight - buttonY, buttonWidth, buttonHeight);
-      if (!drawArrowIfNeeded(renderer, labels[i], x + buttonWidth / 2, pageHeight - buttonY + buttonHeight / 2, 6, true)) {
+      if (!drawArrowIfNeeded(renderer, labels[i], x + buttonWidth / 2, pageHeight - buttonY + buttonHeight / 2, 6,
+                             true)) {
         const int textWidth = renderer.getTextWidth(UI_10_FONT_ID, labels[i]);
         const int textX = x + (buttonWidth - 1 - textWidth) / 2;
         renderer.drawText(UI_10_FONT_ID, textX, pageHeight - buttonY + textYOffset, labels[i]);

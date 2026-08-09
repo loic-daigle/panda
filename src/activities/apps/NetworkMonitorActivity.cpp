@@ -5,6 +5,7 @@
 #include <Logging.h>
 #include <WiFi.h>
 #include <esp_wifi.h>
+
 #include <algorithm>
 #include <string>
 
@@ -34,16 +35,14 @@ static void networkMonitorPromiscuousCallback(void* buf, wifi_promiscuous_pkt_ty
   const uint8_t frameCtrl = payload[0];
   if (frameCtrl != 0xC0 && frameCtrl != 0xA0) return;
 
-  activeNetworkMonitor->onFrame(payload, sig_len, pkt->rx_ctrl.rssi,
-                                static_cast<uint8_t>(pkt->rx_ctrl.channel));
+  activeNetworkMonitor->onFrame(payload, sig_len, pkt->rx_ctrl.rssi, static_cast<uint8_t>(pkt->rx_ctrl.channel));
 }
 
 // ---------------------------------------------------------------------------
 // onFrame — called from the WiFi RX task, must be ISR-safe
 // ---------------------------------------------------------------------------
 
-void NetworkMonitorActivity::onFrame(const uint8_t* payload, uint16_t len, int rssi,
-                                     uint8_t channel) {
+void NetworkMonitorActivity::onFrame(const uint8_t* payload, uint16_t len, int rssi, uint8_t channel) {
   portENTER_CRITICAL(&dataMux);
 
   totalFrames = totalFrames + 1;
@@ -58,18 +57,17 @@ void NetworkMonitorActivity::onFrame(const uint8_t* payload, uint16_t len, int r
   //   [16-21] BSSID (target)
   //   [22-23] Sequence control
   //   [24]  Reason code (body)
-  const uint8_t* srcMac  = payload + 10;
-  const uint8_t* bssid   = payload + 16;
-  const uint8_t  reason  = (len > 24) ? payload[24] : 0;
-  const uint8_t  ftype   = payload[0];
+  const uint8_t* srcMac = payload + 10;
+  const uint8_t* bssid = payload + 16;
+  const uint8_t reason = (len > 24) ? payload[24] : 0;
+  const uint8_t ftype = payload[0];
 
   // Search for an existing event matching source MAC + BSSID
   for (int i = 0; i < eventCount; i++) {
-    if (memcmp(events[i].attackerMac, srcMac, 6) == 0 &&
-        memcmp(events[i].targetBssid, bssid,  6) == 0) {
+    if (memcmp(events[i].attackerMac, srcMac, 6) == 0 && memcmp(events[i].targetBssid, bssid, 6) == 0) {
       events[i].count++;
       events[i].lastSeen = millis();
-      events[i].rssi     = static_cast<int8_t>(rssi);
+      events[i].rssi = static_cast<int8_t>(rssi);
       portEXIT_CRITICAL(&dataMux);
       return;
     }
@@ -79,13 +77,13 @@ void NetworkMonitorActivity::onFrame(const uint8_t* payload, uint16_t len, int r
   if (eventCount < MAX_EVENTS) {
     DetectionEvent& ev = events[eventCount];
     memcpy(ev.attackerMac, srcMac, 6);
-    memcpy(ev.targetBssid, bssid,  6);
-    ev.channel    = channel;
-    ev.rssi       = static_cast<int8_t>(rssi);
-    ev.count      = 1;
-    ev.firstSeen  = millis();
-    ev.lastSeen   = millis();
-    ev.frameType  = ftype;
+    memcpy(ev.targetBssid, bssid, 6);
+    ev.channel = channel;
+    ev.rssi = static_cast<int8_t>(rssi);
+    ev.count = 1;
+    ev.firstSeen = millis();
+    ev.lastSeen = millis();
+    ev.frameType = ftype;
     ev.reasonCode = reason;
     eventCount++;
   }
@@ -100,23 +98,23 @@ void NetworkMonitorActivity::onFrame(const uint8_t* payload, uint16_t len, int r
 void NetworkMonitorActivity::onEnter() {
   Activity::onEnter();
 
-  monitorMode   = FRAME_DETECTION;
-  state         = MONITORING;
+  monitorMode = FRAME_DETECTION;
+  state = MONITORING;
   selectorIndex = 0;
-  detailIndex   = 0;
-  alertActive   = false;
-  autoHop       = true;
+  detailIndex = 0;
+  alertActive = false;
+  autoHop = true;
   currentChannel = 1;
-  historyIndex  = 0;
-  framesPerSec  = 0;
-  totalFrames   = 0;
+  historyIndex = 0;
+  framesPerSec = 0;
+  totalFrames = 0;
   framesThisInterval = 0;
-  eventCount    = 0;
+  eventCount = 0;
 
-  memset(events,      0, sizeof(events));
+  memset(events, 0, sizeof(events));
   memset(rateHistory, 0, sizeof(rateHistory));
 
-  lastHopTime    = millis();
+  lastHopTime = millis();
   lastUpdateTime = millis();
 
   // Reset rogue AP state
@@ -192,8 +190,8 @@ void NetworkMonitorActivity::processRogueScanResults() {
 
       uint8_t* bssid = WiFi.BSSID(i);
       char buf[20];
-      snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X",
-               bssid[0], bssid[1], bssid[2], bssid[3], bssid[4], bssid[5]);
+      snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X", bssid[0], bssid[1], bssid[2], bssid[3], bssid[4],
+               bssid[5]);
       rec.bssid = buf;
 
       // Deduplicate by BSSID — update RSSI if we already have this AP
@@ -395,11 +393,10 @@ void NetworkMonitorActivity::loop() {
 
     framesPerSec = (elapsed > 0) ? (frames * 1000UL) / elapsed : 0;
 
-    rateHistory[historyIndex] = static_cast<uint16_t>(
-        framesPerSec > 0xFFFF ? 0xFFFF : framesPerSec);
+    rateHistory[historyIndex] = static_cast<uint16_t>(framesPerSec > 0xFFFF ? 0xFFFF : framesPerSec);
     historyIndex = (historyIndex + 1) % GRAPH_POINTS;
 
-    alertActive    = (framesPerSec > 10);
+    alertActive = (framesPerSec > 10);
     lastUpdateTime = now;
     requestUpdate();
   }
@@ -475,10 +472,18 @@ void NetworkMonitorActivity::render(RenderLock&&) {
   renderer.clearScreen();
 
   switch (state) {
-    case ROGUE_SCANNING: renderRogueScanning(); break;
-    case ROGUE_RESULTS:  renderRogueResults();  break;
-    case ROGUE_DETAIL:   renderRogueDetail();   break;
-    default:             renderFrameDetection(); break;
+    case ROGUE_SCANNING:
+      renderRogueScanning();
+      break;
+    case ROGUE_RESULTS:
+      renderRogueResults();
+      break;
+    case ROGUE_DETAIL:
+      renderRogueDetail();
+      break;
+    default:
+      renderFrameDetection();
+      break;
   }
 
   renderer.displayBuffer();
@@ -489,8 +494,8 @@ void NetworkMonitorActivity::render(RenderLock&&) {
 // ---------------------------------------------------------------------------
 
 void NetworkMonitorActivity::renderFrameDetection() {
-  const auto& metrics  = UITheme::getInstance().getMetrics();
-  const auto pageWidth  = renderer.getScreenWidth();
+  const auto& metrics = UITheme::getInstance().getMetrics();
+  const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
   // ---- DETAIL view ----
@@ -503,9 +508,7 @@ void NetworkMonitorActivity::renderFrameDetection() {
     if (!validIndex) {
       state = MONITORING;
     } else {
-      GUI.drawHeader(renderer,
-                     Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                     "Detection Detail");
+      GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Detection Detail");
 
       const int leftPad = metrics.contentSidePadding;
       int y = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing + 20;
@@ -536,16 +539,14 @@ void NetworkMonitorActivity::renderFrameDetection() {
       // Type
       renderer.drawText(SMALL_FONT_ID, leftPad, y, "Frame Type", true, EpdFontFamily::BOLD);
       y += 22;
-      renderer.drawText(UI_10_FONT_ID, leftPad, y,
-                        (ev.frameType == 0xA0) ? "Disassociation" : "Management Frame");
+      renderer.drawText(UI_10_FONT_ID, leftPad, y, (ev.frameType == 0xA0) ? "Disassociation" : "Management Frame");
       y += lineH;
 
       // Reason
       renderer.drawText(SMALL_FONT_ID, leftPad, y, "Reason", true, EpdFontFamily::BOLD);
       y += 22;
       char reasonBuf[48];
-      snprintf(reasonBuf, sizeof(reasonBuf), "%d (%s)", ev.reasonCode,
-               reasonCodeStr(ev.reasonCode));
+      snprintf(reasonBuf, sizeof(reasonBuf), "%d (%s)", ev.reasonCode, reasonCodeStr(ev.reasonCode));
       renderer.drawText(UI_10_FONT_ID, leftPad, y, reasonBuf);
       y += lineH;
 
@@ -590,11 +591,8 @@ void NetworkMonitorActivity::renderFrameDetection() {
 
   // Header subtitle: channel + mode
   char subtitle[32];
-  snprintf(subtitle, sizeof(subtitle), "Ch %d (%s)", currentChannel,
-           autoHop ? "auto" : "manual");
-  GUI.drawHeader(renderer,
-                 Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 "Network Monitor", subtitle);
+  snprintf(subtitle, sizeof(subtitle), "Ch %d (%s)", currentChannel, autoHop ? "auto" : "manual");
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Network Monitor", subtitle);
 
   const int leftPad = metrics.contentSidePadding;
   int y = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing + 6;
@@ -602,23 +600,21 @@ void NetworkMonitorActivity::renderFrameDetection() {
   // Alert banner
   if (alertActive) {
     renderer.fillRect(leftPad, y, pageWidth - 2 * leftPad, 28, true);
-    renderer.drawCenteredText(UI_10_FONT_ID, y + 4, "ALERT: ANOMALOUS FRAME RATE DETECTED", false,
-                              EpdFontFamily::BOLD);
+    renderer.drawCenteredText(UI_10_FONT_ID, y + 4, "ALERT: ANOMALOUS FRAME RATE DETECTED", false, EpdFontFamily::BOLD);
     y += 34;
   }
 
   // Frame rate text
   char rateBuf[32];
-  snprintf(rateBuf, sizeof(rateBuf), "%lu frames/sec",
-           static_cast<unsigned long>(framesPerSec));
+  snprintf(rateBuf, sizeof(rateBuf), "%lu frames/sec", static_cast<unsigned long>(framesPerSec));
   renderer.drawText(UI_10_FONT_ID, leftPad, y, rateBuf, true, EpdFontFamily::BOLD);
   y += renderer.getTextHeight(UI_10_FONT_ID) + 6;
 
   // ---- Rate history bar graph ----
-  const int graphX      = leftPad + 20;
-  const int graphWidth  = pageWidth - graphX - 20;
+  const int graphX = leftPad + 20;
+  const int graphWidth = pageWidth - graphX - 20;
   const int graphHeight = 60;
-  const int graphY      = y;
+  const int graphY = y;
 
   uint16_t maxRate = 1;
   for (int i = 0; i < GRAPH_POINTS; i++) {
@@ -630,10 +626,7 @@ void NetworkMonitorActivity::renderFrameDetection() {
     const int idx = (historyIndex + i) % GRAPH_POINTS;
     const int barH = (static_cast<int>(rateHistory[idx]) * graphHeight) / maxRate;
     if (barH > 0) {
-      renderer.fillRect(graphX + i * barW,
-                        graphY + graphHeight - barH,
-                        (barW > 2 ? barW - 1 : 1),
-                        barH, true);
+      renderer.fillRect(graphX + i * barW, graphY + graphHeight - barH, (barW > 2 ? barW - 1 : 1), barH, true);
     }
   }
   renderer.drawRect(graphX - 1, graphY - 1, graphWidth + 2, graphHeight + 2, true);
@@ -641,59 +634,50 @@ void NetworkMonitorActivity::renderFrameDetection() {
 
   // Total frames and source count
   portENTER_CRITICAL(&dataMux);
-  const uint32_t capturedTotal  = totalFrames;
-  const int      capturedCount  = eventCount;
+  const uint32_t capturedTotal = totalFrames;
+  const int capturedCount = eventCount;
   portEXIT_CRITICAL(&dataMux);
 
   char statBuf[64];
-  snprintf(statBuf, sizeof(statBuf), "Total: %lu  Sources: %d",
-           static_cast<unsigned long>(capturedTotal), capturedCount);
+  snprintf(statBuf, sizeof(statBuf), "Total: %lu  Sources: %d", static_cast<unsigned long>(capturedTotal),
+           capturedCount);
   renderer.drawText(UI_10_FONT_ID, leftPad, y, statBuf);
   y += renderer.getTextHeight(UI_10_FONT_ID) + 8;
 
   // ---- Event list ----
-  const int listTop    = y;
+  const int listTop = y;
   const int listBottom = pageHeight - metrics.buttonHintsHeight - metrics.verticalSpacing;
   const int listHeight = listBottom - listTop;
 
   if (capturedCount == 0) {
-    renderer.drawCenteredText(UI_10_FONT_ID, listTop + listHeight / 2,
-                              "No anomalous frames detected");
+    renderer.drawCenteredText(UI_10_FONT_ID, listTop + listHeight / 2, "No anomalous frames detected");
   } else {
     if (selectorIndex >= capturedCount) {
       selectorIndex = capturedCount - 1;
     }
 
     GUI.drawList(
-        renderer, Rect{0, listTop, pageWidth, listHeight},
-        capturedCount, selectorIndex,
+        renderer, Rect{0, listTop, pageWidth, listHeight}, capturedCount, selectorIndex,
         [this](int i) -> std::string {
           portENTER_CRITICAL(&dataMux);
-          const uint8_t atkMac[6] = {
-              events[i].attackerMac[0], events[i].attackerMac[1],
-              events[i].attackerMac[2], events[i].attackerMac[3],
-              events[i].attackerMac[4], events[i].attackerMac[5]};
-          const uint8_t tgtBssid[6] = {
-              events[i].targetBssid[0], events[i].targetBssid[1],
-              events[i].targetBssid[2], events[i].targetBssid[3],
-              events[i].targetBssid[4], events[i].targetBssid[5]};
+          const uint8_t atkMac[6] = {events[i].attackerMac[0], events[i].attackerMac[1], events[i].attackerMac[2],
+                                     events[i].attackerMac[3], events[i].attackerMac[4], events[i].attackerMac[5]};
+          const uint8_t tgtBssid[6] = {events[i].targetBssid[0], events[i].targetBssid[1], events[i].targetBssid[2],
+                                       events[i].targetBssid[3], events[i].targetBssid[4], events[i].targetBssid[5]};
           portEXIT_CRITICAL(&dataMux);
           char buf[48];
-          snprintf(buf, sizeof(buf), "%02X:%02X:%02X > %02X:%02X:%02X",
-                   atkMac[0], atkMac[1], atkMac[2],
-                   tgtBssid[0], tgtBssid[1], tgtBssid[2]);
+          snprintf(buf, sizeof(buf), "%02X:%02X:%02X > %02X:%02X:%02X", atkMac[0], atkMac[1], atkMac[2], tgtBssid[0],
+                   tgtBssid[1], tgtBssid[2]);
           return std::string(buf);
         },
         [this](int i) -> std::string {
           portENTER_CRITICAL(&dataMux);
-          const uint32_t cnt  = events[i].count;
-          const uint8_t  ch   = events[i].channel;
-          const int8_t   rssi = events[i].rssi;
+          const uint32_t cnt = events[i].count;
+          const uint8_t ch = events[i].channel;
+          const int8_t rssi = events[i].rssi;
           portEXIT_CRITICAL(&dataMux);
           char buf[40];
-          snprintf(buf, sizeof(buf), "%lux Ch%d %ddBm",
-                   static_cast<unsigned long>(cnt),
-                   static_cast<int>(ch),
+          snprintf(buf, sizeof(buf), "%lux Ch%d %ddBm", static_cast<unsigned long>(cnt), static_cast<int>(ch),
                    static_cast<int>(rssi));
           return std::string(buf);
         });
@@ -712,8 +696,7 @@ void NetworkMonitorActivity::renderRogueScanning() {
   const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
-  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 "Network Monitor", "AP Scan");
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Network Monitor", "AP Scan");
 
   char buf[48];
   snprintf(buf, sizeof(buf), "Scanning... (Phase %d/%d)", rogueScanPhase + 1, ROGUE_SCAN_PHASES);
@@ -734,11 +717,9 @@ void NetworkMonitorActivity::renderRogueResults() {
   const auto pageHeight = renderer.getScreenHeight();
 
   char subtitle[48];
-  snprintf(subtitle, sizeof(subtitle), "%d APs, %d suspicious",
-           static_cast<int>(allAps.size()), suspiciousCount);
+  snprintf(subtitle, sizeof(subtitle), "%d APs, %d suspicious", static_cast<int>(allAps.size()), suspiciousCount);
 
-  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 "Network Monitor", subtitle);
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Network Monitor", subtitle);
 
   const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
   const int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
@@ -747,8 +728,8 @@ void NetworkMonitorActivity::renderRogueResults() {
     renderer.drawCenteredText(UI_10_FONT_ID, pageHeight / 2, "No networks found");
   } else {
     GUI.drawList(
-        renderer, Rect{0, contentTop, pageWidth, contentHeight},
-        static_cast<int>(ssidGroups.size()), rogueSelectorIndex,
+        renderer, Rect{0, contentTop, pageWidth, contentHeight}, static_cast<int>(ssidGroups.size()),
+        rogueSelectorIndex,
         [this](int index) -> std::string {
           const auto& g = ssidGroups[index];
           std::string title;
@@ -762,7 +743,7 @@ void NetworkMonitorActivity::renderRogueResults() {
           snprintf(buf, sizeof(buf), "%d APs", g.apCount);
           std::string sub = buf;
           if (g.mixedEncryption) sub += " MIXED ENC!";
-          if (g.mixedChannels)   sub += " Multi-Ch";
+          if (g.mixedChannels) sub += " Multi-Ch";
           return sub;
         });
   }
@@ -776,8 +757,7 @@ void NetworkMonitorActivity::renderRogueResults() {
 // ---------------------------------------------------------------------------
 
 void NetworkMonitorActivity::renderRogueDetail() {
-  if (rogueDetailGroupIndex < 0 ||
-      rogueDetailGroupIndex >= static_cast<int>(ssidGroups.size())) {
+  if (rogueDetailGroupIndex < 0 || rogueDetailGroupIndex >= static_cast<int>(ssidGroups.size())) {
     state = ROGUE_RESULTS;
     return;
   }
@@ -789,8 +769,7 @@ void NetworkMonitorActivity::renderRogueDetail() {
 
   const SsidGroup& g = ssidGroups[rogueDetailGroupIndex];
 
-  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 g.ssid.c_str());
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, g.ssid.c_str());
 
   int y = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing + 10;
 
@@ -830,11 +809,8 @@ void NetworkMonitorActivity::renderRogueDetail() {
     if (y >= bottomLimit) break;
 
     char buf[64];
-    snprintf(buf, sizeof(buf), "%s  Ch%d  %ddBm  %s",
-             ap.bssid.c_str(),
-             static_cast<int>(ap.channel),
-             static_cast<int>(ap.rssi),
-             encryptionString(ap.encType));
+    snprintf(buf, sizeof(buf), "%s  Ch%d  %ddBm  %s", ap.bssid.c_str(), static_cast<int>(ap.channel),
+             static_cast<int>(ap.rssi), encryptionString(ap.encType));
     renderer.drawText(UI_10_FONT_ID, leftPad, y, buf);
     y += lineH;
   }
@@ -864,16 +840,11 @@ void NetworkMonitorActivity::saveToCsv() {
              "%02X:%02X:%02X:%02X:%02X:%02X,"
              "%02X:%02X:%02X:%02X:%02X:%02X,"
              "%d,%s,%d,%lu,%d\n",
-             events[i].attackerMac[0], events[i].attackerMac[1],
-             events[i].attackerMac[2], events[i].attackerMac[3],
-             events[i].attackerMac[4], events[i].attackerMac[5],
-             events[i].targetBssid[0], events[i].targetBssid[1],
-             events[i].targetBssid[2], events[i].targetBssid[3],
-             events[i].targetBssid[4], events[i].targetBssid[5],
-             static_cast<int>(events[i].channel),
-             (events[i].frameType == 0xA0) ? "Disassoc" : "MgmtFrame",
-             static_cast<int>(events[i].reasonCode),
-             static_cast<unsigned long>(events[i].count),
+             events[i].attackerMac[0], events[i].attackerMac[1], events[i].attackerMac[2], events[i].attackerMac[3],
+             events[i].attackerMac[4], events[i].attackerMac[5], events[i].targetBssid[0], events[i].targetBssid[1],
+             events[i].targetBssid[2], events[i].targetBssid[3], events[i].targetBssid[4], events[i].targetBssid[5],
+             static_cast<int>(events[i].channel), (events[i].frameType == 0xA0) ? "Disassoc" : "MgmtFrame",
+             static_cast<int>(events[i].reasonCode), static_cast<unsigned long>(events[i].count),
              static_cast<int>(events[i].rssi));
     csv += line;
   }
@@ -889,34 +860,50 @@ void NetworkMonitorActivity::saveToCsv() {
 
 std::string NetworkMonitorActivity::macToString(const uint8_t* mac) {
   char buf[18];
-  snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X",
-           mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
   return std::string(buf);
 }
 
 const char* NetworkMonitorActivity::reasonCodeStr(uint8_t code) {
   switch (code) {
-    case 1: return "Unspecified";
-    case 2: return "Auth expired";
-    case 3: return "STA leaving";
-    case 4: return "Inactivity";
-    case 5: return "AP full";
-    case 6: return "Class 2 err";
-    case 7: return "Class 3 err";
-    case 8: return "STA leaving BSS";
-    default: return "Other";
+    case 1:
+      return "Unspecified";
+    case 2:
+      return "Auth expired";
+    case 3:
+      return "STA leaving";
+    case 4:
+      return "Inactivity";
+    case 5:
+      return "AP full";
+    case 6:
+      return "Class 2 err";
+    case 7:
+      return "Class 3 err";
+    case 8:
+      return "STA leaving BSS";
+    default:
+      return "Other";
   }
 }
 
 const char* NetworkMonitorActivity::encryptionString(uint8_t type) {
   switch (type) {
-    case WIFI_AUTH_OPEN:          return "Open";
-    case WIFI_AUTH_WEP:           return "WEP";
-    case WIFI_AUTH_WPA_PSK:       return "WPA";
-    case WIFI_AUTH_WPA2_PSK:      return "WPA2";
-    case WIFI_AUTH_WPA_WPA2_PSK:  return "WPA/2";
-    case WIFI_AUTH_WPA3_PSK:      return "WPA3";
-    case WIFI_AUTH_WPA2_WPA3_PSK: return "WPA2/3";
-    default:                      return "?";
+    case WIFI_AUTH_OPEN:
+      return "Open";
+    case WIFI_AUTH_WEP:
+      return "WEP";
+    case WIFI_AUTH_WPA_PSK:
+      return "WPA";
+    case WIFI_AUTH_WPA2_PSK:
+      return "WPA2";
+    case WIFI_AUTH_WPA_WPA2_PSK:
+      return "WPA/2";
+    case WIFI_AUTH_WPA3_PSK:
+      return "WPA3";
+    case WIFI_AUTH_WPA2_WPA3_PSK:
+      return "WPA2/3";
+    default:
+      return "?";
   }
 }

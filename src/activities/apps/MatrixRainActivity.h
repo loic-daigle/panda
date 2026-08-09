@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+
 #include "activities/Activity.h"
 
 class MatrixRainActivity final : public Activity {

@@ -16,6 +16,7 @@
 // ============================================================
 
 #include <unity.h>
+
 #include "BitmapRenderer.h"
 
 // We use BitmapRenderer (a real pixel-drawing GfxRenderer) instead of the no-op mock
@@ -57,30 +58,57 @@ static void drawListItem(int y, const char* text, bool selected) {
 static void drawPip(int cx, int cy, int r) {
   for (int dy = -r; dy <= r; dy++) {
     int dx = 0;
-    while ((dx+1)*(dx+1) + dy*dy <= r*r) dx++;
+    while ((dx + 1) * (dx + 1) + dy * dy <= r * r) dx++;
     renderer.fillRect(cx - dx, cy + dy, dx * 2 + 1, 1, true);
   }
 }
 
 static void drawDie(int x, int y, int size, int value) {
   renderer.fillRect(x + 4, y + 4, size, size, true);    // shadow
-  renderer.fillRect(x, y, size, size, false);             // white face
-  renderer.drawRect(x, y, size, size);                    // outer border
-  renderer.drawRect(x + 2, y + 2, size - 4, size - 4);   // inner border
+  renderer.fillRect(x, y, size, size, false);           // white face
+  renderer.drawRect(x, y, size, size);                  // outer border
+  renderer.drawRect(x + 2, y + 2, size - 4, size - 4);  // inner border
 
   int pip = size / 8;
   int m = size / 4;
   int l = x + m, r = x + size - m;
   int t = y + m, b = y + size - m;
-  int mx = x + size/2, my = y + size/2;
+  int mx = x + size / 2, my = y + size / 2;
 
   switch (value) {
-    case 1: drawPip(mx,my,pip); break;
-    case 2: drawPip(r,t,pip); drawPip(l,b,pip); break;
-    case 3: drawPip(r,t,pip); drawPip(mx,my,pip); drawPip(l,b,pip); break;
-    case 4: drawPip(l,t,pip); drawPip(r,t,pip); drawPip(l,b,pip); drawPip(r,b,pip); break;
-    case 5: drawPip(l,t,pip); drawPip(r,t,pip); drawPip(mx,my,pip); drawPip(l,b,pip); drawPip(r,b,pip); break;
-    case 6: drawPip(l,t,pip); drawPip(r,t,pip); drawPip(l,my,pip); drawPip(r,my,pip); drawPip(l,b,pip); drawPip(r,b,pip); break;
+    case 1:
+      drawPip(mx, my, pip);
+      break;
+    case 2:
+      drawPip(r, t, pip);
+      drawPip(l, b, pip);
+      break;
+    case 3:
+      drawPip(r, t, pip);
+      drawPip(mx, my, pip);
+      drawPip(l, b, pip);
+      break;
+    case 4:
+      drawPip(l, t, pip);
+      drawPip(r, t, pip);
+      drawPip(l, b, pip);
+      drawPip(r, b, pip);
+      break;
+    case 5:
+      drawPip(l, t, pip);
+      drawPip(r, t, pip);
+      drawPip(mx, my, pip);
+      drawPip(l, b, pip);
+      drawPip(r, b, pip);
+      break;
+    case 6:
+      drawPip(l, t, pip);
+      drawPip(r, t, pip);
+      drawPip(l, my, pip);
+      drawPip(r, my, pip);
+      drawPip(l, b, pip);
+      drawPip(r, b, pip);
+      break;
   }
 }
 
@@ -123,11 +151,11 @@ void render_dice_1d20() {
 
   // Single d20 — large, centered, number inside
   int x = 170, y = 220, size = 140;
-  renderer.fillRect(x+4, y+4, size, size, true);
+  renderer.fillRect(x + 4, y + 4, size, size, true);
   renderer.fillRect(x, y, size, size, false);
   renderer.drawRect(x, y, size, size);
-  renderer.drawRect(x+2, y+2, size-4, size-4);
-  renderer.drawCenteredText(UI_12_FONT_ID, y + size/2 - 12, "17", true, 1);
+  renderer.drawRect(x + 2, y + 2, size - 4, size - 4);
+  renderer.drawCenteredText(UI_12_FONT_ID, y + size / 2 - 12, "17", true, 1);
   renderer.drawCenteredText(SMALL_FONT_ID, y + size - 20, "d20");
 
   renderer.drawCenteredText(UI_10_FONT_ID, 440, "d20: 17", true, 1);
@@ -167,11 +195,15 @@ void render_evil_portal() {
   drawHeader("Evil Portal");
 
   int y = 100;
-  renderer.drawText(SMALL_FONT_ID, 15, y, "ACTIVE", true, 1); y += 45;
+  renderer.drawText(SMALL_FONT_ID, 15, y, "ACTIVE", true, 1);
+  y += 45;
   renderer.drawText(SMALL_FONT_ID, 15, y, "SSID:", true, 1);
-  renderer.drawText(UI_10_FONT_ID, 80, y, "Free WiFi"); y += 45;
-  renderer.drawText(UI_10_FONT_ID, 15, y, "Clients: 3"); y += 45;
-  renderer.drawText(UI_10_FONT_ID, 15, y, "Captured: 2", true, 1); y += 45;
+  renderer.drawText(UI_10_FONT_ID, 80, y, "Free WiFi");
+  y += 45;
+  renderer.drawText(UI_10_FONT_ID, 15, y, "Clients: 3");
+  y += 45;
+  renderer.drawText(UI_10_FONT_ID, 15, y, "Captured: 2", true, 1);
+  y += 45;
   renderer.drawText(UI_10_FONT_ID, 15, y, "Last: john@example.com");
   drawButtonHints("Stop", "", "", "");
 
@@ -191,10 +223,7 @@ void render_apps_menu() {
   TEST_ASSERT_TRUE(renderer.saveBMP("test/preview_apps_menu.bmp"));
 }
 
-
-
 void render_countdowntimer() {
-
   renderer.clearScreen();
   drawHeader("CountdownTimer");
 
@@ -222,7 +251,6 @@ void render_countdowntimer() {
 
   TEST_ASSERT_TRUE(renderer.saveBMP("test/preview_countdowntimer.bmp"));
 }
-
 
 void render_diceroller() {
   // Reference: src\activities\apps\DiceRollerActivity.cpp
@@ -289,7 +317,7 @@ int main() {
   RUN_TEST(render_evil_portal);
   RUN_TEST(render_apps_menu);
   // RUN_TEST(render_my_new_activity);  // ← uncomment when ready
-    RUN_TEST(render_countdowntimer);
-    RUN_TEST(render_diceroller);
+  RUN_TEST(render_countdowntimer);
+  RUN_TEST(render_diceroller);
   return UNITY_END();
 }

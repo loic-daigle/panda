@@ -82,8 +82,8 @@ void WardrivingActivity::processScanResults() {
     for (int i = 0; i < result; i++) {
       uint8_t* rawBssid = WiFi.BSSID(i);
       char bssidBuf[20];
-      snprintf(bssidBuf, sizeof(bssidBuf), "%02X:%02X:%02X:%02X:%02X:%02X",
-               rawBssid[0], rawBssid[1], rawBssid[2], rawBssid[3], rawBssid[4], rawBssid[5]);
+      snprintf(bssidBuf, sizeof(bssidBuf), "%02X:%02X:%02X:%02X:%02X:%02X", rawBssid[0], rawBssid[1], rawBssid[2],
+               rawBssid[3], rawBssid[4], rawBssid[5]);
 
       // Check if BSSID already seen
       bool found = false;
@@ -123,14 +123,22 @@ void WardrivingActivity::processScanResults() {
 
 const char* WardrivingActivity::encryptionString(uint8_t type) {
   switch (type) {
-    case WIFI_AUTH_OPEN: return "Open";
-    case WIFI_AUTH_WEP: return "WEP";
-    case WIFI_AUTH_WPA_PSK: return "WPA";
-    case WIFI_AUTH_WPA2_PSK: return "WPA2";
-    case WIFI_AUTH_WPA_WPA2_PSK: return "WPA/2";
-    case WIFI_AUTH_WPA3_PSK: return "WPA3";
-    case WIFI_AUTH_WPA2_WPA3_PSK: return "WPA2/3";
-    default: return "?";
+    case WIFI_AUTH_OPEN:
+      return "Open";
+    case WIFI_AUTH_WEP:
+      return "WEP";
+    case WIFI_AUTH_WPA_PSK:
+      return "WPA";
+    case WIFI_AUTH_WPA2_PSK:
+      return "WPA2";
+    case WIFI_AUTH_WPA_WPA2_PSK:
+      return "WPA/2";
+    case WIFI_AUTH_WPA3_PSK:
+      return "WPA3";
+    case WIFI_AUTH_WPA2_WPA3_PSK:
+      return "WPA2/3";
+    default:
+      return "?";
   }
 }
 
@@ -148,8 +156,7 @@ void WardrivingActivity::loop() {
     }
 
     // Start next async scan after interval, but only if the previous one finished
-    if (WiFi.scanComplete() != WIFI_SCAN_RUNNING &&
-        millis() - lastScanTime >= SCAN_INTERVAL_MS) {
+    if (WiFi.scanComplete() != WIFI_SCAN_RUNNING && millis() - lastScanTime >= SCAN_INTERVAL_MS) {
       WiFi.scanNetworks(true);
     }
   }
@@ -202,8 +209,7 @@ void WardrivingActivity::render(RenderLock&&) {
     snprintf(subtitleBuf, sizeof(subtitleBuf), "%zu unique", networks.size());
   }
 
-  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 "Wardriving", subtitleBuf);
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Wardriving", subtitleBuf);
 
   const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
   const int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
@@ -216,22 +222,17 @@ void WardrivingActivity::render(RenderLock&&) {
     }
   } else {
     GUI.drawList(
-        renderer, Rect{0, contentTop, pageWidth, contentHeight},
-        static_cast<int>(networks.size()), selectorIndex,
-        [this](int index) -> std::string {
-          return networks[index].ssid;
-        },
+        renderer, Rect{0, contentTop, pageWidth, contentHeight}, static_cast<int>(networks.size()), selectorIndex,
+        [this](int index) -> std::string { return networks[index].ssid; },
         [this](int index) -> std::string {
           const auto& net = networks[index];
           char buf[40];
-          snprintf(buf, sizeof(buf), "%d dBm  Ch%u  %s",
-                   net.rssi, net.channel, encryptionString(net.encType));
+          snprintf(buf, sizeof(buf), "%d dBm  Ch%u  %s", net.rssi, net.channel, encryptionString(net.encType));
           return buf;
         });
   }
 
-  const auto labels = mappedInput.mapLabels(tr(STR_EXIT), logging ? "Stop" : "Start",
-                                            "^", "v");
+  const auto labels = mappedInput.mapLabels(tr(STR_EXIT), logging ? "Stop" : "Start", "^", "v");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
 
   renderer.displayBuffer();

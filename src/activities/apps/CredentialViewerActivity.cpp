@@ -16,9 +16,7 @@ void CredentialViewerActivity::onEnter() {
   requestUpdate();
 }
 
-void CredentialViewerActivity::onExit() {
-  Activity::onExit();
-}
+void CredentialViewerActivity::onExit() { Activity::onExit(); }
 
 void CredentialViewerActivity::loadCredentials() {
   creds.clear();
@@ -54,11 +52,20 @@ void CredentialViewerActivity::loadCredentials() {
             if (j == lineEnd || content[j] == ',') {
               std::string val(content.c_str() + fieldStart, j - fieldStart);
               switch (field) {
-                case 0: cred.timestamp = val; break;
-                case 1: cred.ssid = val; break;
-                case 2: cred.username = val; break;
-                case 3: cred.password = val; break;
-                default: break;
+                case 0:
+                  cred.timestamp = val;
+                  break;
+                case 1:
+                  cred.ssid = val;
+                  break;
+                case 2:
+                  cred.username = val;
+                  break;
+                case 3:
+                  cred.password = val;
+                  break;
+                default:
+                  break;
               }
               field++;
               fieldStart = j + 1;
@@ -174,12 +181,8 @@ void CredentialViewerActivity::render(RenderLock&&) {
 
       GUI.drawList(
           renderer, Rect{0, contentTop, pageWidth, contentHeight}, static_cast<int>(creds.size()), selectorIndex,
-          [this](int i) -> std::string {
-            return creds[i].username.empty() ? "(no username)" : creds[i].username;
-          },
-          [this](int i) -> std::string {
-            return creds[i].ssid + " - " + creds[i].timestamp;
-          });
+          [this](int i) -> std::string { return creds[i].username.empty() ? "(no username)" : creds[i].username; },
+          [this](int i) -> std::string { return creds[i].ssid + " - " + creds[i].timestamp; });
 
       const auto labels = mappedInput.mapLabels("Exit", "Hold:Delete", "^", "v");
       GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
@@ -207,14 +210,12 @@ void CredentialViewerActivity::render(RenderLock&&) {
 
         renderer.drawText(SMALL_FONT_ID, leftPad, y, "Username", true, EpdFontFamily::BOLD);
         y += 22;
-        renderer.drawText(UI_10_FONT_ID, leftPad, y,
-                          cred.username.empty() ? "(empty)" : cred.username.c_str());
+        renderer.drawText(UI_10_FONT_ID, leftPad, y, cred.username.empty() ? "(empty)" : cred.username.c_str());
         y += lineH;
 
         renderer.drawText(SMALL_FONT_ID, leftPad, y, "Password", true, EpdFontFamily::BOLD);
         y += 22;
-        renderer.drawText(UI_10_FONT_ID, leftPad, y,
-                          cred.password.empty() ? "(empty)" : cred.password.c_str());
+        renderer.drawText(UI_10_FONT_ID, leftPad, y, cred.password.empty() ? "(empty)" : cred.password.c_str());
       }
 
       const auto labels = mappedInput.mapLabels("Back", "", "", "");

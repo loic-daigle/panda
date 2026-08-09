@@ -1,14 +1,18 @@
 #pragma once
 // UITheme mock — components/UITheme.h
 
-#include "GfxRenderer.h"
-#include <string>
 #include <functional>
+#include <string>
 #include <vector>
+
+#include "GfxRenderer.h"
 
 enum class UIIcon { Folder, Recent, Transfer, Book, Settings, Wifi, Hotspot, Library };
 
-struct TabInfo { const char* label; bool selected; };
+struct TabInfo {
+  const char* label;
+  bool selected;
+};
 
 struct UIMetrics {
   int topPadding = 5;
@@ -45,12 +49,9 @@ struct GUIHelper {
   void drawKeyboardKey(GfxRenderer&, Rect, const char*, bool) {}
 
   // drawList with all overloads
-  void drawList(GfxRenderer&, Rect, int, int,
-      std::function<std::string(int)>,
-      std::function<std::string(int)> = nullptr,
-      std::function<UIIcon(int)> = nullptr,
-      std::function<std::string(int)> = nullptr,
-      bool = false) {}
+  void drawList(GfxRenderer&, Rect, int, int, std::function<std::string(int)>,
+                std::function<std::string(int)> = nullptr, std::function<UIIcon(int)> = nullptr,
+                std::function<std::string(int)> = nullptr, bool = false) {}
 
   void drawTabBar(GfxRenderer&, Rect, const std::vector<TabInfo>&, bool = false) {}
   void drawRecentBookCover(GfxRenderer&, Rect, auto&, int, bool&, bool&, bool, auto) {}
@@ -59,16 +60,20 @@ struct GUIHelper {
 
 class UITheme {
  public:
-  static UITheme& getInstance() { static UITheme t; return t; }
+  static UITheme& getInstance() {
+    static UITheme t;
+    return t;
+  }
   const UIMetrics& getMetrics() const { return metrics; }
   const auto& getTheme() const { return *this; }
   bool showsFileIcons() const { return false; }
   void reload() {}
   uint8_t getStatusBarHeight() const { return 20; }
   uint8_t getProgressBarHeight() const { return 4; }
-  int getNumberOfItemsPerPage(GfxRenderer&, bool=false, bool=false, bool=false, bool=false) { return 10; }
+  int getNumberOfItemsPerPage(GfxRenderer&, bool = false, bool = false, bool = false, bool = false) { return 10; }
   static UIIcon getFileIcon(const std::string&) { return UIIcon::Book; }
   static std::string getCoverThumbPath(const std::string& p, int) { return p; }
+
  private:
   UIMetrics metrics;
 };

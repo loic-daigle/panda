@@ -23,16 +23,58 @@ constexpr const char* CasinoActivity::RANK_CHARS[];
 //  0=Seven, 1=BAR, 2=Cherry, 3=Bell, 4=Star, 5=Diamond,
 //  6=Lemon, 7=Orange, 8=Grape, 9=Melon, 10=Plum, 11=SevenOutline(wild)
 const CasinoActivity::SlotMachineType CasinoActivity::MACHINES[NUM_MACHINES] = {
-    {"Classic",        "Traditional 3-reel slots",    6, {{0,1,2,3,4,5,0,0},   {50,20,10,8,5,3,0,0}},    2, 0xFF, false, false, 10},
-    {"Fruit Frenzy",   "Fruity fun, free spins!",     6, {{2,6,7,8,9,10,0,0},  {15,12,10,8,6,4,0,0}},    2, 0xFF, true,  false, 10},
-    {"Lucky 7s",       "Wild sevens match anything",  5, {{0,11,1,3,4,0,0,0},  {50,25,20,8,5,0,0,0}},    2, 1,    false, false, 25},
-    {"Diamond Deluxe", "Hold reels, big diamonds",    6, {{5,4,3,1,2,0,0,0},   {40,15,10,8,5,3,0,0}},    3, 0xFF, false, true,  50},
-    {"High Roller",    "Big bets, bigger payouts",    4, {{0,1,5,4,0,0,0,0},   {80,30,20,10,0,0,0,0}},   3, 0xFF, false, false, 100},
+    {"Classic",
+     "Traditional 3-reel slots",
+     6,
+     {{0, 1, 2, 3, 4, 5, 0, 0}, {50, 20, 10, 8, 5, 3, 0, 0}},
+     2,
+     0xFF,
+     false,
+     false,
+     10},
+    {"Fruit Frenzy",
+     "Fruity fun, free spins!",
+     6,
+     {{2, 6, 7, 8, 9, 10, 0, 0}, {15, 12, 10, 8, 6, 4, 0, 0}},
+     2,
+     0xFF,
+     true,
+     false,
+     10},
+    {"Lucky 7s",
+     "Wild sevens match anything",
+     5,
+     {{0, 11, 1, 3, 4, 0, 0, 0}, {50, 25, 20, 8, 5, 0, 0, 0}},
+     2,
+     1,
+     false,
+     false,
+     25},
+    {"Diamond Deluxe",
+     "Hold reels, big diamonds",
+     6,
+     {{5, 4, 3, 1, 2, 0, 0, 0}, {40, 15, 10, 8, 5, 3, 0, 0}},
+     3,
+     0xFF,
+     false,
+     true,
+     50},
+    {"High Roller",
+     "Big bets, bigger payouts",
+     4,
+     {{0, 1, 5, 4, 0, 0, 0, 0}, {80, 30, 20, 10, 0, 0, 0, 0}},
+     3,
+     0xFF,
+     false,
+     false,
+     100},
 };
 
 bool CasinoActivity::isRed(int n) {
-  static constexpr int reds[] = {1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36};
-  for (int r : reds) { if (r == n) return true; }
+  static constexpr int reds[] = {1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36};
+  for (int r : reds) {
+    if (r == n) return true;
+  }
   return false;
 }
 
@@ -105,7 +147,10 @@ void CasinoActivity::loop() {
         mappedInput.wasPressed(MappedInputManager::Button::Back)) {
       showingResult = false;
       // Refill if broke
-      if (credits <= 0) { credits = 1000; saveCredits(); }
+      if (credits <= 0) {
+        credits = 1000;
+        saveCredits();
+      }
       requestUpdate();
       return;
     }
@@ -114,7 +159,10 @@ void CasinoActivity::loop() {
 
   switch (screen) {
     case LOBBY: {
-      if (mappedInput.wasPressed(MappedInputManager::Button::Back)) { finish(); return; }
+      if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
+        finish();
+        return;
+      }
       if (mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
         switch (lobbyIndex) {
           case 0:
@@ -122,10 +170,23 @@ void CasinoActivity::loop() {
             slotsScreen = SLOTS_MENU;
             slotsMachineMenuIndex = 0;
             break;
-          case 1: screen = BLACKJACK; bjState = BJ_BET; break;
-          case 2: screen = COINFLIP; coinState = COIN_BET; break;
-          case 3: screen = HIGHLOW; hlState = HL_BET; hlStreak = 0; break;
-          case 4: screen = ROULETTE; rlState = RL_BET; break;
+          case 1:
+            screen = BLACKJACK;
+            bjState = BJ_BET;
+            break;
+          case 2:
+            screen = COINFLIP;
+            coinState = COIN_BET;
+            break;
+          case 3:
+            screen = HIGHLOW;
+            hlState = HL_BET;
+            hlStreak = 0;
+            break;
+          case 4:
+            screen = ROULETTE;
+            rlState = RL_BET;
+            break;
           case 5:
             screen = LOOTBOX;
             lbScreen = LB_MAIN_MENU;
@@ -141,18 +202,39 @@ void CasinoActivity::loop() {
             requestUpdate();
             return;
         }
-        requestUpdate(); return;
+        requestUpdate();
+        return;
       }
-      buttonNavigator.onNext([this] { lobbyIndex = ButtonNavigator::nextIndex(lobbyIndex, LOBBY_COUNT); resetConfirmCount = 0; requestUpdate(); });
-      buttonNavigator.onPrevious([this] { lobbyIndex = ButtonNavigator::previousIndex(lobbyIndex, LOBBY_COUNT); resetConfirmCount = 0; requestUpdate(); });
+      buttonNavigator.onNext([this] {
+        lobbyIndex = ButtonNavigator::nextIndex(lobbyIndex, LOBBY_COUNT);
+        resetConfirmCount = 0;
+        requestUpdate();
+      });
+      buttonNavigator.onPrevious([this] {
+        lobbyIndex = ButtonNavigator::previousIndex(lobbyIndex, LOBBY_COUNT);
+        resetConfirmCount = 0;
+        requestUpdate();
+      });
       break;
     }
-    case SLOTS: slotsLoop(); break;
-    case BLACKJACK: bjLoop(); break;
-    case COINFLIP: coinLoop(); break;
-    case HIGHLOW: hlLoop(); break;
-    case ROULETTE: rlLoop(); break;
-    case LOOTBOX: lbLoop(); break;
+    case SLOTS:
+      slotsLoop();
+      break;
+    case BLACKJACK:
+      bjLoop();
+      break;
+    case COINFLIP:
+      coinLoop();
+      break;
+    case HIGHLOW:
+      hlLoop();
+      break;
+    case ROULETTE:
+      rlLoop();
+      break;
+    case LOOTBOX:
+      lbLoop();
+      break;
   }
 }
 
@@ -164,13 +246,27 @@ void CasinoActivity::render(RenderLock&&) {
   renderer.clearScreen();
 
   switch (screen) {
-    case LOBBY: renderLobby(); break;
-    case SLOTS: slotsRender(); break;
-    case BLACKJACK: bjRender(); break;
-    case COINFLIP: coinRender(); break;
-    case HIGHLOW: hlRender(); break;
-    case ROULETTE: rlRender(); break;
-    case LOOTBOX: lbRender(); return;  // lbRender calls displayBuffer itself
+    case LOBBY:
+      renderLobby();
+      break;
+    case SLOTS:
+      slotsRender();
+      break;
+    case BLACKJACK:
+      bjRender();
+      break;
+    case COINFLIP:
+      coinRender();
+      break;
+    case HIGHLOW:
+      hlRender();
+      break;
+    case ROULETTE:
+      rlRender();
+      break;
+    case LOOTBOX:
+      lbRender();
+      return;  // lbRender calls displayBuffer itself
   }
 
   // Result overlay
@@ -234,10 +330,15 @@ void CasinoActivity::renderLobby() {
   int contentTop = 90;
   int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
 
-  static const char* games[] = {"Slot Machine", "Blackjack", "Coin Flip", "Higher / Lower", "Roulette", "Loot Box", "Reset Credits"};
-  static const char* descs[] = {"5 machines with powerups", "Beat the dealer to 21", "Pick heads or tails, 2x payout", "Guess the next card, streak bonus", "European roulette, 0-36", "Gacha pulls & collection", "Start fresh with 1000 credits"};
+  static const char* games[] = {"Slot Machine", "Blackjack", "Coin Flip",    "Higher / Lower",
+                                "Roulette",     "Loot Box",  "Reset Credits"};
+  static const char* descs[] = {"5 machines with powerups",       "Beat the dealer to 21",
+                                "Pick heads or tails, 2x payout", "Guess the next card, streak bonus",
+                                "European roulette, 0-36",        "Gacha pulls & collection",
+                                "Start fresh with 1000 credits"};
 
-  static const char* resetDescs[] = {"Start fresh with 1000 credits", "Are you sure? Press again.", "Really sure? Press once more."};
+  static const char* resetDescs[] = {"Start fresh with 1000 credits", "Are you sure? Press again.",
+                                     "Really sure? Press once more."};
   const char* resetDesc = resetDescs[resetConfirmCount < 3 ? resetConfirmCount : 2];
 
   GUI.drawList(
@@ -310,22 +411,28 @@ static void drawSuitShape(GfxRenderer& r, int cx, int cy, int sz, int suit) {
       for (int dy = -cr; dy <= cr; dy++) {
         int dx = 0;
         while ((dx + 1) * (dx + 1) + dy * dy <= cr * cr) dx++;
-        if (dx > 0) r.fillRect(cx - dx, cy - sz / 2 - cr / 3 + dy, dx * 2 + 1, 1, true);
-        else r.drawPixel(cx, cy - sz / 2 - cr / 3 + dy, true);
+        if (dx > 0)
+          r.fillRect(cx - dx, cy - sz / 2 - cr / 3 + dy, dx * 2 + 1, 1, true);
+        else
+          r.drawPixel(cx, cy - sz / 2 - cr / 3 + dy, true);
       }
       // Bottom-left circle
       for (int dy = -cr; dy <= cr; dy++) {
         int dx = 0;
         while ((dx + 1) * (dx + 1) + dy * dy <= cr * cr) dx++;
-        if (dx > 0) r.fillRect(cx - sz / 2 - dx, cy + cr / 3 + dy, dx * 2 + 1, 1, true);
-        else r.drawPixel(cx - sz / 2, cy + cr / 3 + dy, true);
+        if (dx > 0)
+          r.fillRect(cx - sz / 2 - dx, cy + cr / 3 + dy, dx * 2 + 1, 1, true);
+        else
+          r.drawPixel(cx - sz / 2, cy + cr / 3 + dy, true);
       }
       // Bottom-right circle
       for (int dy = -cr; dy <= cr; dy++) {
         int dx = 0;
         while ((dx + 1) * (dx + 1) + dy * dy <= cr * cr) dx++;
-        if (dx > 0) r.fillRect(cx + sz / 2 - dx, cy + cr / 3 + dy, dx * 2 + 1, 1, true);
-        else r.drawPixel(cx + sz / 2, cy + cr / 3 + dy, true);
+        if (dx > 0)
+          r.fillRect(cx + sz / 2 - dx, cy + cr / 3 + dy, dx * 2 + 1, 1, true);
+        else
+          r.drawPixel(cx + sz / 2, cy + cr / 3 + dy, true);
       }
       // Stem
       r.fillRect(cx - 1, cy + cr / 2, 3, sz, true);
@@ -336,8 +443,8 @@ static void drawSuitShape(GfxRenderer& r, int cx, int cy, int sz, int suit) {
 
 void CasinoActivity::drawCard(int x, int y, const Card& c, bool faceDown) {
   int cw = 70, ch = 100;
-  renderer.fillRect(x + 2, y + 2, cw, ch, true);   // shadow
-  renderer.fillRect(x, y, cw, ch, false);            // white face
+  renderer.fillRect(x + 2, y + 2, cw, ch, true);  // shadow
+  renderer.fillRect(x, y, cw, ch, false);         // white face
   renderer.drawRect(x, y, cw, ch);
   renderer.drawRect(x + 1, y + 1, cw - 2, ch - 2);
 
@@ -525,7 +632,7 @@ static void drawIconOrange(GfxRenderer& r, int cx, int cy) {
 
 static void drawIconGrape(GfxRenderer& r, int cx, int cy) {
   // Cluster of 6 small circles in 1-2-3 pyramid arrangement
-  int gr = 8;  // grape circle radius
+  int gr = 8;           // grape circle radius
   int sp = gr * 2 + 2;  // spacing
 
   // Row 1 (top): 1 grape
@@ -663,19 +770,44 @@ static void drawCoinEllipse(GfxRenderer& r, int cx, int cy, int radiusX, int rad
 
 void CasinoActivity::drawSlotIcon(int cx, int cy, uint8_t symbolId) {
   switch (symbolId) {
-    case 0:  drawIcon7(renderer, cx, cy);        break;
-    case 1:  drawIconBar(renderer, cx, cy);      break;
-    case 2:  drawIconCherry(renderer, cx, cy);   break;
-    case 3:  drawIconBell(renderer, cx, cy);     break;
-    case 4:  drawIconStar(renderer, cx, cy);     break;
-    case 5:  drawIconDiamond(renderer, cx, cy);  break;
-    case 6:  drawIconLemon(renderer, cx, cy);    break;
-    case 7:  drawIconOrange(renderer, cx, cy);   break;
-    case 8:  drawIconGrape(renderer, cx, cy);    break;
-    case 9:  drawIconMelon(renderer, cx, cy);    break;
-    case 10: drawIconPlum(renderer, cx, cy);     break;
-    case 11: drawIcon7Outline(renderer, cx, cy); break;
-    default: break;
+    case 0:
+      drawIcon7(renderer, cx, cy);
+      break;
+    case 1:
+      drawIconBar(renderer, cx, cy);
+      break;
+    case 2:
+      drawIconCherry(renderer, cx, cy);
+      break;
+    case 3:
+      drawIconBell(renderer, cx, cy);
+      break;
+    case 4:
+      drawIconStar(renderer, cx, cy);
+      break;
+    case 5:
+      drawIconDiamond(renderer, cx, cy);
+      break;
+    case 6:
+      drawIconLemon(renderer, cx, cy);
+      break;
+    case 7:
+      drawIconOrange(renderer, cx, cy);
+      break;
+    case 8:
+      drawIconGrape(renderer, cx, cy);
+      break;
+    case 9:
+      drawIconMelon(renderer, cx, cy);
+      break;
+    case 10:
+      drawIconPlum(renderer, cx, cy);
+      break;
+    case 11:
+      drawIcon7Outline(renderer, cx, cy);
+      break;
+    default:
+      break;
   }
 }
 
@@ -694,8 +826,8 @@ void CasinoActivity::drawReelBlur(int x, int y, int w, int h, int frameOffset) {
 
 void CasinoActivity::drawSlotReel(int x, int y, int symbolId, bool held, bool blur, int blurFrame) {
   int rw = 130, rh = 130;
-  renderer.fillRect(x + 3, y + 3, rw, rh, true);   // shadow
-  renderer.fillRect(x, y, rw, rh, false);            // white
+  renderer.fillRect(x + 3, y + 3, rw, rh, true);  // shadow
+  renderer.fillRect(x, y, rw, rh, false);         // white
   renderer.drawRect(x, y, rw, rh);
   renderer.drawRect(x + 2, y + 2, rw - 4, rh - 4);
 
@@ -722,10 +854,18 @@ void CasinoActivity::drawSlotReel(int x, int y, int symbolId, bool held, bool bl
 
 void CasinoActivity::slotsLoop() {
   switch (slotsScreen) {
-    case SLOTS_MENU:    slotsMenuLoop();    break;
-    case SLOTS_PLAY:    slotsPlayLoop();    break;
-    case SLOTS_PAYOUTS: slotsPayoutsLoop(); break;
-    case SLOTS_POWERUPS: slotsPowerupsLoop(); break;
+    case SLOTS_MENU:
+      slotsMenuLoop();
+      break;
+    case SLOTS_PLAY:
+      slotsPlayLoop();
+      break;
+    case SLOTS_PAYOUTS:
+      slotsPayoutsLoop();
+      break;
+    case SLOTS_POWERUPS:
+      slotsPowerupsLoop();
+      break;
   }
 }
 
@@ -793,7 +933,10 @@ void CasinoActivity::slotsPlayLoop() {
       slotsShowLastResult = false;
       bool isFreeSpinActive = slotsPowerups.freeSpins > 0;
       if (!isFreeSpinActive && credits < currentBet()) {
-        if (credits <= 0) { credits = 1000; saveCredits(); }
+        if (credits <= 0) {
+          credits = 1000;
+          saveCredits();
+        }
         requestUpdate();
         return;
       }
@@ -917,8 +1060,10 @@ void CasinoActivity::slotsSpin() {
   // Pre-compute final reel values
   const auto& machine = MACHINES[slotsMachineIndex];
   for (int i = 0; i < 3; i++) {
-    if (!reelHold[i]) finalReels[i] = esp_random() % machine.numSymbols;
-    else finalReels[i] = reels[i];
+    if (!reelHold[i])
+      finalReels[i] = esp_random() % machine.numSymbols;
+    else
+      finalReels[i] = reels[i];
   }
   slotsPlayState = SP_SPIN;
   animFrame = 0;
@@ -1003,10 +1148,18 @@ void CasinoActivity::slotsEvaluate() {
 
 void CasinoActivity::slotsRender() {
   switch (slotsScreen) {
-    case SLOTS_MENU:    slotsRenderMenu();    break;
-    case SLOTS_PLAY:    slotsRenderPlay();    break;
-    case SLOTS_PAYOUTS: slotsRenderPayouts(); break;
-    case SLOTS_POWERUPS: slotsRenderPowerups(); break;
+    case SLOTS_MENU:
+      slotsRenderMenu();
+      break;
+    case SLOTS_PLAY:
+      slotsRenderPlay();
+      break;
+    case SLOTS_PAYOUTS:
+      slotsRenderPayouts();
+      break;
+    case SLOTS_POWERUPS:
+      slotsRenderPowerups();
+      break;
   }
 }
 
@@ -1023,8 +1176,7 @@ void CasinoActivity::slotsRenderMenu() {
   int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
 
   GUI.drawList(
-      renderer, Rect{0, contentTop, pageWidth, contentHeight},
-      NUM_MACHINES, slotsMachineMenuIndex,
+      renderer, Rect{0, contentTop, pageWidth, contentHeight}, NUM_MACHINES, slotsMachineMenuIndex,
       [](int i) { return std::string(CasinoActivity::MACHINES[i].name); },
       [](int i) { return std::string(CasinoActivity::MACHINES[i].description); });
 
@@ -1137,10 +1289,8 @@ void CasinoActivity::slotsRenderPayouts() {
   renderer.drawLine(15, 75, pageWidth - 15, 75);
 
   // Symbol names
-  static constexpr const char* SYMBOL_DISPLAY_NAMES[] = {
-      "Seven", "BAR", "Cherry", "Bell", "Star", "Diamond",
-      "Lemon", "Orange", "Grape", "Melon", "Plum", "7-Wild"
-  };
+  static constexpr const char* SYMBOL_DISPLAY_NAMES[] = {"Seven", "BAR",    "Cherry", "Bell",  "Star", "Diamond",
+                                                         "Lemon", "Orange", "Grape",  "Melon", "Plum", "7-Wild"};
 
   int y = 88;
   for (int s = 0; s < machine.numSymbols; s++) {
@@ -1193,16 +1343,9 @@ void CasinoActivity::slotsRenderPowerups() {
   renderer.drawLine(15, 75, pageWidth - 15, 75);
 
   static constexpr int NUM_POWERUP_ITEMS = 3;
-  static const char* pwNames[] = {
-      "2x Multiplier",
-      "Free Spin",
-      "Wild Card"
-  };
-  static const char* pwDescs[] = {
-      "Next win doubled  —  50 cr",
-      "One free spin     —  30 cr",
-      "Force 2-match win —  40 cr"
-  };
+  static const char* pwNames[] = {"2x Multiplier", "Free Spin", "Wild Card"};
+  static const char* pwDescs[] = {"Next win doubled  —  50 cr", "One free spin     —  30 cr",
+                                  "Force 2-match win —  40 cr"};
   static const int pwCosts[] = {50, 30, 40};
 
   int y = 100;
@@ -1251,7 +1394,9 @@ void CasinoActivity::bjShuffle() {
   // Fisher-Yates shuffle
   for (int i = 51; i > 0; i--) {
     int j = esp_random() % (i + 1);
-    Card tmp = deck[i]; deck[i] = deck[j]; deck[j] = tmp;
+    Card tmp = deck[i];
+    deck[i] = deck[j];
+    deck[j] = tmp;
   }
   deckPos = 0;
 }
@@ -1264,11 +1409,18 @@ CasinoActivity::Card CasinoActivity::bjDraw() {
 int CasinoActivity::bjHandValue(const std::vector<Card>& hand) const {
   int total = 0, aces = 0;
   for (auto& c : hand) {
-    if (c.rank == 1) { total += 11; aces++; }
-    else if (c.rank >= 10) total += 10;
-    else total += c.rank;
+    if (c.rank == 1) {
+      total += 11;
+      aces++;
+    } else if (c.rank >= 10)
+      total += 10;
+    else
+      total += c.rank;
   }
-  while (total > 21 && aces > 0) { total -= 10; aces--; }
+  while (total > 21 && aces > 0) {
+    total -= 10;
+    aces--;
+  }
   return total;
 }
 
@@ -1349,7 +1501,9 @@ void CasinoActivity::bjEvaluate() {
 void CasinoActivity::bjLoop() {
   if (bjState == BJ_BET) {
     if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
-      screen = LOBBY; requestUpdate(); return;
+      screen = LOBBY;
+      requestUpdate();
+      return;
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Left)) {
       if (betIndex > 0) betIndex--;
@@ -1447,7 +1601,9 @@ void CasinoActivity::bjRender() {
 void CasinoActivity::coinLoop() {
   if (coinState == COIN_BET) {
     if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
-      screen = LOBBY; requestUpdate(); return;
+      screen = LOBBY;
+      requestUpdate();
+      return;
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Left)) {
       if (betIndex > 0) betIndex--;
@@ -1471,16 +1627,19 @@ void CasinoActivity::coinLoop() {
 
   if (coinState == COIN_PICK) {
     if (mappedInput.wasPressed(MappedInputManager::Button::Up)) {
-      coinPick = 0; requestUpdate();  // Heads
+      coinPick = 0;
+      requestUpdate();  // Heads
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Down)) {
-      coinPick = 1; requestUpdate();  // Tails
+      coinPick = 1;
+      requestUpdate();  // Tails
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
       coinFlip();
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
-      coinState = COIN_BET; requestUpdate();
+      coinState = COIN_BET;
+      requestUpdate();
     }
     return;
   }
@@ -1563,11 +1722,21 @@ void CasinoActivity::coinRender() {
     // Animate coin rotation: vary horizontal radius
     int radiusX;
     switch (coinAnimFrame) {
-      case 0: radiusX = fullR; break;          // full circle
-      case 1: radiusX = fullR * 3 / 5; break;  // squished
-      case 2: radiusX = 2; break;              // edge-on
-      case 3: radiusX = fullR * 3 / 5; break;  // expanding
-      default: radiusX = fullR; break;          // full
+      case 0:
+        radiusX = fullR;
+        break;  // full circle
+      case 1:
+        radiusX = fullR * 3 / 5;
+        break;  // squished
+      case 2:
+        radiusX = 2;
+        break;  // edge-on
+      case 3:
+        radiusX = fullR * 3 / 5;
+        break;  // expanding
+      default:
+        radiusX = fullR;
+        break;  // full
     }
 
     drawCoinEllipse(renderer, cx, cy, radiusX, fullR);
@@ -1594,7 +1763,9 @@ void CasinoActivity::hlDraw() {
 void CasinoActivity::hlLoop() {
   if (hlState == HL_BET) {
     if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
-      screen = LOBBY; requestUpdate(); return;
+      screen = LOBBY;
+      requestUpdate();
+      return;
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Left)) {
       if (betIndex > 0) betIndex--;
@@ -1725,7 +1896,9 @@ void CasinoActivity::hlRender() {
 void CasinoActivity::rlLoop() {
   if (rlState == RL_BET) {
     if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
-      screen = LOBBY; requestUpdate(); return;
+      screen = LOBBY;
+      requestUpdate();
+      return;
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Left)) {
       if (betIndex > 0) betIndex--;
@@ -1749,7 +1922,9 @@ void CasinoActivity::rlLoop() {
 
   if (rlState == RL_PICK) {
     if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
-      rlState = RL_BET; requestUpdate(); return;
+      rlState = RL_BET;
+      requestUpdate();
+      return;
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Up)) {
       int t = (int)rlBetType - 1;
@@ -1765,11 +1940,17 @@ void CasinoActivity::rlLoop() {
     }
     if (rlBetType == RL_NUMBER) {
       if (mappedInput.wasPressed(MappedInputManager::Button::Left)) {
-        if (rlNumber > 0) rlNumber--; else rlNumber = 36;
+        if (rlNumber > 0)
+          rlNumber--;
+        else
+          rlNumber = 36;
         requestUpdate();
       }
       if (mappedInput.wasPressed(MappedInputManager::Button::Right)) {
-        if (rlNumber < 36) rlNumber++; else rlNumber = 0;
+        if (rlNumber < 36)
+          rlNumber++;
+        else
+          rlNumber = 0;
         requestUpdate();
       }
     }
@@ -1852,15 +2033,24 @@ void CasinoActivity::rlSpin() {
 // Helper: get bet type display name
 const char* CasinoActivity::rlBetName(RLBetType t, int num, char* buf, int bufsz) {
   switch (t) {
-    case RL_RED:    return "Red";
-    case RL_BLACK:  return "Black";
-    case RL_ODD:    return "Odd";
-    case RL_EVEN:   return "Even";
-    case RL_LOW:    return "Low (1-18)";
-    case RL_HIGH:   return "High (19-36)";
-    case RL_DOZ1:   return "Dozen 1-12";
-    case RL_DOZ2:   return "Dozen 13-24";
-    case RL_DOZ3:   return "Dozen 25-36";
+    case RL_RED:
+      return "Red";
+    case RL_BLACK:
+      return "Black";
+    case RL_ODD:
+      return "Odd";
+    case RL_EVEN:
+      return "Even";
+    case RL_LOW:
+      return "Low (1-18)";
+    case RL_HIGH:
+      return "High (19-36)";
+    case RL_DOZ1:
+      return "Dozen 1-12";
+    case RL_DOZ2:
+      return "Dozen 13-24";
+    case RL_DOZ3:
+      return "Dozen 25-36";
     case RL_NUMBER:
       snprintf(buf, bufsz, "Number: %d", num);
       return buf;
@@ -1872,16 +2062,26 @@ const char* CasinoActivity::rlBetName(RLBetType t, int num, char* buf, int bufsz
 bool CasinoActivity::rlCellHighlighted(int n) const {
   if (n == 0) return false;
   switch (rlBetType) {
-    case RL_RED:    return isRed(n);
-    case RL_BLACK:  return !isRed(n);
-    case RL_ODD:    return (n % 2 == 1);
-    case RL_EVEN:   return (n % 2 == 0);
-    case RL_LOW:    return (n >= 1 && n <= 18);
-    case RL_HIGH:   return (n >= 19 && n <= 36);
-    case RL_DOZ1:   return (n >= 1 && n <= 12);
-    case RL_DOZ2:   return (n >= 13 && n <= 24);
-    case RL_DOZ3:   return (n >= 25 && n <= 36);
-    case RL_NUMBER: return (n == rlNumber);
+    case RL_RED:
+      return isRed(n);
+    case RL_BLACK:
+      return !isRed(n);
+    case RL_ODD:
+      return (n % 2 == 1);
+    case RL_EVEN:
+      return (n % 2 == 0);
+    case RL_LOW:
+      return (n >= 1 && n <= 18);
+    case RL_HIGH:
+      return (n >= 19 && n <= 36);
+    case RL_DOZ1:
+      return (n >= 1 && n <= 12);
+    case RL_DOZ2:
+      return (n >= 13 && n <= 24);
+    case RL_DOZ3:
+      return (n >= 25 && n <= 36);
+    case RL_NUMBER:
+      return (n == rlNumber);
   }
   return false;
 }
@@ -1988,60 +2188,60 @@ void CasinoActivity::rlRender() {
 // ================================================================
 
 const CasinoActivity::LbItem CasinoActivity::LB_ITEMS[50] = {
-  // COMMON (0-19)
-  {"Resistor",       LB_COMMON,    0},
-  {"Capacitor",      LB_COMMON,    1},
-  {"LED",            LB_COMMON,    2},
-  {"Battery",        LB_COMMON,    3},
-  {"Antenna",        LB_COMMON,    4},
-  {"USB Plug",       LB_COMMON,    5},
-  {"SD Card",        LB_COMMON,    6},
-  {"Floppy Disk",    LB_COMMON,    7},
-  {"Mouse",          LB_COMMON,    8},
-  {"Keyboard Key",   LB_COMMON,    9},
-  {"Pixel Heart",    LB_COMMON,   10},
-  {"Coffee Cup",     LB_COMMON,   11},
-  {"Light Bulb",     LB_COMMON,   12},
-  {"Wrench",         LB_COMMON,   13},
-  {"Magnifier",      LB_COMMON,   14},
-  {"Clock",          LB_COMMON,   15},
-  {"Envelope",       LB_COMMON,   16},
-  {"Star",           LB_COMMON,   17},
-  {"Moon",           LB_COMMON,   18},
-  {"Cloud",          LB_COMMON,   19},
-  // RARE (20-34)
-  {"Microchip",      LB_RARE,     20},
-  {"Circuit Board",  LB_RARE,     21},
-  {"Router",         LB_RARE,     22},
-  {"Satellite",      LB_RARE,     23},
-  {"Robot Head",     LB_RARE,     24},
-  {"Game Boy",       LB_RARE,     25},
-  {"Oscilloscope",   LB_RARE,     26},
-  {"Soldering Iron", LB_RARE,     27},
-  {"Drone",          LB_RARE,     28},
-  {"VR Headset",     LB_RARE,     29},
-  {"Server Rack",    LB_RARE,     30},
-  {"Ethernet Jack",  LB_RARE,     31},
-  {"Raspberry Pi",   LB_RARE,     32},
-  {"Arduino",        LB_RARE,     33},
-  {"Logic Analyzer", LB_RARE,     34},
-  // EPIC (35-44)
-  {"Golden Chip",    LB_EPIC,     35},
-  {"Cyber Eye",      LB_EPIC,     36},
-  {"Plasma Ball",    LB_EPIC,     37},
-  {"Hologram",       LB_EPIC,     38},
-  {"Quantum Bit",    LB_EPIC,     39},
-  {"Neural Net",     LB_EPIC,     40},
-  {"Infinity Loop",  LB_EPIC,     41},
-  {"Crypto Key",     LB_EPIC,     42},
-  {"Zero Day",       LB_EPIC,     43},
-  {"Black Box",      LB_EPIC,     44},
-  // LEGENDARY (45-49)
-  {"The Kernel",     LB_LEGENDARY, 45},
-  {"Root Shell",     LB_LEGENDARY, 46},
-  {"Packet Ghost",   LB_LEGENDARY, 47},
-  {"E-Ink Dragon",   LB_LEGENDARY, 48},
-  {"biscuit. Logo",  LB_LEGENDARY, 49},
+    // COMMON (0-19)
+    {"Resistor", LB_COMMON, 0},
+    {"Capacitor", LB_COMMON, 1},
+    {"LED", LB_COMMON, 2},
+    {"Battery", LB_COMMON, 3},
+    {"Antenna", LB_COMMON, 4},
+    {"USB Plug", LB_COMMON, 5},
+    {"SD Card", LB_COMMON, 6},
+    {"Floppy Disk", LB_COMMON, 7},
+    {"Mouse", LB_COMMON, 8},
+    {"Keyboard Key", LB_COMMON, 9},
+    {"Pixel Heart", LB_COMMON, 10},
+    {"Coffee Cup", LB_COMMON, 11},
+    {"Light Bulb", LB_COMMON, 12},
+    {"Wrench", LB_COMMON, 13},
+    {"Magnifier", LB_COMMON, 14},
+    {"Clock", LB_COMMON, 15},
+    {"Envelope", LB_COMMON, 16},
+    {"Star", LB_COMMON, 17},
+    {"Moon", LB_COMMON, 18},
+    {"Cloud", LB_COMMON, 19},
+    // RARE (20-34)
+    {"Microchip", LB_RARE, 20},
+    {"Circuit Board", LB_RARE, 21},
+    {"Router", LB_RARE, 22},
+    {"Satellite", LB_RARE, 23},
+    {"Robot Head", LB_RARE, 24},
+    {"Game Boy", LB_RARE, 25},
+    {"Oscilloscope", LB_RARE, 26},
+    {"Soldering Iron", LB_RARE, 27},
+    {"Drone", LB_RARE, 28},
+    {"VR Headset", LB_RARE, 29},
+    {"Server Rack", LB_RARE, 30},
+    {"Ethernet Jack", LB_RARE, 31},
+    {"Raspberry Pi", LB_RARE, 32},
+    {"Arduino", LB_RARE, 33},
+    {"Logic Analyzer", LB_RARE, 34},
+    // EPIC (35-44)
+    {"Golden Chip", LB_EPIC, 35},
+    {"Cyber Eye", LB_EPIC, 36},
+    {"Plasma Ball", LB_EPIC, 37},
+    {"Hologram", LB_EPIC, 38},
+    {"Quantum Bit", LB_EPIC, 39},
+    {"Neural Net", LB_EPIC, 40},
+    {"Infinity Loop", LB_EPIC, 41},
+    {"Crypto Key", LB_EPIC, 42},
+    {"Zero Day", LB_EPIC, 43},
+    {"Black Box", LB_EPIC, 44},
+    // LEGENDARY (45-49)
+    {"The Kernel", LB_LEGENDARY, 45},
+    {"Root Shell", LB_LEGENDARY, 46},
+    {"Packet Ghost", LB_LEGENDARY, 47},
+    {"E-Ink Dragon", LB_LEGENDARY, 48},
+    {"biscuit. Logo", LB_LEGENDARY, 49},
 };
 
 // ================================================================
@@ -2050,23 +2250,19 @@ const CasinoActivity::LbItem CasinoActivity::LB_ITEMS[50] = {
 
 void CasinoActivity::lbFillDithered25(const GfxRenderer& r, int x, int y, int w, int h) {
   for (int dy = 0; dy < h; dy += 2)
-    for (int dx = ((dy / 2) % 2); dx < w; dx += 2)
-      r.drawPixel(x + dx, y + dy, true);
+    for (int dx = ((dy / 2) % 2); dx < w; dx += 2) r.drawPixel(x + dx, y + dy, true);
 }
 
 void CasinoActivity::lbFillDithered50(const GfxRenderer& r, int x, int y, int w, int h) {
   for (int dy = 0; dy < h; dy++)
-    for (int dx = (dy % 2); dx < w; dx += 2)
-      r.drawPixel(x + dx, y + dy, true);
+    for (int dx = (dy % 2); dx < w; dx += 2) r.drawPixel(x + dx, y + dy, true);
 }
 
 void CasinoActivity::lbFillDithered75(const GfxRenderer& r, int x, int y, int w, int h) {
   for (int dy = 0; dy < h; dy++)
-    for (int dx = ((dy + 1) % 2); dx < w; dx += 2)
-      r.drawPixel(x + dx, y + dy, true);
+    for (int dx = ((dy + 1) % 2); dx < w; dx += 2) r.drawPixel(x + dx, y + dy, true);
   for (int dy = 1; dy < h; dy += 2)
-    for (int dx = ((dy / 2) % 2); dx < w; dx += 2)
-      r.drawPixel(x + dx, y + dy, true);
+    for (int dx = ((dy / 2) % 2); dx < w; dx += 2) r.drawPixel(x + dx, y + dy, true);
 }
 
 // ================================================================
@@ -2113,10 +2309,14 @@ int CasinoActivity::lbCountCollected() const {
 
 const char* CasinoActivity::lbRarityName(LbRarity r) {
   switch (r) {
-    case LB_COMMON:    return "Common";
-    case LB_RARE:      return "Rare";
-    case LB_EPIC:      return "Epic";
-    case LB_LEGENDARY: return "Legendary";
+    case LB_COMMON:
+      return "Common";
+    case LB_RARE:
+      return "Rare";
+    case LB_EPIC:
+      return "Epic";
+    case LB_LEGENDARY:
+      return "Legendary";
   }
   return "?";
 }
@@ -2134,11 +2334,26 @@ int CasinoActivity::lbRollItem(bool guaranteeRare) {
   LbRarity r = lbRollRarity(guaranteeRare);
   int start, count;
   switch (r) {
-    case LB_COMMON:    start = 0;  count = LB_COMMON_COUNT;    break;
-    case LB_RARE:      start = 20; count = LB_RARE_COUNT;      break;
-    case LB_EPIC:      start = 35; count = LB_EPIC_COUNT;      break;
-    case LB_LEGENDARY: start = 45; count = LB_LEGENDARY_COUNT; break;
-    default:           start = 0;  count = LB_COMMON_COUNT;    break;
+    case LB_COMMON:
+      start = 0;
+      count = LB_COMMON_COUNT;
+      break;
+    case LB_RARE:
+      start = 20;
+      count = LB_RARE_COUNT;
+      break;
+    case LB_EPIC:
+      start = 35;
+      count = LB_EPIC_COUNT;
+      break;
+    case LB_LEGENDARY:
+      start = 45;
+      count = LB_LEGENDARY_COUNT;
+      break;
+    default:
+      start = 0;
+      count = LB_COMMON_COUNT;
+      break;
   }
   return start + (int)(esp_random() % count);
 }
@@ -2213,8 +2428,12 @@ void CasinoActivity::lbLoop() {
       }
       if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
         switch (lbMenuIndex) {
-          case 0: lbPerformSinglePull(); break;
-          case 1: lbPerformMultiPull(); break;
+          case 0:
+            lbPerformSinglePull();
+            break;
+          case 1:
+            lbPerformMultiPull();
+            break;
           case 2:
             lbScreen = LB_COLLECTION;
             lbCollectionPage = 0;
@@ -2293,7 +2512,10 @@ void CasinoActivity::lbLoop() {
           lbCollectionPage = (lbCollectionPage + 1) % totalPages;
         }
         int itemId = lbCollectionPage * LB_ITEMS_PER_PAGE + lbCollectionCursor;
-        if (itemId >= LB_ITEM_COUNT) { lbCollectionPage = 0; lbCollectionCursor = 0; }
+        if (itemId >= LB_ITEM_COUNT) {
+          lbCollectionPage = 0;
+          lbCollectionCursor = 0;
+        }
         requestUpdate();
       }
       if (mappedInput.wasPressed(MappedInputManager::Button::Left)) {
@@ -2329,7 +2551,10 @@ void CasinoActivity::lbLoop() {
           lbCollectionPage = (lbCollectionPage + 1) % totalPages;
         }
         int itemId = lbCollectionPage * LB_ITEMS_PER_PAGE + lbCollectionCursor;
-        if (itemId >= LB_ITEM_COUNT) { lbCollectionPage = 0; lbCollectionCursor = 0; }
+        if (itemId >= LB_ITEM_COUNT) {
+          lbCollectionPage = 0;
+          lbCollectionCursor = 0;
+        }
         requestUpdate();
       }
       if (mappedInput.wasPressed(MappedInputManager::Button::PageForward)) {
@@ -2371,16 +2596,28 @@ void CasinoActivity::lbRender() {
   renderer.clearScreen();
 
   switch (lbScreen) {
-    case LB_MAIN_MENU:     lbRenderMainMenu();     break;
-    case LB_PULLING:       lbRenderPulling();      break;
-    case LB_REVEAL_SINGLE: lbRenderRevealSingle(); break;
-    case LB_REVEAL_MULTI:  lbRenderRevealMulti();  break;
-    case LB_COLLECTION:    lbRenderCollection();   break;
-    case LB_ITEM_DETAIL:   lbRenderItemDetail();   break;
+    case LB_MAIN_MENU:
+      lbRenderMainMenu();
+      break;
+    case LB_PULLING:
+      lbRenderPulling();
+      break;
+    case LB_REVEAL_SINGLE:
+      lbRenderRevealSingle();
+      break;
+    case LB_REVEAL_MULTI:
+      lbRenderRevealMulti();
+      break;
+    case LB_COLLECTION:
+      lbRenderCollection();
+      break;
+    case LB_ITEM_DETAIL:
+      lbRenderItemDetail();
+      break;
   }
 
-  if (lbScreen == LB_REVEAL_SINGLE || lbScreen == LB_REVEAL_MULTI ||
-      lbScreen == LB_ITEM_DETAIL   || lbScreen == LB_COLLECTION) {
+  if (lbScreen == LB_REVEAL_SINGLE || lbScreen == LB_REVEAL_MULTI || lbScreen == LB_ITEM_DETAIL ||
+      lbScreen == LB_COLLECTION) {
     renderer.displayBuffer(HalDisplay::HALF_REFRESH);
   } else {
     renderer.displayBuffer();
@@ -2409,8 +2646,8 @@ void CasinoActivity::lbRenderMainMenu() {
 
   char singleBuf[40], multiBuf[40], collBuf[40];
   snprintf(singleBuf, sizeof(singleBuf), "Single Pull (%d)", LB_SINGLE_COST);
-  snprintf(multiBuf,  sizeof(multiBuf),  "5x Pull (%d)",    LB_MULTI_COST);
-  snprintf(collBuf,   sizeof(collBuf),   "Collection (%d/%d)", lbTotalCollected, LB_ITEM_COUNT);
+  snprintf(multiBuf, sizeof(multiBuf), "5x Pull (%d)", LB_MULTI_COST);
+  snprintf(collBuf, sizeof(collBuf), "Collection (%d/%d)", lbTotalCollected, LB_ITEM_COUNT);
 
   const char* items[] = {singleBuf, multiBuf, collBuf};
   for (int i = 0; i < 3; i++) {
@@ -2438,7 +2675,7 @@ void CasinoActivity::lbRenderMainMenu() {
 // ================================================================
 
 void CasinoActivity::lbRenderPulling() {
-  const auto pageWidth  = renderer.getScreenWidth();
+  const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
   int cx = pageWidth / 2;
   int cy = pageHeight / 2 - 50;
@@ -2485,7 +2722,7 @@ void CasinoActivity::lbRenderPulling() {
 // ================================================================
 
 void CasinoActivity::lbRenderRevealSingle() {
-  const auto pageWidth  = renderer.getScreenWidth();
+  const auto pageWidth = renderer.getScreenWidth();
   int itemId = lbPullResults[0];
   const LbItem& item = LB_ITEMS[itemId];
   bool isNew = lbPullIsNew[0];
@@ -2548,10 +2785,10 @@ void CasinoActivity::lbRenderRevealMulti() {
   renderer.drawLine(15, 45, pageWidth - 15, 45);
 
   int slotSize = 70;
-  int spacing  = 10;
-  int totalW   = LB_MULTI_COUNT * slotSize + (LB_MULTI_COUNT - 1) * spacing;
-  int startX   = (pageWidth - totalW) / 2;
-  int slotY    = 80;
+  int spacing = 10;
+  int totalW = LB_MULTI_COUNT * slotSize + (LB_MULTI_COUNT - 1) * spacing;
+  int startX = (pageWidth - totalW) / 2;
+  int slotY = 80;
 
   for (int i = 0; i < LB_MULTI_COUNT; i++) {
     int sx = startX + i * (slotSize + spacing);
@@ -2584,9 +2821,12 @@ void CasinoActivity::lbRenderRevealMulti() {
 
       // Star rating
       int starCount = 1;
-      if (item.rarity == LB_RARE)           starCount = 2;
-      else if (item.rarity == LB_EPIC)      starCount = 3;
-      else if (item.rarity == LB_LEGENDARY) starCount = 5;
+      if (item.rarity == LB_RARE)
+        starCount = 2;
+      else if (item.rarity == LB_EPIC)
+        starCount = 3;
+      else if (item.rarity == LB_LEGENDARY)
+        starCount = 5;
       char starBuf[6] = {};
       int sc = starCount < 5 ? starCount : 5;
       for (int si = 0; si < sc; si++) starBuf[si] = '*';
@@ -2601,8 +2841,8 @@ void CasinoActivity::lbRenderRevealMulti() {
       int tw = renderer.getTextWidth(UI_12_FONT_ID, qm, EpdFontFamily::BOLD);
       renderer.fillRect(sx + 4, slotY + slotSize / 2 - 12, slotSize - 8, 24, false);
       lbFillDithered50(renderer, sx + 4, slotY + slotSize / 2 - 12, slotSize - 8, 24);
-      renderer.drawText(UI_12_FONT_ID, sx + (slotSize - tw) / 2,
-                        slotY + slotSize / 2 - 10, qm, true, EpdFontFamily::BOLD);
+      renderer.drawText(UI_12_FONT_ID, sx + (slotSize - tw) / 2, slotY + slotSize / 2 - 10, qm, true,
+                        EpdFontFamily::BOLD);
     }
   }
 
@@ -2613,7 +2853,10 @@ void CasinoActivity::lbRenderRevealMulti() {
   if (lbRevealIndex >= LB_MULTI_COUNT - 1) {
     int newCount = 0, dupeCount = 0;
     for (int i = 0; i < LB_MULTI_COUNT; i++) {
-      if (lbPullIsNew[i]) newCount++; else dupeCount++;
+      if (lbPullIsNew[i])
+        newCount++;
+      else
+        dupeCount++;
     }
     char sumBuf[64];
     if (dupeCount > 0) {
@@ -2634,7 +2877,7 @@ void CasinoActivity::lbRenderRevealMulti() {
 // ================================================================
 
 void CasinoActivity::lbRenderCollection() {
-  const auto pageWidth  = renderer.getScreenWidth();
+  const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
   int totalPages = (LB_ITEM_COUNT + LB_ITEMS_PER_PAGE - 1) / LB_ITEMS_PER_PAGE;
 
@@ -2643,22 +2886,22 @@ void CasinoActivity::lbRenderCollection() {
   renderer.drawCenteredText(UI_12_FONT_ID, 12, hdrBuf, true, EpdFontFamily::BOLD);
   renderer.drawLine(15, 42, pageWidth - 15, 42);
 
-  int cellSize    = 70;
+  int cellSize = 70;
   int cellSpacing = 12;
-  int gridW       = LB_GRID_COLS * cellSize + (LB_GRID_COLS - 1) * cellSpacing;
-  int gridStartX  = (pageWidth - gridW) / 2;
-  int gridStartY  = 60;
+  int gridW = LB_GRID_COLS * cellSize + (LB_GRID_COLS - 1) * cellSpacing;
+  int gridStartX = (pageWidth - gridW) / 2;
+  int gridStartY = 60;
 
   for (int row = 0; row < LB_GRID_ROWS; row++) {
     for (int col = 0; col < LB_GRID_COLS; col++) {
-      int idx    = row * LB_GRID_COLS + col;
+      int idx = row * LB_GRID_COLS + col;
       int itemId = lbCollectionPage * LB_ITEMS_PER_PAGE + idx;
       if (itemId >= LB_ITEM_COUNT) continue;
 
       int cx = gridStartX + col * (cellSize + cellSpacing);
       int cy = gridStartY + row * (cellSize + cellSpacing + 20);
 
-      bool owned    = lbHasItem(itemId);
+      bool owned = lbHasItem(itemId);
       bool selected = (idx == lbCollectionCursor);
 
       if (selected) {
@@ -2689,10 +2932,10 @@ void CasinoActivity::lbRenderCollection() {
   }
 
   // Progress bar
-  int barY  = pageHeight - 120;
-  int barW  = pageWidth - 80;
-  int barX  = 40;
-  int barH  = 16;
+  int barY = pageHeight - 120;
+  int barW = pageWidth - 80;
+  int barX = 40;
+  int barH = 16;
   renderer.drawRect(barX, barY, barW, barH);
   int fillW = (barW - 4) * lbTotalCollected / LB_ITEM_COUNT;
   if (fillW > 0) {
@@ -2798,12 +3041,12 @@ void CasinoActivity::lbDrawRarityBorder(int x, int y, int w, int h, LbRarity rar
       lbFillDithered50(renderer, x + 5, y + h - 7, w - 10, 2);
       lbFillDithered50(renderer, x + 5, y + 5, 2, h - 10);
       lbFillDithered50(renderer, x + w - 7, y + 5, 2, h - 10);
-      int corners[4][2] = {{x+2, y+2}, {x+w-4, y+2}, {x+2, y+h-4}, {x+w-4, y+h-4}};
+      int corners[4][2] = {{x + 2, y + 2}, {x + w - 4, y + 2}, {x + 2, y + h - 4}, {x + w - 4, y + h - 4}};
       for (int ci = 0; ci < 4; ci++) {
         int cx2 = corners[ci][0];
         int cy2 = corners[ci][1];
-        renderer.drawPixel(cx2 + 1, cy2,     false);
-        renderer.drawPixel(cx2,     cy2 + 1, false);
+        renderer.drawPixel(cx2 + 1, cy2, false);
+        renderer.drawPixel(cx2, cy2 + 1, false);
         renderer.drawPixel(cx2 + 2, cy2 + 1, false);
         renderer.drawPixel(cx2 + 1, cy2 + 2, false);
       }
@@ -2818,20 +3061,23 @@ void CasinoActivity::lbDrawRarityBorder(int x, int y, int w, int h, LbRarity rar
 
 void CasinoActivity::lbDrawStars(int cx, int y, LbRarity rarity) const {
   int count = 1;
-  if (rarity == LB_RARE)           count = 2;
-  else if (rarity == LB_EPIC)      count = 3;
-  else if (rarity == LB_LEGENDARY) count = 5;
+  if (rarity == LB_RARE)
+    count = 2;
+  else if (rarity == LB_EPIC)
+    count = 3;
+  else if (rarity == LB_LEGENDARY)
+    count = 5;
 
   int starSpacing = 20;
   int startX = cx - (count - 1) * starSpacing / 2;
 
   for (int i = 0; i < count; i++) {
     int sx = startX + i * starSpacing;
-    int r  = 6;
+    int r = 6;
     for (int a = 0; a < 5; a++) {
       float angle = -1.5708f + a * 1.2566f;
       int tx = sx + (int)(r * cosf(angle));
-      int ty = y  + (int)(r * sinf(angle));
+      int ty = y + (int)(r * sinf(angle));
       renderer.drawLine(sx, y, tx, ty);
     }
   }
@@ -2844,7 +3090,7 @@ void CasinoActivity::lbDrawStars(int cx, int y, LbRarity rarity) const {
 void CasinoActivity::lbDrawItemIcon(int x, int y, int size, int iconId, bool locked) const {
   int cx = x + size / 2;
   int cy = y + size / 2;
-  int s  = size / 3;
+  int s = size / 3;
 
   if (locked) {
     lbFillDithered75(renderer, x + 2, y + 2, size - 4, size - 4);
@@ -2857,41 +3103,40 @@ void CasinoActivity::lbDrawItemIcon(int x, int y, int size, int iconId, bool loc
   }
 
   switch (iconId) {
-    case 0: { // Resistor
+    case 0: {  // Resistor
       renderer.drawLine(x + 4, cy, cx - s, cy);
       for (int i = 0; i < 4; i++) {
         int bx = cx - s + i * s / 2;
-        renderer.drawLine(bx,          cy,          bx + s / 4, cy - s / 2);
-        renderer.drawLine(bx + s / 4,  cy - s / 2,  bx + s / 2, cy + s / 2);
+        renderer.drawLine(bx, cy, bx + s / 4, cy - s / 2);
+        renderer.drawLine(bx + s / 4, cy - s / 2, bx + s / 2, cy + s / 2);
       }
       renderer.drawLine(cx + s, cy, x + size - 4, cy);
       break;
     }
-    case 1: { // Capacitor
+    case 1: {  // Capacitor
       renderer.fillRect(cx - s / 3 - 2, cy - s, 3, s * 2, true);
-      renderer.fillRect(cx + s / 3,     cy - s, 3, s * 2, true);
+      renderer.fillRect(cx + s / 3, cy - s, 3, s * 2, true);
       renderer.drawLine(x + 4, cy, cx - s / 3 - 2, cy);
       renderer.drawLine(cx + s / 3 + 3, cy, x + size - 4, cy);
       break;
     }
-    case 2: { // LED
+    case 2: {  // LED
       renderer.drawLine(cx - s / 2, cy - s, cx - s / 2, cy + s);
       renderer.drawLine(cx - s / 2, cy - s, cx + s / 2, cy);
       renderer.drawLine(cx - s / 2, cy + s, cx + s / 2, cy);
       renderer.fillRect(cx + s / 2, cy - s, 2, s * 2, true);
-      for (int i = -1; i <= 1; i++)
-        renderer.drawLine(cx + s / 2 + 3, cy + i * s / 2, cx + s, cy + i * s / 2 - s / 3);
+      for (int i = -1; i <= 1; i++) renderer.drawLine(cx + s / 2 + 3, cy + i * s / 2, cx + s, cy + i * s / 2 - s / 3);
       break;
     }
-    case 3: { // Battery
+    case 3: {  // Battery
       renderer.drawRect(cx - s, cy - s / 2, s * 3 / 2, s);
       renderer.fillRect(cx + s / 2 + 1, cy - s / 4, s / 3, s / 2, true);
       renderer.drawLine(cx - s / 2, cy - s / 4, cx - s / 2, cy + s / 4);
-      renderer.drawLine(cx - s + 3,          cy - s / 6, cx - s + 3 + s / 4, cy - s / 6);
-      renderer.drawLine(cx - s + 3 + s / 8,  cy - s / 3, cx - s + 3 + s / 8, cy);
+      renderer.drawLine(cx - s + 3, cy - s / 6, cx - s + 3 + s / 4, cy - s / 6);
+      renderer.drawLine(cx - s + 3 + s / 8, cy - s / 3, cx - s + 3 + s / 8, cy);
       break;
     }
-    case 4: { // Antenna
+    case 4: {  // Antenna
       renderer.drawLine(cx, cy + s, cx, cy - s / 2);
       renderer.drawLine(cx, cy - s / 2, cx - s / 2, cy - s);
       renderer.drawLine(cx, cy - s / 2, cx + s / 2, cy - s);
@@ -2899,36 +3144,36 @@ void CasinoActivity::lbDrawItemIcon(int x, int y, int size, int iconId, bool loc
       renderer.drawLine(cx + s / 2 + 5, cy - s / 4, cx + s / 2 + 7, cy - s / 2);
       break;
     }
-    case 5: { // USB Plug
+    case 5: {  // USB Plug
       renderer.drawRect(cx - s / 2, cy - s, s, s * 2);
       renderer.fillRect(cx - s / 4, cy - s - s / 3, s / 2, s / 3, true);
       renderer.drawLine(cx - s / 6, cy - s / 2, cx - s / 6, cy + s / 2);
       renderer.drawLine(cx + s / 6, cy - s / 2, cx + s / 6, cy + s / 2);
       break;
     }
-    case 6: { // SD Card
+    case 6: {  // SD Card
       renderer.drawRect(cx - s / 2, cy - s, s, s * 2);
       renderer.drawLine(cx - s / 2, cy - s, cx - s / 4, cy - s - s / 3);
       renderer.drawLine(cx - s / 4, cy - s - s / 3, cx + s / 2, cy - s - s / 3);
       renderer.fillRect(cx - s / 4, cy - s / 2, s / 2, 2, true);
-      renderer.fillRect(cx - s / 4, cy,          s / 2, 2, true);
+      renderer.fillRect(cx - s / 4, cy, s / 2, 2, true);
       break;
     }
-    case 7: { // Floppy Disk
+    case 7: {  // Floppy Disk
       renderer.drawRect(cx - s, cy - s, s * 2, s * 2);
       renderer.fillRect(cx - s / 2, cy - s, s, s / 2, true);
       renderer.fillRect(cx - s / 3, cy + s / 4, s * 2 / 3, s * 3 / 4, false);
       renderer.drawRect(cx - s / 3, cy + s / 4, s * 2 / 3, s * 3 / 4);
       break;
     }
-    case 8: { // Mouse
+    case 8: {  // Mouse
       renderer.drawRect(cx - s / 2, cy - s, s, s * 2);
       renderer.drawLine(cx, cy - s, cx, cy - s / 3);
       renderer.drawLine(cx - s / 2, cy - s / 3, cx + s / 2, cy - s / 3);
       renderer.drawLine(cx - s / 2, cy + s, cx + s / 2, cy + s);
       break;
     }
-    case 9: { // Keyboard Key
+    case 9: {  // Keyboard Key
       renderer.drawRect(cx - s / 2, cy - s / 2, s, s);
       renderer.drawRect(cx - s / 2 + 2, cy - s / 2 + 2, s - 4, s - 4);
       char key[] = "A";
@@ -2936,7 +3181,7 @@ void CasinoActivity::lbDrawItemIcon(int x, int y, int size, int iconId, bool loc
       renderer.drawText(SMALL_FONT_ID, cx - tw / 2, cy - 5, key, true, EpdFontFamily::BOLD);
       break;
     }
-    case 10: { // Pixel Heart
+    case 10: {  // Pixel Heart
       for (int dy = -s; dy <= s; dy++) {
         for (int dx = -s; dx <= s; dx++) {
           int lx = dx + s / 3, ly = dy + s / 3;
@@ -2949,58 +3194,56 @@ void CasinoActivity::lbDrawItemIcon(int x, int y, int size, int iconId, bool loc
       }
       break;
     }
-    case 11: { // Coffee Cup
+    case 11: {  // Coffee Cup
       renderer.drawRect(cx - s / 2, cy - s / 2, s, s + s / 3);
       renderer.drawRect(cx + s / 2, cy - s / 4, s / 3, s / 2);
       for (int i = 0; i < 3; i++) {
         int sx2 = cx - s / 4 + i * s / 4;
-        renderer.drawPixel(sx2,     cy - s / 2 - 2, true);
+        renderer.drawPixel(sx2, cy - s / 2 - 2, true);
         renderer.drawPixel(sx2 + 1, cy - s / 2 - 4, true);
-        renderer.drawPixel(sx2,     cy - s / 2 - 6, true);
+        renderer.drawPixel(sx2, cy - s / 2 - 6, true);
       }
       break;
     }
-    case 12: { // Light Bulb
+    case 12: {  // Light Bulb
       for (int a = 0; a < 360; a += 10) {
         float rad = a * 3.14159f / 180.0f;
-        renderer.drawPixel(cx + (int)(s / 2 * cosf(rad)),
-                           cy - s / 4 + (int)(s / 2 * sinf(rad)), true);
+        renderer.drawPixel(cx + (int)(s / 2 * cosf(rad)), cy - s / 4 + (int)(s / 2 * sinf(rad)), true);
       }
       renderer.fillRect(cx - s / 4, cy + s / 4, s / 2, s / 3, true);
       break;
     }
-    case 13: { // Wrench
+    case 13: {  // Wrench
       renderer.drawLine(cx - s, cy + s, cx + s / 2, cy - s / 2);
       renderer.drawLine(cx + s / 2, cy - s / 2, cx + s, cy - s / 3);
       renderer.drawLine(cx + s / 2, cy - s / 2, cx + s / 3, cy - s);
       break;
     }
-    case 14: { // Magnifier
+    case 14: {  // Magnifier
       for (int a = 0; a < 360; a += 10) {
         float rad = a * 3.14159f / 180.0f;
-        renderer.drawPixel(cx - s / 4 + (int)(s / 2 * cosf(rad)),
-                           cy - s / 4 + (int)(s / 2 * sinf(rad)), true);
+        renderer.drawPixel(cx - s / 4 + (int)(s / 2 * cosf(rad)), cy - s / 4 + (int)(s / 2 * sinf(rad)), true);
       }
-      renderer.drawLine(cx + s / 6,     cy + s / 6,     cx + s,     cy + s);
-      renderer.drawLine(cx + s / 6 + 1, cy + s / 6,     cx + s + 1, cy + s);
+      renderer.drawLine(cx + s / 6, cy + s / 6, cx + s, cy + s);
+      renderer.drawLine(cx + s / 6 + 1, cy + s / 6, cx + s + 1, cy + s);
       break;
     }
-    case 15: { // Clock
+    case 15: {  // Clock
       for (int a = 0; a < 360; a += 10) {
         float rad = a * 3.14159f / 180.0f;
         renderer.drawPixel(cx + (int)(s * cosf(rad)), cy + (int)(s * sinf(rad)), true);
       }
-      renderer.drawLine(cx, cy, cx,          cy - s * 2 / 3);
-      renderer.drawLine(cx, cy, cx + s / 2,  cy);
+      renderer.drawLine(cx, cy, cx, cy - s * 2 / 3);
+      renderer.drawLine(cx, cy, cx + s / 2, cy);
       break;
     }
-    case 16: { // Envelope
+    case 16: {  // Envelope
       renderer.drawRect(cx - s, cy - s / 2, s * 2, s);
       renderer.drawLine(cx - s, cy - s / 2, cx, cy + s / 4);
       renderer.drawLine(cx + s, cy - s / 2, cx, cy + s / 4);
       break;
     }
-    case 17: { // Star (5-pointed spokes)
+    case 17: {  // Star (5-pointed spokes)
       for (int i = 0; i < 5; i++) {
         float angle = -1.5708f + i * 1.2566f;
         int tx = cx + (int)(s * cosf(angle));
@@ -3009,7 +3252,7 @@ void CasinoActivity::lbDrawItemIcon(int x, int y, int size, int iconId, bool loc
       }
       break;
     }
-    case 18: { // Moon
+    case 18: {  // Moon
       for (int a = 0; a < 360; a += 5) {
         float rad = a * 3.14159f / 180.0f;
         renderer.drawPixel(cx + (int)(s * cosf(rad)), cy + (int)(s * sinf(rad)), true);
@@ -3018,40 +3261,37 @@ void CasinoActivity::lbDrawItemIcon(int x, int y, int size, int iconId, bool loc
         for (int dx2 = -s; dx2 <= s; dx2++) {
           if (dx2 * dx2 + dy2 * dy2 <= (s - 2) * (s - 2)) {
             int ox = dx2 + s / 3;
-            if (ox * ox + dy2 * dy2 <= s * s)
-              renderer.drawPixel(cx + dx2 + s / 3, cy + dy2, false);
+            if (ox * ox + dy2 * dy2 <= s * s) renderer.drawPixel(cx + dx2 + s / 3, cy + dy2, false);
           }
         }
       }
       break;
     }
-    case 19: { // Cloud
+    case 19: {  // Cloud
       for (int i = -1; i <= 1; i++) {
         for (int a = 0; a < 360; a += 10) {
           float rad = a * 3.14159f / 180.0f;
           int r2 = s / 2;
-          renderer.drawPixel(cx + i * s / 3 + (int)(r2 * cosf(rad)),
-                             cy + (int)(r2 * sinf(rad)), true);
+          renderer.drawPixel(cx + i * s / 3 + (int)(r2 * cosf(rad)), cy + (int)(r2 * sinf(rad)), true);
         }
       }
       for (int a = 0; a < 360; a += 10) {
         float rad = a * 3.14159f / 180.0f;
-        renderer.drawPixel(cx + (int)(s / 3 * cosf(rad)),
-                           cy - s / 3 + (int)(s / 3 * sinf(rad)), true);
+        renderer.drawPixel(cx + (int)(s / 3 * cosf(rad)), cy - s / 3 + (int)(s / 3 * sinf(rad)), true);
       }
       break;
     }
-    case 20: { // Microchip
+    case 20: {  // Microchip
       renderer.drawRect(cx - s / 2, cy - s / 2, s, s);
       for (int i = 0; i < 4; i++) {
         int py = cy - s / 2 + 2 + i * (s - 4) / 3;
         renderer.fillRect(cx - s / 2 - s / 4, py, s / 4, 2, true);
-        renderer.fillRect(cx + s / 2,          py, s / 4, 2, true);
+        renderer.fillRect(cx + s / 2, py, s / 4, 2, true);
       }
       renderer.fillRect(cx - s / 2 + 2, cy - s / 2 + 2, 3, 3, true);
       break;
     }
-    case 21: { // Circuit Board
+    case 21: {  // Circuit Board
       renderer.drawRect(cx - s, cy - s, s * 2, s * 2);
       renderer.drawLine(cx - s / 2, cy - s, cx - s / 2, cy);
       renderer.drawLine(cx - s / 2, cy, cx + s / 2, cy);
@@ -3060,34 +3300,33 @@ void CasinoActivity::lbDrawItemIcon(int x, int y, int size, int iconId, bool loc
       renderer.fillRect(cx + s / 2 - 2, cy + s - 2, 4, 4, true);
       break;
     }
-    case 22: { // Router
+    case 22: {  // Router
       renderer.drawRect(cx - s, cy, s * 2, s / 2);
       renderer.drawLine(cx - s / 2, cy, cx - s / 3, cy - s);
       renderer.drawLine(cx + s / 2, cy, cx + s / 3, cy - s);
       renderer.fillRect(cx - s / 3 - 2, cy - s - 2, 4, 4, true);
       renderer.fillRect(cx + s / 3 - 2, cy - s - 2, 4, 4, true);
-      for (int i = 0; i < 3; i++)
-        renderer.fillRect(cx - s / 2 + i * s / 2, cy + s / 6, 3, 3, true);
+      for (int i = 0; i < 3; i++) renderer.fillRect(cx - s / 2 + i * s / 2, cy + s / 6, 3, 3, true);
       break;
     }
-    case 23: { // Satellite
+    case 23: {  // Satellite
       renderer.drawRect(cx - s / 4, cy - s / 4, s / 2, s / 2);
-      renderer.fillRect(cx - s,       cy - s / 6, s * 2 / 3, s / 3, true);
-      renderer.fillRect(cx + s / 4,   cy - s / 6, s * 2 / 3, s / 3, true);
+      renderer.fillRect(cx - s, cy - s / 6, s * 2 / 3, s / 3, true);
+      renderer.fillRect(cx + s / 4, cy - s / 6, s * 2 / 3, s / 3, true);
       renderer.drawLine(cx, cy - s / 4, cx, cy - s);
       renderer.fillRect(cx - 2, cy - s - 2, 4, 4, true);
       break;
     }
-    case 24: { // Robot Head
+    case 24: {  // Robot Head
       renderer.drawRect(cx - s, cy - s / 2, s * 2, s + s / 2);
       renderer.fillRect(cx - s / 2, cy - s / 4, s / 3, s / 3, true);
-      renderer.fillRect(cx + s / 4,  cy - s / 4, s / 3, s / 3, true);
+      renderer.fillRect(cx + s / 4, cy - s / 4, s / 3, s / 3, true);
       renderer.drawLine(cx - s / 2, cy + s / 3, cx + s / 2, cy + s / 3);
       renderer.drawLine(cx, cy - s / 2, cx, cy - s);
       renderer.fillRect(cx - 2, cy - s - 3, 5, 3, true);
       break;
     }
-    case 25: { // Game Boy
+    case 25: {  // Game Boy
       renderer.drawRect(cx - s / 2, cy - s, s, s * 2);
       renderer.fillRect(cx - s / 3, cy - s + s / 4, s * 2 / 3, s / 2, false);
       renderer.drawRect(cx - s / 3, cy - s + s / 4, s * 2 / 3, s / 2);
@@ -3097,7 +3336,7 @@ void CasinoActivity::lbDrawItemIcon(int x, int y, int size, int iconId, bool loc
       renderer.fillRect(cx - s / 4, cy + s / 3, 2, s / 4, true);
       break;
     }
-    case 26: { // Oscilloscope
+    case 26: {  // Oscilloscope
       renderer.drawRect(cx - s, cy - s / 2, s * 2, s);
       for (int px = -s + 2; px < s - 2; px++) {
         float wave = sinf(px * 3.14159f / (float)(s / 2));
@@ -3106,14 +3345,14 @@ void CasinoActivity::lbDrawItemIcon(int x, int y, int size, int iconId, bool loc
       }
       break;
     }
-    case 27: { // Soldering Iron
+    case 27: {  // Soldering Iron
       renderer.drawLine(cx - s, cy + s, cx + s / 3, cy - s / 3);
       renderer.drawLine(cx - s + 1, cy + s, cx + s / 3 + 1, cy - s / 3);
       renderer.drawLine(cx + s / 3, cy - s / 3, cx + s, cy - s);
       renderer.fillRect(cx + s - 2, cy - s - 2, 4, 4, true);
       break;
     }
-    case 28: { // Drone
+    case 28: {  // Drone
       renderer.drawLine(cx - s, cy - s, cx + s, cy + s);
       renderer.drawLine(cx + s, cy - s, cx - s, cy + s);
       renderer.fillRect(cx - 2, cy - 2, 4, 4, true);
@@ -3124,15 +3363,15 @@ void CasinoActivity::lbDrawItemIcon(int x, int y, int size, int iconId, bool loc
       }
       break;
     }
-    case 29: { // VR Headset
+    case 29: {  // VR Headset
       renderer.drawRect(cx - s, cy - s / 3, s * 2, s * 2 / 3);
       renderer.fillRect(cx - s / 2, cy - s / 6, s / 3, s / 3, true);
-      renderer.fillRect(cx + s / 4,  cy - s / 6, s / 3, s / 3, true);
+      renderer.fillRect(cx + s / 4, cy - s / 6, s / 3, s / 3, true);
       renderer.drawLine(cx - s, cy, cx - s - s / 3, cy - s / 2);
       renderer.drawLine(cx + s, cy, cx + s + s / 3, cy - s / 2);
       break;
     }
-    case 30: { // Server Rack
+    case 30: {  // Server Rack
       for (int i = 0; i < 3; i++) {
         int ry = cy - s + i * (s * 2 / 3);
         renderer.drawRect(cx - s / 2, ry, s, s * 2 / 3 - 2);
@@ -3140,30 +3379,28 @@ void CasinoActivity::lbDrawItemIcon(int x, int y, int size, int iconId, bool loc
       }
       break;
     }
-    case 31: { // Ethernet Jack
+    case 31: {  // Ethernet Jack
       renderer.drawRect(cx - s / 2, cy - s / 3, s, s * 2 / 3);
       renderer.drawRect(cx - s / 3, cy - s / 3 - s / 4, s * 2 / 3, s / 4);
-      for (int i = 0; i < 4; i++)
-        renderer.fillRect(cx - s / 4 + i * s / 6, cy - s / 3 - s / 6, 2, s / 6, true);
+      for (int i = 0; i < 4; i++) renderer.fillRect(cx - s / 4 + i * s / 6, cy - s / 3 - s / 6, 2, s / 6, true);
       break;
     }
-    case 32: { // Raspberry Pi
+    case 32: {  // Raspberry Pi
       renderer.drawRect(cx - s, cy - s / 2, s * 2, s);
       renderer.fillRect(cx - s + 2, cy - s / 2 + 2, s / 3, s / 4, true);
-      for (int i = 0; i < 5; i++)
-        renderer.fillRect(cx + s / 2 + i * 3 - 7, cy - s / 2 - 3, 2, 3, true);
+      for (int i = 0; i < 5; i++) renderer.fillRect(cx + s / 2 + i * 3 - 7, cy - s / 2 - 3, 2, 3, true);
       renderer.fillRect(cx, cy - s / 4, s / 2, s / 3, false);
       renderer.drawRect(cx, cy - s / 4, s / 2, s / 3);
       break;
     }
-    case 33: { // Arduino
+    case 33: {  // Arduino
       renderer.drawRect(cx - s, cy - s / 2, s * 2, s);
       renderer.fillRect(cx - s / 2, cy - s / 2 - 2, s, 2, true);
       renderer.fillRect(cx - s / 4, cy + s / 2, s / 2, 2, true);
       renderer.fillRect(cx + s / 3, cy - s / 4, s / 3, s / 4, true);
       break;
     }
-    case 34: { // Logic Analyzer
+    case 34: {  // Logic Analyzer
       renderer.drawRect(cx - s / 2, cy - s / 3, s, s * 2 / 3);
       for (int i = 0; i < 4; i++) {
         int px = cx - s / 3 + i * s / 4;
@@ -3172,18 +3409,18 @@ void CasinoActivity::lbDrawItemIcon(int x, int y, int size, int iconId, bool loc
       }
       break;
     }
-    case 35: { // Golden Chip
+    case 35: {  // Golden Chip
       lbFillDithered25(renderer, cx - s, cy - s, s * 2, s * 2);
       renderer.drawRect(cx - s, cy - s, s * 2, s * 2);
       renderer.drawRect(cx - s + 2, cy - s + 2, s * 2 - 4, s * 2 - 4);
       for (int i = 0; i < 3; i++) {
         int py = cy - s + 4 + i * (s * 2 - 8) / 2;
         renderer.fillRect(cx - s - s / 3, py, s / 3, 3, true);
-        renderer.fillRect(cx + s,          py, s / 3, 3, true);
+        renderer.fillRect(cx + s, py, s / 3, 3, true);
       }
       break;
     }
-    case 36: { // Cyber Eye
+    case 36: {  // Cyber Eye
       for (int a = 0; a < 360; a += 5) {
         float rad = a * 3.14159f / 180.0f;
         renderer.drawPixel(cx + (int)(s * cosf(rad)), cy + (int)(s * sinf(rad)), true);
@@ -3198,7 +3435,7 @@ void CasinoActivity::lbDrawItemIcon(int x, int y, int size, int iconId, bool loc
       renderer.drawLine(cx, cy - s, cx, cy - s - 3);
       break;
     }
-    case 37: { // Plasma Ball
+    case 37: {  // Plasma Ball
       lbFillDithered25(renderer, cx - s, cy - s, s * 2, s * 2);
       for (int a = 0; a < 360; a += 5) {
         float rad = a * 3.14159f / 180.0f;
@@ -3211,15 +3448,15 @@ void CasinoActivity::lbDrawItemIcon(int x, int y, int size, int iconId, bool loc
       renderer.drawLine(cx - s / 3, cy + s / 2, cx - s / 6, cy + s / 3);
       break;
     }
-    case 38: { // Hologram
-      renderer.drawLine(cx,      cy - s, cx + s,  cy);
-      renderer.drawLine(cx + s,  cy,     cx,      cy + s);
-      renderer.drawLine(cx,      cy + s, cx - s,  cy);
-      renderer.drawLine(cx - s,  cy,     cx,      cy - s);
+    case 38: {  // Hologram
+      renderer.drawLine(cx, cy - s, cx + s, cy);
+      renderer.drawLine(cx + s, cy, cx, cy + s);
+      renderer.drawLine(cx, cy + s, cx - s, cy);
+      renderer.drawLine(cx - s, cy, cx, cy - s);
       lbFillDithered25(renderer, cx - s / 2, cy - s / 2, s, s);
       break;
     }
-    case 39: { // Quantum Bit
+    case 39: {  // Quantum Bit
       for (int a = 0; a < 360; a += 8) {
         float rad = a * 3.14159f / 180.0f;
         int r2 = s * 2 / 3;
@@ -3229,16 +3466,15 @@ void CasinoActivity::lbDrawItemIcon(int x, int y, int size, int iconId, bool loc
       lbFillDithered50(renderer, cx - s / 6, cy - s / 3, s / 3, s * 2 / 3);
       break;
     }
-    case 40: { // Neural Net
+    case 40: {  // Neural Net
       int nodes[5][2] = {{cx, cy - s}, {cx - s, cy}, {cx + s, cy}, {cx - s / 2, cy + s}, {cx + s / 2, cy + s}};
       for (int i = 0; i < 5; i++) {
         renderer.fillRect(nodes[i][0] - 2, nodes[i][1] - 2, 5, 5, true);
-        for (int j = i + 1; j < 5; j++)
-          renderer.drawLine(nodes[i][0], nodes[i][1], nodes[j][0], nodes[j][1]);
+        for (int j = i + 1; j < 5; j++) renderer.drawLine(nodes[i][0], nodes[i][1], nodes[j][0], nodes[j][1]);
       }
       break;
     }
-    case 41: { // Infinity Loop
+    case 41: {  // Infinity Loop
       for (int a = 0; a < 360; a += 5) {
         float rad = a * 3.14159f / 180.0f;
         float ix = s * 2 / 3 * cosf(rad);
@@ -3247,14 +3483,14 @@ void CasinoActivity::lbDrawItemIcon(int x, int y, int size, int iconId, bool loc
       }
       break;
     }
-    case 42: { // Crypto Key
+    case 42: {  // Crypto Key
       renderer.drawRect(cx - s, cy - s / 4, s, s / 2);
       renderer.drawLine(cx, cy, cx + s, cy);
-      renderer.drawLine(cx + s / 2,     cy, cx + s / 2,     cy + s / 3);
+      renderer.drawLine(cx + s / 2, cy, cx + s / 2, cy + s / 3);
       renderer.drawLine(cx + s * 3 / 4, cy, cx + s * 3 / 4, cy + s / 4);
       break;
     }
-    case 43: { // Zero Day
+    case 43: {  // Zero Day
       lbFillDithered50(renderer, cx - s / 2, cy - s / 2, s, s);
       renderer.drawRect(cx - s / 2, cy - s / 2, s, s);
       renderer.fillRect(cx - s / 3, cy - s / 4, s / 4, s / 4, false);
@@ -3262,49 +3498,47 @@ void CasinoActivity::lbDrawItemIcon(int x, int y, int size, int iconId, bool loc
       renderer.fillRect(cx - s / 6, cy + s / 6, s / 3, 2, false);
       break;
     }
-    case 44: { // Black Box
+    case 44: {  // Black Box
       renderer.fillRect(cx - s, cy - s, s * 2, s * 2, true);
       lbFillDithered50(renderer, cx - s + 3, cy - s + 3, s * 2 - 6, s * 2 - 6);
       renderer.drawRect(cx - s / 3, cy - s / 3, s * 2 / 3, s * 2 / 3);
       break;
     }
-    case 45: { // The Kernel
+    case 45: {  // The Kernel
       renderer.fillRect(cx - s - 2, cy - s - 2, s * 2 + 4, s * 2 + 4, true);
       renderer.fillRect(cx - s, cy - s + s / 3, s * 2, s * 2 - s / 3, false);
       renderer.fillRect(cx - s, cy - s, s * 2, s / 3, true);
       renderer.fillRect(cx + s - s / 4, cy - s + 2, s / 5, s / 5, false);
-      for (int i = 0; i < 5; i++)
-        renderer.fillRect(cx - s + 4 + i * 4, cy - s / 4, 2, 3, true);
+      for (int i = 0; i < 5; i++) renderer.fillRect(cx - s + 4 + i * 4, cy - s / 4, 2, 3, true);
       renderer.fillRect(cx - s + 24, cy - s / 4, 3, 5, true);
       break;
     }
-    case 46: { // Root Shell
+    case 46: {  // Root Shell
       renderer.drawRect(cx - s, cy - s, s * 2, s * 2);
       renderer.fillRect(cx - s, cy - s, s * 2, s / 3, true);
       renderer.fillRect(cx + s - s / 4, cy - s + 2, s / 5, s / 5, false);
-      renderer.drawLine(cx - s / 2,       cy - s / 6, cx - s / 2 + s / 3, cy - s / 6);
-      renderer.drawLine(cx - s / 2,       cy + s / 6, cx - s / 2 + s / 3, cy + s / 6);
+      renderer.drawLine(cx - s / 2, cy - s / 6, cx - s / 2 + s / 3, cy - s / 6);
+      renderer.drawLine(cx - s / 2, cy + s / 6, cx - s / 2 + s / 3, cy + s / 6);
       renderer.drawLine(cx - s / 3, cy - s / 3, cx - s / 3, cy + s / 3);
       renderer.drawLine(cx - s / 6, cy - s / 3, cx - s / 6, cy + s / 3);
       break;
     }
-    case 47: { // Packet Ghost
+    case 47: {  // Packet Ghost
       for (int a = 0; a <= 180; a += 5) {
         float rad = a * 3.14159f / 180.0f;
-        renderer.drawPixel(cx + (int)(s * 2 / 3 * cosf(rad)),
-                           cy - s / 4 + (int)(s * 2 / 3 * -sinf(rad)), true);
+        renderer.drawPixel(cx + (int)(s * 2 / 3 * cosf(rad)), cy - s / 4 + (int)(s * 2 / 3 * -sinf(rad)), true);
       }
       renderer.drawLine(cx - s * 2 / 3, cy - s / 4, cx - s * 2 / 3, cy + s);
       renderer.drawLine(cx + s * 2 / 3, cy - s / 4, cx + s * 2 / 3, cy + s);
       renderer.drawLine(cx - s * 2 / 3, cy + s, cx - s / 3, cy + s / 2);
-      renderer.drawLine(cx - s / 3,     cy + s / 2, cx,          cy + s);
-      renderer.drawLine(cx,             cy + s,     cx + s / 3,  cy + s / 2);
-      renderer.drawLine(cx + s / 3,     cy + s / 2, cx + s * 2 / 3, cy + s);
+      renderer.drawLine(cx - s / 3, cy + s / 2, cx, cy + s);
+      renderer.drawLine(cx, cy + s, cx + s / 3, cy + s / 2);
+      renderer.drawLine(cx + s / 3, cy + s / 2, cx + s * 2 / 3, cy + s);
       renderer.fillRect(cx - s / 3, cy - s / 3, 3, 3, true);
       renderer.fillRect(cx + s / 4, cy - s / 3, 3, 3, true);
       break;
     }
-    case 48: { // E-Ink Dragon
+    case 48: {  // E-Ink Dragon
       for (int dy2 = -s / 2; dy2 <= s / 2; dy2++) {
         float ratio = 1.0f - (float)(dy2 * dy2) / ((float)(s / 2) * (s / 2));
         if (ratio < 0.0f) ratio = 0.0f;
@@ -3312,19 +3546,19 @@ void CasinoActivity::lbDrawItemIcon(int x, int y, int size, int iconId, bool loc
         if (hw > 0) renderer.fillRect(cx - hw / 2, cy + dy2, hw, 1, true);
       }
       renderer.drawLine(cx - s / 2, cy - s / 4, cx - s, cy - s);
-      renderer.drawLine(cx - s,     cy - s,      cx - s / 3, cy);
+      renderer.drawLine(cx - s, cy - s, cx - s / 3, cy);
       renderer.drawLine(cx + s / 2, cy - s / 4, cx + s, cy - s);
-      renderer.drawLine(cx + s,     cy - s,      cx + s / 3, cy);
+      renderer.drawLine(cx + s, cy - s, cx + s / 3, cy);
       renderer.drawLine(cx + s / 2, cy - s / 4, cx + s, cy);
       renderer.drawLine(cx + s / 2, cy + s / 4, cx + s, cy);
-      renderer.drawLine(cx - s / 2, cy,           cx - s, cy + s / 2);
-      renderer.drawLine(cx - s,     cy + s / 2,   cx - s + s / 3, cy + s);
+      renderer.drawLine(cx - s / 2, cy, cx - s, cy + s / 2);
+      renderer.drawLine(cx - s, cy + s / 2, cx - s + s / 3, cy + s);
       break;
     }
-    case 49: { // biscuit. Logo
+    case 49: {  // biscuit. Logo
       for (int a = 0; a < 360; a += 5) {
         float rad = a * 3.14159f / 180.0f;
-        renderer.drawPixel(cx + (int)(s * cosf(rad)),       cy + (int)(s * sinf(rad)), true);
+        renderer.drawPixel(cx + (int)(s * cosf(rad)), cy + (int)(s * sinf(rad)), true);
         renderer.drawPixel(cx + (int)((s - 2) * cosf(rad)), cy + (int)((s - 2) * sinf(rad)), true);
       }
       renderer.fillRect(cx - s / 3, cy - s / 2, 2, s, true);

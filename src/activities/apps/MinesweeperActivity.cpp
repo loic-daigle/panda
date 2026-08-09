@@ -13,8 +13,7 @@
 // 50% gray — classic checkerboard dither
 static void fillDithered50(GfxRenderer& r, int x, int y, int w, int h) {
   for (int dy = 0; dy < h; dy++)
-    for (int dx = (dy % 2); dx < w; dx += 2)
-      r.drawPixel(x + dx, y + dy, true);
+    for (int dx = (dy % 2); dx < w; dx += 2) r.drawPixel(x + dx, y + dy, true);
 }
 
 void MinesweeperActivity::onEnter() {
@@ -75,7 +74,9 @@ void MinesweeperActivity::reveal(int x, int y) {
 
   // Iterative flood fill using fixed-size stack
   static constexpr int MAX_CELLS = 160;  // 10*16 max grid
-  struct Cell { int8_t x, y; };
+  struct Cell {
+    int8_t x, y;
+  };
   Cell stack[MAX_CELLS];
   int top = 0;
   stack[top++] = {static_cast<int8_t>(x), static_cast<int8_t>(y)};
@@ -256,8 +257,8 @@ void MinesweeperActivity::render(RenderLock&&) {
   }
 
   // Draw header with mine/flag info
-  std::string headerInfo =
-      std::string(tr(STR_MINES)) + ": " + std::to_string(mineCount) + "  " + tr(STR_FLAGS) + ": " + std::to_string(flagCount);
+  std::string headerInfo = std::string(tr(STR_MINES)) + ": " + std::to_string(mineCount) + "  " + tr(STR_FLAGS) + ": " +
+                           std::to_string(flagCount);
   GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, tr(STR_MINESWEEPER),
                  headerInfo.c_str());
 
@@ -302,8 +303,10 @@ void MinesweeperActivity::render(RenderLock&&) {
             for (int dy = -mr; dy <= mr; dy++) {
               int dx = 0;
               while ((dx + 1) * (dx + 1) + dy * dy <= mr * mr) dx++;
-              if (dx > 0) renderer.fillRect(cx - dx, cy + dy, dx * 2 + 1, 1, true);
-              else renderer.drawPixel(cx, cy + dy, true);
+              if (dx > 0)
+                renderer.fillRect(cx - dx, cy + dy, dx * 2 + 1, 1, true);
+              else
+                renderer.drawPixel(cx, cy + dy, true);
             }
             // 4 radiating lines (cross + X)
             renderer.drawLine(cx - mr - 2, cy, cx + mr + 2, cy);
@@ -331,8 +334,10 @@ void MinesweeperActivity::render(RenderLock&&) {
             for (int dy = -mr; dy <= mr; dy++) {
               int dx = 0;
               while ((dx + 1) * (dx + 1) + dy * dy <= mr * mr) dx++;
-              if (dx > 0) renderer.fillRect(cx - dx, cy + dy, dx * 2 + 1, 1, true);
-              else renderer.drawPixel(cx, cy + dy, true);
+              if (dx > 0)
+                renderer.fillRect(cx - dx, cy + dy, dx * 2 + 1, 1, true);
+              else
+                renderer.drawPixel(cx, cy + dy, true);
             }
             // 4 radiating lines (cross + X)
             renderer.drawLine(cx - mr - 2, cy, cx + mr + 2, cy);

@@ -72,7 +72,10 @@ float BreadcrumbTrailActivity::jaccardScore(const Crumb& crumb, const ApSig* cur
   int matches = 0;
   for (int i = 0; i < crumb.apCount; i++)
     for (int j = 0; j < currentCount; j++)
-      if (memcmp(crumb.aps[i].bssid, current[j].bssid, 6) == 0) { matches++; break; }
+      if (memcmp(crumb.aps[i].bssid, current[j].bssid, 6) == 0) {
+        matches++;
+        break;
+      }
   int unionCount = crumb.apCount + currentCount - matches;
   if (unionCount <= 0) return 0.0f;
   return (float)matches / (float)unionCount * 100.0f;
@@ -100,8 +103,14 @@ bool BreadcrumbTrailActivity::loadFromDisk(const char* path) {
   auto f = Storage.open(path);
   if (!f) return false;
   uint16_t count = 0;
-  if (f.read(reinterpret_cast<uint8_t*>(&count), sizeof(count)) != sizeof(count)) { f.close(); return false; }
-  if (count == 0 || count > MAX_CRUMBS) { f.close(); return false; }
+  if (f.read(reinterpret_cast<uint8_t*>(&count), sizeof(count)) != sizeof(count)) {
+    f.close();
+    return false;
+  }
+  if (count == 0 || count > MAX_CRUMBS) {
+    f.close();
+    return false;
+  }
   trail.resize(count);
   f.read(reinterpret_cast<uint8_t*>(trail.data()), sizeof(Crumb) * count);
   f.close();
@@ -130,9 +139,18 @@ void BreadcrumbTrailActivity::loadTrailList() {
 void BreadcrumbTrailActivity::loop() {
   if (state == MENU) {
     static constexpr int MENU_COUNT = 3;
-    buttonNavigator.onNext([this] { menuIndex = ButtonNavigator::nextIndex(menuIndex, MENU_COUNT); requestUpdate(); });
-    buttonNavigator.onPrevious([this] { menuIndex = ButtonNavigator::previousIndex(menuIndex, MENU_COUNT); requestUpdate(); });
-    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) { finish(); return; }
+    buttonNavigator.onNext([this] {
+      menuIndex = ButtonNavigator::nextIndex(menuIndex, MENU_COUNT);
+      requestUpdate();
+    });
+    buttonNavigator.onPrevious([this] {
+      menuIndex = ButtonNavigator::previousIndex(menuIndex, MENU_COUNT);
+      requestUpdate();
+    });
+    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) {
+      finish();
+      return;
+    }
     if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
       if (menuIndex == 0) {
         trail.clear();
@@ -178,9 +196,19 @@ void BreadcrumbTrailActivity::loop() {
   }
 
   if (state == TRAIL_LIST) {
-    buttonNavigator.onNext([this] { trailListIndex = ButtonNavigator::nextIndex(trailListIndex, (int)trailFiles.size()); requestUpdate(); });
-    buttonNavigator.onPrevious([this] { trailListIndex = ButtonNavigator::previousIndex(trailListIndex, (int)trailFiles.size()); requestUpdate(); });
-    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) { state = MENU; requestUpdate(); return; }
+    buttonNavigator.onNext([this] {
+      trailListIndex = ButtonNavigator::nextIndex(trailListIndex, (int)trailFiles.size());
+      requestUpdate();
+    });
+    buttonNavigator.onPrevious([this] {
+      trailListIndex = ButtonNavigator::previousIndex(trailListIndex, (int)trailFiles.size());
+      requestUpdate();
+    });
+    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) {
+      state = MENU;
+      requestUpdate();
+      return;
+    }
     if (mappedInput.wasReleased(MappedInputManager::Button::Confirm) && !trailFiles.empty()) {
       char path[80];
       snprintf(path, sizeof(path), "%s/%s", TRAILS_DIR, trailFiles[trailListIndex].c_str());
@@ -196,7 +224,12 @@ void BreadcrumbTrailActivity::loop() {
   }
 
   if (state == RETRACING) {
-    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) { state = MENU; trail.clear(); requestUpdate(); return; }
+    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) {
+      state = MENU;
+      trail.clear();
+      requestUpdate();
+      return;
+    }
     unsigned long now = millis();
     if (now - lastCrumb >= 5000) {
       lastCrumb = now;
@@ -207,7 +240,10 @@ void BreadcrumbTrailActivity::loop() {
       int bestIdx = 0;
       for (int i = 0; i < (int)trail.size(); i++) {
         float s = jaccardScore(trail[i], current.aps, current.apCount);
-        if (s > best) { best = s; bestIdx = i; }
+        if (s > best) {
+          best = s;
+          bestIdx = i;
+        }
       }
       matchScore = best;
       retraceIndex = bestIdx;
@@ -218,16 +254,15 @@ void BreadcrumbTrailActivity::loop() {
 }
 
 void BreadcrumbTrailActivity::promptSaveName() {
-  startActivityForResult(
-      std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Trail Name", "trail", 32),
-      [this](const ActivityResult& result) {
-        if (!result.isCancelled) {
-          const auto& text = std::get<KeyboardResult>(result.data).text;
-          if (!text.empty()) saveToDisk(text.c_str());
-        }
-        state = MENU;
-        menuIndex = 0;
-      });
+  startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Trail Name", "trail", 32),
+                         [this](const ActivityResult& result) {
+                           if (!result.isCancelled) {
+                             const auto& text = std::get<KeyboardResult>(result.data).text;
+                             if (!text.empty()) saveToDisk(text.c_str());
+                           }
+                           state = MENU;
+                           menuIndex = 0;
+                         });
 }
 
 // ----------------------------------------------------------------
@@ -237,10 +272,18 @@ void BreadcrumbTrailActivity::promptSaveName() {
 void BreadcrumbTrailActivity::render(RenderLock&&) {
   renderer.clearScreen();
   switch (state) {
-    case MENU:      renderMenu();      break;
-    case RECORDING: renderRecording(); break;
-    case TRAIL_LIST: renderTrailList(); break;
-    case RETRACING: renderRetracing(); break;
+    case MENU:
+      renderMenu();
+      break;
+    case RECORDING:
+      renderRecording();
+      break;
+    case TRAIL_LIST:
+      renderTrailList();
+      break;
+    case RETRACING:
+      renderRetracing();
+      break;
   }
   renderer.displayBuffer();
 }
@@ -276,12 +319,12 @@ void BreadcrumbTrailActivity::renderRecording() const {
   renderer.drawCenteredText(UI_10_FONT_ID, y, buf);
   y += 40;
 
-  unsigned long totalSecs = (lastCrumb > 0) ? (((unsigned long)trail.size() * 30000 + (millis() - lastCrumb)) / 1000) : 0;
+  unsigned long totalSecs =
+      (lastCrumb > 0) ? (((unsigned long)trail.size() * 30000 + (millis() - lastCrumb)) / 1000) : 0;
   snprintf(buf, sizeof(buf), "Elapsed: %lum %02lus", totalSecs / 60, totalSecs % 60);
   renderer.drawCenteredText(SMALL_FONT_ID, y, buf);
 
-  renderer.drawCenteredText(SMALL_FONT_ID, pageHeight - metrics.buttonHintsHeight - 25,
-                             "Back = stop & save");
+  renderer.drawCenteredText(SMALL_FONT_ID, pageHeight - metrics.buttonHintsHeight - 25, "Back = stop & save");
   const auto labels = mappedInput.mapLabels("Stop", "", "", "");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
 }

@@ -5,8 +5,6 @@
 #include <Logging.h>
 #include <WiFi.h>
 
-#include "util/RadioManager.h"
-
 #include <algorithm>
 #include <climits>
 #include <string>
@@ -14,6 +12,7 @@
 #include "MappedInputManager.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
+#include "util/RadioManager.h"
 
 // ---- File-scope helpers (used by signal view rendering) ----------------------
 
@@ -99,21 +98,28 @@ void WifiScannerActivity::sortNetworks() {
   if (sortBySignal) {
     std::sort(networks.begin(), networks.end(), [](const Network& a, const Network& b) { return a.rssi > b.rssi; });
   } else {
-    std::sort(networks.begin(), networks.end(),
-              [](const Network& a, const Network& b) { return a.ssid < b.ssid; });
+    std::sort(networks.begin(), networks.end(), [](const Network& a, const Network& b) { return a.ssid < b.ssid; });
   }
 }
 
 const char* WifiScannerActivity::encryptionString(uint8_t type) const {
   switch (type) {
-    case WIFI_AUTH_OPEN: return "Open";
-    case WIFI_AUTH_WEP: return "WEP";
-    case WIFI_AUTH_WPA_PSK: return "WPA";
-    case WIFI_AUTH_WPA2_PSK: return "WPA2";
-    case WIFI_AUTH_WPA_WPA2_PSK: return "WPA/2";
-    case WIFI_AUTH_WPA3_PSK: return "WPA3";
-    case WIFI_AUTH_WPA2_WPA3_PSK: return "WPA2/3";
-    default: return "?";
+    case WIFI_AUTH_OPEN:
+      return "Open";
+    case WIFI_AUTH_WEP:
+      return "WEP";
+    case WIFI_AUTH_WPA_PSK:
+      return "WPA";
+    case WIFI_AUTH_WPA2_PSK:
+      return "WPA2";
+    case WIFI_AUTH_WPA_WPA2_PSK:
+      return "WPA/2";
+    case WIFI_AUTH_WPA3_PSK:
+      return "WPA3";
+    case WIFI_AUTH_WPA2_WPA3_PSK:
+      return "WPA2/3";
+    default:
+      return "?";
   }
 }
 
@@ -133,8 +139,8 @@ void WifiScannerActivity::saveToCsv() {
 
   String csv = "SSID,BSSID,RSSI,Channel,Encryption\n";
   for (const auto& net : networks) {
-    csv += String(net.ssid.c_str()) + "," + net.bssid.c_str() + "," + String(net.rssi) + "," +
-           String(net.channel) + "," + encryptionString(net.encType) + "\n";
+    csv += String(net.ssid.c_str()) + "," + net.bssid.c_str() + "," + String(net.rssi) + "," + String(net.channel) +
+           "," + encryptionString(net.encType) + "\n";
   }
   Storage.writeFile(filename, csv);
   LOG_DBG("WSCAN", "Saved %zu networks to %s", networks.size(), filename);
@@ -157,8 +163,8 @@ void WifiScannerActivity::doMeasurement() {
       uint8_t* bssidBytes = WiFi.BSSID(i);
       if (!bssidBytes) continue;
       char bssidStr[20];
-      snprintf(bssidStr, sizeof(bssidStr), "%02X:%02X:%02X:%02X:%02X:%02X",
-               bssidBytes[0], bssidBytes[1], bssidBytes[2], bssidBytes[3], bssidBytes[4], bssidBytes[5]);
+      snprintf(bssidStr, sizeof(bssidStr), "%02X:%02X:%02X:%02X:%02X:%02X", bssidBytes[0], bssidBytes[1], bssidBytes[2],
+               bssidBytes[3], bssidBytes[4], bssidBytes[5]);
       if (targetBssid == bssidStr) {
         found = WiFi.RSSI(i);
         break;
@@ -235,9 +241,12 @@ void WifiScannerActivity::analyzeChannels() {
       if (dist > 2) continue;
 
       int overlapPct;
-      if (dist == 0) overlapPct = 100;
-      else if (dist == 1) overlapPct = 70;
-      else overlapPct = 30;  // dist == 2
+      if (dist == 0)
+        overlapPct = 100;
+      else if (dist == 1)
+        overlapPct = 70;
+      else
+        overlapPct = 30;  // dist == 2
 
       channelData[target].interferenceScore += signalWeight * overlapPct / 100;
     }
@@ -502,10 +511,8 @@ void WifiScannerActivity::renderChannelSpectrum() {
   const auto pageHeight = renderer.getScreenHeight();
 
   char subtitle[40];
-  snprintf(subtitle, sizeof(subtitle), "%d APs  Best: Ch %d",
-           static_cast<int>(networks.size()), recommendedChannel);
-  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 "Channel Analyzer", subtitle);
+  snprintf(subtitle, sizeof(subtitle), "%d APs  Best: Ch %d", static_cast<int>(networks.size()), recommendedChannel);
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Channel Analyzer", subtitle);
 
   const int headerBottom = metrics.topPadding + metrics.headerHeight;
 
@@ -523,9 +530,7 @@ void WifiScannerActivity::renderChannelSpectrum() {
 
   const int chSpacing = graphW / 13;
 
-  auto chToX = [&](int ch) -> int {
-    return graphX + (ch - 1) * chSpacing + chSpacing / 2;
-  };
+  auto chToX = [&](int ch) -> int { return graphX + (ch - 1) * chSpacing + chSpacing / 2; };
 
   // Dotted vertical grid lines
   for (int ch = 1; ch <= 13; ch++) {
@@ -569,12 +574,17 @@ void WifiScannerActivity::renderChannelSpectrum() {
 
     for (int dx = -halfSpread; dx <= halfSpread; dx++) {
       int px = centerX + dx;
-      if (px < graphX || px > graphX + graphW) { prevPx = -1; continue; }
+      if (px < graphX || px > graphX + graphW) {
+        prevPx = -1;
+        continue;
+      }
 
       float normDist = static_cast<float>(dx < 0 ? -dx : dx) / static_cast<float>(chSpacing);
       float factor;
-      if (normDist <= 0.5f) factor = 1.0f;
-      else if (normDist <= 1.5f) factor = 0.7f;
+      if (normDist <= 0.5f)
+        factor = 1.0f;
+      else if (normDist <= 1.5f)
+        factor = 0.7f;
       else {
         factor = 0.7f * (2.0f - normDist) / 0.5f;
         if (factor < 0.0f) factor = 0.0f;
@@ -598,8 +608,7 @@ void WifiScannerActivity::renderChannelSpectrum() {
 
   int maxInterference = 1;
   for (int ch = 1; ch <= 13; ch++) {
-    if (channelData[ch].interferenceScore > maxInterference)
-      maxInterference = channelData[ch].interferenceScore;
+    if (channelData[ch].interferenceScore > maxInterference) maxInterference = channelData[ch].interferenceScore;
   }
 
   for (int ch = 1; ch <= 13; ch++) {
@@ -634,27 +643,27 @@ void WifiScannerActivity::renderChannelTable() {
   const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
-  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 "Channel Analyzer", "Table View");
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Channel Analyzer",
+                 "Table View");
 
   const int headerBottom = metrics.topPadding + metrics.headerHeight;
   const int pad = metrics.contentSidePadding;
 
-  const int colCh   = pad;
-  const int colAps  = colCh + 42;
+  const int colCh = pad;
+  const int colAps = colCh + 42;
   const int colBest = colAps + 44;
-  const int colAvg  = colBest + 58;
-  const int colBar  = colAvg + 54;
+  const int colAvg = colBest + 58;
+  const int colBar = colAvg + 54;
   const int barMaxW = pageWidth - colBar - pad;
 
   const int rowH = renderer.getTextHeight(SMALL_FONT_ID) + 6;
   int y = headerBottom + 8;
 
-  renderer.drawText(SMALL_FONT_ID, colCh,   y, "Ch",    true, EpdFontFamily::BOLD);
-  renderer.drawText(SMALL_FONT_ID, colAps,  y, "APs",   true, EpdFontFamily::BOLD);
-  renderer.drawText(SMALL_FONT_ID, colBest, y, "Best",  true, EpdFontFamily::BOLD);
-  renderer.drawText(SMALL_FONT_ID, colAvg,  y, "Avg",   true, EpdFontFamily::BOLD);
-  renderer.drawText(SMALL_FONT_ID, colBar,  y, "Interf",true, EpdFontFamily::BOLD);
+  renderer.drawText(SMALL_FONT_ID, colCh, y, "Ch", true, EpdFontFamily::BOLD);
+  renderer.drawText(SMALL_FONT_ID, colAps, y, "APs", true, EpdFontFamily::BOLD);
+  renderer.drawText(SMALL_FONT_ID, colBest, y, "Best", true, EpdFontFamily::BOLD);
+  renderer.drawText(SMALL_FONT_ID, colAvg, y, "Avg", true, EpdFontFamily::BOLD);
+  renderer.drawText(SMALL_FONT_ID, colBar, y, "Interf", true, EpdFontFamily::BOLD);
   y += rowH + 2;
 
   renderer.drawLine(pad, y, pageWidth - pad, y, true);
@@ -662,8 +671,7 @@ void WifiScannerActivity::renderChannelTable() {
 
   int maxInterference = 1;
   for (int ch = 1; ch <= 13; ch++) {
-    if (channelData[ch].interferenceScore > maxInterference)
-      maxInterference = channelData[ch].interferenceScore;
+    if (channelData[ch].interferenceScore > maxInterference) maxInterference = channelData[ch].interferenceScore;
   }
 
   const int hintsTop = pageHeight - metrics.buttonHintsHeight - metrics.verticalSpacing;
@@ -676,21 +684,24 @@ void WifiScannerActivity::renderChannelTable() {
 
     char chBuf[6];
     snprintf(chBuf, sizeof(chBuf), isRec ? ">%d" : "%d", ch);
-    renderer.drawText(SMALL_FONT_ID, colCh, y, chBuf, true,
-                      isRec ? EpdFontFamily::BOLD : EpdFontFamily::REGULAR);
+    renderer.drawText(SMALL_FONT_ID, colCh, y, chBuf, true, isRec ? EpdFontFamily::BOLD : EpdFontFamily::REGULAR);
 
     char apsBuf[8];
     snprintf(apsBuf, sizeof(apsBuf), "%d", info.apCount);
     renderer.drawText(SMALL_FONT_ID, colAps, y, apsBuf);
 
     char bestBuf[8];
-    if (info.apCount > 0) snprintf(bestBuf, sizeof(bestBuf), "%d", info.strongestRssi);
-    else bestBuf[0] = '-', bestBuf[1] = '\0';
+    if (info.apCount > 0)
+      snprintf(bestBuf, sizeof(bestBuf), "%d", info.strongestRssi);
+    else
+      bestBuf[0] = '-', bestBuf[1] = '\0';
     renderer.drawText(SMALL_FONT_ID, colBest, y, bestBuf);
 
     char avgBuf[8];
-    if (info.apCount > 0) snprintf(avgBuf, sizeof(avgBuf), "%d", info.avgRssi);
-    else avgBuf[0] = '-', avgBuf[1] = '\0';
+    if (info.apCount > 0)
+      snprintf(avgBuf, sizeof(avgBuf), "%d", info.avgRssi);
+    else
+      avgBuf[0] = '-', avgBuf[1] = '\0';
     renderer.drawText(SMALL_FONT_ID, colAvg, y, avgBuf);
 
     int barW = (info.interferenceScore * barMaxW) / maxInterference;
@@ -773,8 +784,10 @@ void WifiScannerActivity::render(RenderLock&&) {
   }
 
   if (viewMode == CHANNEL_VIEW) {
-    if (channelViewMode == VIEW_SPECTRUM) renderChannelSpectrum();
-    else renderChannelTable();
+    if (channelViewMode == VIEW_SPECTRUM)
+      renderChannelSpectrum();
+    else
+      renderChannelTable();
     renderer.displayBuffer();
     return;
   }

@@ -315,14 +315,12 @@ void EmergencyActivity::loop() {
     // ---- TRIGGERED ----
     case TRIGGERED: {
       // Periodic mesh SOS broadcasts
-      if (broadcastMesh && espnowInitialized &&
-          millis() - lastMeshSos >= MESH_SOS_INTERVAL_MS) {
+      if (broadcastMesh && espnowInitialized && millis() - lastMeshSos >= MESH_SOS_INTERVAL_MS) {
         sendMeshSos();
       }
 
       // Cancel: hold Back for 3 seconds
-      if (mappedInput.isPressed(MappedInputManager::Button::Back) &&
-          mappedInput.getHeldTime() >= 3000) {
+      if (mappedInput.isPressed(MappedInputManager::Button::Back) && mappedInput.getHeldTime() >= 3000) {
         stopEmergency();
         state = CONFIG;
         confirmPressCount = 0;
@@ -345,10 +343,18 @@ void EmergencyActivity::loop() {
 void EmergencyActivity::render(RenderLock&&) {
   renderer.clearScreen();
   switch (state) {
-    case CONFIG:    renderConfig();    break;
-    case ARMED:     renderArmed();     break;
-    case CHECK_IN:  renderCheckIn();   break;
-    case TRIGGERED: renderTriggered(); break;
+    case CONFIG:
+      renderConfig();
+      break;
+    case ARMED:
+      renderArmed();
+      break;
+    case CHECK_IN:
+      renderCheckIn();
+      break;
+    case TRIGGERED:
+      renderTriggered();
+      break;
   }
   renderer.displayBuffer();
 }
@@ -362,18 +368,18 @@ void EmergencyActivity::renderConfig() const {
   const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
-  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 "Emergency", "Configure & arm");
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Emergency",
+                 "Configure & arm");
 
   const int listTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
   const int listH = pageHeight - listTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
 
   GUI.drawList(
-      renderer, Rect{0, listTop, pageWidth, listH},
-      CONFIG_ITEMS, configIndex,
+      renderer, Rect{0, listTop, pageWidth, listH}, CONFIG_ITEMS, configIndex,
       [this](int i) -> std::string {
         switch (i) {
-          case 0: return (mode == PANIC_MANUAL) ? "Mode: Manual Panic" : "Mode: Dead Man's Switch";
+          case 0:
+            return (mode == PANIC_MANUAL) ? "Mode: Manual Panic" : "Mode: Dead Man's Switch";
           case 1: {
             char buf[32];
             unsigned long ms = INTERVALS[intervalIndex];
@@ -381,24 +387,34 @@ void EmergencyActivity::renderConfig() const {
             snprintf(buf, sizeof(buf), "Check-in interval: %lum", mins);
             return buf;
           }
-          case 2: return broadcastWifi ? "WiFi SOS: ON" : "WiFi SOS: OFF";
-          case 3: return broadcastMesh ? "Mesh SOS: ON" : "Mesh SOS: OFF";
-          case 4: return showMedical ? "Show Medical: ON" : "Show Medical: OFF";
-          case 5: return "ARM";
-          default: return "";
+          case 2:
+            return broadcastWifi ? "WiFi SOS: ON" : "WiFi SOS: OFF";
+          case 3:
+            return broadcastMesh ? "Mesh SOS: ON" : "Mesh SOS: OFF";
+          case 4:
+            return showMedical ? "Show Medical: ON" : "Show Medical: OFF";
+          case 5:
+            return "ARM";
+          default:
+            return "";
         }
       },
       [this](int i) -> std::string {
         switch (i) {
-          case 0: return (mode == PANIC_MANUAL)
-              ? "Triple-press Confirm to trigger"
-              : "Auto-trigger if check-ins missed";
-          case 1: return (mode == DEAD_MAN_SWITCH) ? "Dead man mode only" : "N/A for manual mode";
-          case 2: return "Create SOS WiFi access point";
-          case 3: return "Broadcast via ESP-NOW mesh";
-          case 4: return medInfoLoaded ? "Medical data loaded" : "No medical data on file";
-          case 5: return "Activate emergency monitoring";
-          default: return "";
+          case 0:
+            return (mode == PANIC_MANUAL) ? "Triple-press Confirm to trigger" : "Auto-trigger if check-ins missed";
+          case 1:
+            return (mode == DEAD_MAN_SWITCH) ? "Dead man mode only" : "N/A for manual mode";
+          case 2:
+            return "Create SOS WiFi access point";
+          case 3:
+            return "Broadcast via ESP-NOW mesh";
+          case 4:
+            return medInfoLoaded ? "Medical data loaded" : "No medical data on file";
+          case 5:
+            return "Activate emergency monitoring";
+          default:
+            return "";
         }
       });
 
@@ -415,15 +431,14 @@ void EmergencyActivity::renderArmed() const {
   const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
-  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 "ARMED", "Emergency monitoring active");
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "ARMED",
+                 "Emergency monitoring active");
 
   const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
   const int centerY = contentTop + (pageHeight - contentTop - metrics.buttonHintsHeight) / 2;
 
   if (mode == PANIC_MANUAL) {
-    renderer.drawCenteredText(UI_12_FONT_ID, centerY - 30,
-                              "Triple-press Confirm for SOS", true, EpdFontFamily::BOLD);
+    renderer.drawCenteredText(UI_12_FONT_ID, centerY - 30, "Triple-press Confirm for SOS", true, EpdFontFamily::BOLD);
     if (confirmPressCount > 0) {
       char buf[32];
       snprintf(buf, sizeof(buf), "Presses: %d / 3", confirmPressCount);
@@ -466,21 +481,19 @@ void EmergencyActivity::renderCheckIn() const {
   unsigned long sec = millis() / 1000;
   const char* headerTitle = (sec % 2 == 0) ? "! CHECK IN NOW !" : "CHECK IN REQUIRED";
 
-  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 headerTitle, "Press Confirm immediately");
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, headerTitle,
+                 "Press Confirm immediately");
 
   const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
   const int centerY = contentTop + (pageHeight - contentTop - metrics.buttonHintsHeight) / 2;
 
-  renderer.drawCenteredText(UI_12_FONT_ID, centerY - 40,
-                            "MISSED CHECK-IN", true, EpdFontFamily::BOLD);
+  renderer.drawCenteredText(UI_12_FONT_ID, centerY - 40, "MISSED CHECK-IN", true, EpdFontFamily::BOLD);
 
   char missBuf[40];
   snprintf(missBuf, sizeof(missBuf), "Missed: %d of %d", missedCheckIns, MAX_MISSED);
   renderer.drawCenteredText(UI_10_FONT_ID, centerY, missBuf);
 
-  renderer.drawCenteredText(SMALL_FONT_ID, centerY + 35,
-                            "Confirm to resume  |  Back to disarm");
+  renderer.drawCenteredText(SMALL_FONT_ID, centerY + 35, "Confirm to resume  |  Back to disarm");
 
   const auto labels = mappedInput.mapLabels("Disarm", "Check In", "", "");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
@@ -560,13 +573,11 @@ void EmergencyActivity::renderTriggered() const {
     // Emergency contact section
     renderer.drawText(SMALL_FONT_ID, PAD, y, "EMERGENCY CONTACT", true, EpdFontFamily::BOLD);
     y += lineHSm + 2;
-    const char* contactVal = (medInfoLoaded && medInfo.emergencyContact[0])
-        ? medInfo.emergencyContact : "—";
+    const char* contactVal = (medInfoLoaded && medInfo.emergencyContact[0]) ? medInfo.emergencyContact : "—";
     renderer.drawText(UI_10_FONT_ID, PAD, y, contactVal, true, EpdFontFamily::BOLD);
     y += lineH10 + 4;
 
-    const char* phoneVal = (medInfoLoaded && medInfo.emergencyPhone[0])
-        ? medInfo.emergencyPhone : "—";
+    const char* phoneVal = (medInfoLoaded && medInfo.emergencyPhone[0]) ? medInfo.emergencyPhone : "—";
     renderer.drawText(UI_12_FONT_ID, PAD, y, phoneVal, true, EpdFontFamily::BOLD);
     y += lineH12 + 8;
   }
@@ -593,8 +604,7 @@ void EmergencyActivity::renderTriggered() const {
     }
 
     if (broadcastMesh) {
-      renderer.drawText(SMALL_FONT_ID, PAD, y,
-                        espnowInitialized ? "Mesh broadcast: active" : "Mesh broadcast: failed");
+      renderer.drawText(SMALL_FONT_ID, PAD, y, espnowInitialized ? "Mesh broadcast: active" : "Mesh broadcast: failed");
       y += lineHSm + 3;
     }
   }

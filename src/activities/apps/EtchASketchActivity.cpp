@@ -88,8 +88,8 @@ void EtchASketchActivity::saveToBmp() {
   header[19] = (canvasW >> 8) & 0xFF;
   header[22] = canvasH & 0xFF;
   header[23] = (canvasH >> 8) & 0xFF;
-  header[26] = 1;   // planes
-  header[28] = 1;   // bits per pixel
+  header[26] = 1;  // planes
+  header[28] = 1;  // bits per pixel
   header[34] = imageSize & 0xFF;
   header[35] = (imageSize >> 8) & 0xFF;
   header[36] = (imageSize >> 16) & 0xFF;

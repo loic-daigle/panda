@@ -54,7 +54,10 @@ void HabitTrackerActivity::onExit() { Activity::onExit(); }
 
 void HabitTrackerActivity::loop() {
   if (state == TODAY_VIEW) {
-    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) { finish(); return; }
+    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
+      finish();
+      return;
+    }
 
     if (mappedInput.wasPressed(MappedInputManager::Button::Up)) {
       selectedIndex = ButtonNavigator::previousIndex(selectedIndex, data.habitCount);
@@ -80,8 +83,7 @@ void HabitTrackerActivity::loop() {
     }
 
     // Long-press Right → edit habits
-    if (mappedInput.wasReleased(MappedInputManager::Button::Right) &&
-        mappedInput.getHeldTime() >= 500) {
+    if (mappedInput.wasReleased(MappedInputManager::Button::Right) && mappedInput.getHeldTime() >= 500) {
       state = EDIT_HABITS;
       selectedIndex = 0;
       requestUpdate();
@@ -91,7 +93,10 @@ void HabitTrackerActivity::loop() {
 
   if (state == EDIT_HABITS) {
     if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
-      state = TODAY_VIEW; selectedIndex = 0; requestUpdate(); return;
+      state = TODAY_VIEW;
+      selectedIndex = 0;
+      requestUpdate();
+      return;
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Up)) {
       int total = data.habitCount + 1;
@@ -107,18 +112,17 @@ void HabitTrackerActivity::loop() {
       if (selectedIndex == data.habitCount) {
         // Add habit
         if (data.habitCount >= MAX_HABITS) return;
-        startActivityForResult(
-            std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Habit Name", "", 31),
-            [this](const ActivityResult& r) {
-              if (!r.isCancelled && data.habitCount < MAX_HABITS) {
-                const auto& text = std::get<KeyboardResult>(r.data).text;
-                Habit& h = data.habits[data.habitCount];
-                memset(&h, 0, sizeof(h));
-                strncpy(h.name, text.c_str(), sizeof(h.name) - 1);
-                data.habitCount++;
-                save();
-              }
-            });
+        startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Habit Name", "", 31),
+                               [this](const ActivityResult& r) {
+                                 if (!r.isCancelled && data.habitCount < MAX_HABITS) {
+                                   const auto& text = std::get<KeyboardResult>(r.data).text;
+                                   Habit& h = data.habits[data.habitCount];
+                                   memset(&h, 0, sizeof(h));
+                                   strncpy(h.name, text.c_str(), sizeof(h.name) - 1);
+                                   data.habitCount++;
+                                   save();
+                                 }
+                               });
       } else {
         // Delete selected habit
         for (int i = selectedIndex; i < data.habitCount - 1; i++) {
@@ -140,8 +144,10 @@ void HabitTrackerActivity::render(RenderLock&&) {
   const int pageWidth = renderer.getScreenWidth();
   GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Habit Tracker");
 
-  if (state == TODAY_VIEW) renderToday();
-  else renderEditList();
+  if (state == TODAY_VIEW)
+    renderToday();
+  else
+    renderEditList();
 
   renderer.displayBuffer();
 }
@@ -156,15 +162,16 @@ void HabitTrackerActivity::renderToday() const {
   if (data.habitCount == 0) {
     renderer.drawCenteredText(UI_10_FONT_ID, listTop + listH / 2, "Hold Right to add habits");
   } else {
-    GUI.drawList(renderer, Rect{0, listTop, pageWidth, listH}, data.habitCount, selectedIndex,
-      [this](int i) -> std::string {
-        return std::string(data.habits[i].completedToday ? "[x] " : "[ ] ") + data.habits[i].name;
-      },
-      [this](int i) -> std::string {
-        char buf[32];
-        snprintf(buf, sizeof(buf), "Streak: %d  Best: %d", data.habits[i].streak, data.habits[i].bestStreak);
-        return buf;
-      });
+    GUI.drawList(
+        renderer, Rect{0, listTop, pageWidth, listH}, data.habitCount, selectedIndex,
+        [this](int i) -> std::string {
+          return std::string(data.habits[i].completedToday ? "[x] " : "[ ] ") + data.habits[i].name;
+        },
+        [this](int i) -> std::string {
+          char buf[32];
+          snprintf(buf, sizeof(buf), "Streak: %d  Best: %d", data.habits[i].streak, data.habits[i].bestStreak);
+          return buf;
+        });
   }
 
   const auto labels = mappedInput.mapLabels("Back", "Toggle", "^", "v");
@@ -179,11 +186,10 @@ void HabitTrackerActivity::renderEditList() const {
   const int listH = pageHeight - listTop - metrics.buttonHintsHeight;
   const int total = data.habitCount + 1;
 
-  GUI.drawList(renderer, Rect{0, listTop, pageWidth, listH}, total, selectedIndex,
-    [this](int i) -> std::string {
-      if (i < data.habitCount) return std::string("[-] ") + data.habits[i].name;
-      return "+ Add Habit";
-    });
+  GUI.drawList(renderer, Rect{0, listTop, pageWidth, listH}, total, selectedIndex, [this](int i) -> std::string {
+    if (i < data.habitCount) return std::string("[-] ") + data.habits[i].name;
+    return "+ Add Habit";
+  });
 
   const auto labels = mappedInput.mapLabels("Back", "Select", "^", "v");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);

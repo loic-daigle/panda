@@ -63,15 +63,14 @@ void HttpClientActivity::loop() {
       } else if (menuIndex == 1) {
         // Enter URL
         state = ENTER_URL;
-        startActivityForResult(
-            std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "URL", url, 256),
-            [this](const ActivityResult& result) {
-              if (!result.isCancelled) {
-                url = std::get<KeyboardResult>(result.data).text;
-              }
-              state = MENU;
-              requestUpdate();
-            });
+        startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "URL", url, 256),
+                               [this](const ActivityResult& result) {
+                                 if (!result.isCancelled) {
+                                   url = std::get<KeyboardResult>(result.data).text;
+                                 }
+                                 state = MENU;
+                                 requestUpdate();
+                               });
       } else if (menuIndex == 2 && method == POST) {
         // Enter POST body
         state = ENTER_BODY;
@@ -150,16 +149,15 @@ void HttpClientActivity::loop() {
 void HttpClientActivity::performRequest() {
   if (WiFi.status() != WL_CONNECTED) {
     RADIO.ensureWifi();
-    startActivityForResult(
-        std::make_unique<WifiSelectionActivity>(renderer, mappedInput),
-        [this](const ActivityResult& result) {
-          if (result.isCancelled || WiFi.status() != WL_CONNECTED) {
-            state = MENU;
-            requestUpdate();
-          } else {
-            performRequest();  // retry after connected
-          }
-        });
+    startActivityForResult(std::make_unique<WifiSelectionActivity>(renderer, mappedInput),
+                           [this](const ActivityResult& result) {
+                             if (result.isCancelled || WiFi.status() != WL_CONNECTED) {
+                               state = MENU;
+                               requestUpdate();
+                             } else {
+                               performRequest();  // retry after connected
+                             }
+                           });
     return;
   }
 
@@ -240,8 +238,7 @@ void HttpClientActivity::render(RenderLock&&) {
     char subtitleBuf[48];
     snprintf(subtitleBuf, sizeof(subtitleBuf), "%d \xe2\x80\x94 %lums", responseCode, responseTimeMs);
 
-    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "HTTP Client",
-                   subtitleBuf);
+    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "HTTP Client", subtitleBuf);
 
     const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
     const int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
@@ -269,8 +266,8 @@ void HttpClientActivity::render(RenderLock&&) {
       char pageBuf[24];
       snprintf(pageBuf, sizeof(pageBuf), "%d/%d", currentPage, totalPages);
       const int pageIndW = renderer.getTextWidth(SMALL_FONT_ID, pageBuf);
-      const int pageIndY = pageHeight - metrics.buttonHintsHeight - metrics.verticalSpacing -
-                           renderer.getLineHeight(SMALL_FONT_ID);
+      const int pageIndY =
+          pageHeight - metrics.buttonHintsHeight - metrics.verticalSpacing - renderer.getLineHeight(SMALL_FONT_ID);
       renderer.drawText(SMALL_FONT_ID, pageWidth - metrics.contentSidePadding - pageIndW, pageIndY, pageBuf);
     }
 

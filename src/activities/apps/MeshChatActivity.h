@@ -1,11 +1,12 @@
 #pragma once
-#include <cstdint>
 #include <esp_now.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/portmacro.h>
+#include <freertos/semphr.h>
+
+#include <cstdint>
 #include <string>
 #include <vector>
-#include <freertos/FreeRTOS.h>
-#include <freertos/semphr.h>
-#include <freertos/portmacro.h>
 
 #include "activities/Activity.h"
 #include "util/ButtonNavigator.h"

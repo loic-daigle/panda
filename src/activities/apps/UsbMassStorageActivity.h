@@ -16,6 +16,6 @@ class UsbMassStorageActivity final : public Activity {
   State state = READY;
 
   // USB MSC interface — MANUAL IMPLEMENTATION
-  void initMassStorage();   // TODO: MANUAL — TinyUSB MSC descriptor + SD card sector callbacks
+  void initMassStorage();    // TODO: MANUAL — TinyUSB MSC descriptor + SD card sector callbacks
   void deinitMassStorage();  // TODO: MANUAL — restore CDC mode, remount SD for firmware use
 };

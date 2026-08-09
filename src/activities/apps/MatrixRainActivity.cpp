@@ -83,15 +83,13 @@ void MatrixRainActivity::drawChar(int col, int row, char c, int intensity) {
     case 2:  // DIM — draw char then punch 50% checkerboard white
       renderer.drawText(SMALL_FONT_ID, x, y, buf, true);
       for (int dy = 0; dy < CHAR_H; dy++)
-        for (int dx = (dy % 2); dx < CHAR_W; dx += 2)
-          renderer.drawPixel(x + dx, y + dy, false);
+        for (int dx = (dy % 2); dx < CHAR_W; dx += 2) renderer.drawPixel(x + dx, y + dy, false);
       break;
     case 1:  // FADING — draw char then keep only 25% of pixels
       renderer.drawText(SMALL_FONT_ID, x, y, buf, true);
       for (int dy = 0; dy < CHAR_H; dy++)
         for (int dx = 0; dx < CHAR_W; dx++)
-          if (!((dx + dy * 3) % 4 == 0))
-            renderer.drawPixel(x + dx, y + dy, false);
+          if (!((dx + dy * 3) % 4 == 0)) renderer.drawPixel(x + dx, y + dy, false);
       break;
     case 0:
     default:
@@ -112,19 +110,34 @@ void MatrixRainActivity::onEnter() {
 void MatrixRainActivity::onExit() { Activity::onExit(); }
 
 void MatrixRainActivity::loop() {
-  if (mappedInput.wasPressed(MappedInputManager::Button::Back)) { finish(); return; }
+  if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
+    finish();
+    return;
+  }
 
   if (mappedInput.wasPressed(MappedInputManager::Button::Right)) {
-    if (speedLevel < 2) { speedLevel++; requestUpdate(); }
+    if (speedLevel < 2) {
+      speedLevel++;
+      requestUpdate();
+    }
   }
   if (mappedInput.wasPressed(MappedInputManager::Button::Left)) {
-    if (speedLevel > 0) { speedLevel--; requestUpdate(); }
+    if (speedLevel > 0) {
+      speedLevel--;
+      requestUpdate();
+    }
   }
   if (mappedInput.wasPressed(MappedInputManager::Button::Up)) {
-    if (density < 2) { density++; requestUpdate(); }
+    if (density < 2) {
+      density++;
+      requestUpdate();
+    }
   }
   if (mappedInput.wasPressed(MappedInputManager::Button::Down)) {
-    if (density > 0) { density--; requestUpdate(); }
+    if (density > 0) {
+      density--;
+      requestUpdate();
+    }
   }
 
   unsigned long now = millis();
@@ -147,10 +160,14 @@ void MatrixRainActivity::render(RenderLock&&) {
 
       char ch = grid[row * cols + c];
       int intensity;
-      if (dist == 0) intensity = 4;
-      else if (dist <= 2) intensity = 3;
-      else if (dist <= dropLength[c] / 2) intensity = 2;
-      else intensity = 1;
+      if (dist == 0)
+        intensity = 4;
+      else if (dist <= 2)
+        intensity = 3;
+      else if (dist <= dropLength[c] / 2)
+        intensity = 2;
+      else
+        intensity = 1;
 
       drawChar(c, row, ch, intensity);
     }

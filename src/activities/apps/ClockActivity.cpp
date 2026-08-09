@@ -93,8 +93,7 @@ const char* ClockActivity::dayOfWeekName(int wday) {
 }
 
 const char* ClockActivity::monthName(int mon) {
-  static const char* months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
-                                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+  static const char* months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
   if (mon >= 0 && mon <= 11) return months[mon];
   return "???";
 }
@@ -395,8 +394,7 @@ void ClockActivity::renderStopwatch() {
   renderer.drawCenteredText(UI_12_FONT_ID, y, timeBuf, true, EpdFontFamily::BOLD);
   y += 45;
 
-  for (int i = static_cast<int>(swLaps.size()) - 1;
-       i >= 0 && y < pageHeight - metrics.buttonHintsHeight - 20; i--) {
+  for (int i = static_cast<int>(swLaps.size()) - 1; i >= 0 && y < pageHeight - metrics.buttonHintsHeight - 20; i--) {
     char lapBuf[32];
     char lapTime[16];
     formatMs(swLaps[i], lapTime, sizeof(lapTime));
@@ -405,8 +403,7 @@ void ClockActivity::renderStopwatch() {
     y += lineH;
   }
 
-  const char* confirmLabel =
-      (swState == SW_IDLE) ? "Start" : (swState == SW_RUNNING ? "Lap" : "Restart");
+  const char* confirmLabel = (swState == SW_IDLE) ? "Start" : (swState == SW_RUNNING ? "Lap" : "Restart");
   const char* backLabel = (swState == SW_RUNNING) ? "Stop" : tr(STR_BACK);
   const auto labels = mappedInput.mapLabels(backLabel, confirmLabel, "", "");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);

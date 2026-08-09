@@ -140,7 +140,7 @@ void CalendarActivity::removeEvent(uint32_t id) {
 }
 
 void CalendarActivity::upsertEvent(uint32_t id, int type, time_t timestamp, uint32_t durationSec, const char* title,
-                                    const char* location, bool allDay) {
+                                   const char* location, bool allDay) {
   (void)type;  // event category (general/absence/birthday/alarm) -- not stored, not a delete flag
   int existing = -1;
   for (int i = 0; i < data.eventCount; i++) {
@@ -274,7 +274,7 @@ void CalendarActivity::loop() {
     // than waiting indefinitely for Gadgetbridge to decide to disconnect.
     if (millis() - syncStartMs > SYNC_TIMEOUT_MS) {
       syncResultMessage = (state == SYNC_ADVERTISING) ? "No connection - check Gadgetbridge and try again"
-                                                        : "Timed out - no calendar sync request from phone";
+                                                      : "Timed out - no calendar sync request from phone";
       stopSync();
       state = SYNC_DONE;
       requestUpdate();
@@ -348,7 +348,7 @@ void CalendarActivity::render(RenderLock&&) {
       snprintf(subtitle, sizeof(subtitle), "No events yet");
     } else {
       snprintf(subtitle, sizeof(subtitle), "%d upcoming event%s", static_cast<int>(sortedOrder.size()),
-                sortedOrder.size() == 1 ? "" : "s");
+               sortedOrder.size() == 1 ? "" : "s");
     }
     GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Calendar", subtitle);
   } else {
@@ -449,7 +449,7 @@ void CalendarActivity::renderDetailState() const {
       struct tm endTm;
       localBrokenDownTime(ev.timestamp + static_cast<time_t>(ev.durationSec), endTm);
       snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d - %02d:%02d", startTm.tm_hour, startTm.tm_min, endTm.tm_hour,
-                endTm.tm_min);
+               endTm.tm_min);
     } else {
       snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d", startTm.tm_hour, startTm.tm_min);
     }

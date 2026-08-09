@@ -23,14 +23,7 @@ class BleKeyboardActivity final : public Activity {
   bool preventAutoSleep() override { return true; }
 
  private:
-  enum State {
-    SELECT_SCRIPT,
-    PREVIEW,
-    ADVERTISING,
-    PAIRED,
-    EXECUTING,
-    DONE
-  };
+  enum State { SELECT_SCRIPT, PREVIEW, ADVERTISING, PAIRED, EXECUTING, DONE };
 
   State state = SELECT_SCRIPT;
   ButtonNavigator buttonNavigator;

@@ -1,7 +1,9 @@
 #pragma once
 #include <HalStorage.h>
 #include <WebServer.h>
+
 #include <string>
+
 #include "activities/Activity.h"
 #include "util/ButtonNavigator.h"
 

@@ -44,8 +44,14 @@ void TransitAlertActivity::loadStops() {
   auto f = Storage.open(STOPS_PATH);
   if (!f) return;
   uint16_t count = 0;
-  if (f.read(reinterpret_cast<uint8_t*>(&count), sizeof(count)) != sizeof(count)) { f.close(); return; }
-  if (count == 0 || count > 32) { f.close(); return; }
+  if (f.read(reinterpret_cast<uint8_t*>(&count), sizeof(count)) != sizeof(count)) {
+    f.close();
+    return;
+  }
+  if (count == 0 || count > 32) {
+    f.close();
+    return;
+  }
   stops.resize(count);
   f.read(reinterpret_cast<uint8_t*>(stops.data()), sizeof(Stop) * count);
   f.close();
@@ -72,7 +78,10 @@ float TransitAlertActivity::calcMatch(int idx, const uint8_t bssids[][6], int co
   int matched = 0;
   for (int i = 0; i < s.apCount; i++)
     for (int j = 0; j < count; j++)
-      if (memcmp(s.bssids[i], bssids[j], 6) == 0) { matched++; break; }
+      if (memcmp(s.bssids[i], bssids[j], 6) == 0) {
+        matched++;
+        break;
+      }
   int unionCount = s.apCount + count - matched;
   if (unionCount <= 0) return 0.0f;
   return (float)matched / (float)unionCount * 100.0f;
@@ -81,7 +90,10 @@ float TransitAlertActivity::calcMatch(int idx, const uint8_t bssids[][6], int co
 void TransitAlertActivity::doScan() {
   static uint8_t scannedBssids[20][6];
   int n = WiFi.scanNetworks(false, true);
-  if (n <= 0) { WiFi.scanDelete(); return; }
+  if (n <= 0) {
+    WiFi.scanDelete();
+    return;
+  }
   int total = (n > 20) ? 20 : n;
   for (int i = 0; i < total; i++) memcpy(scannedBssids[i], WiFi.BSSID(i), 6);
   matchScore = calcMatch(targetStop, scannedBssids, total);
@@ -93,41 +105,44 @@ void TransitAlertActivity::doScan() {
 // ----------------------------------------------------------------
 
 void TransitAlertActivity::promptStopName() {
-  startActivityForResult(
-      std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Stop Name", "Stop", 31),
-      [this](const ActivityResult& result) {
-        if (!result.isCancelled) {
-          const auto& text = std::get<KeyboardResult>(result.data).text;
-          if (!text.empty() && (int)stops.size() < 32) {
-            // Scan WiFi and capture top 5 APs
-            Stop s{};
-            strncpy(s.name, text.c_str(), sizeof(s.name) - 1);
-            int n = WiFi.scanNetworks(false, true);
-            if (n > 0) {
-              int total = (n > 5) ? 5 : n;
-              // Sort by RSSI descending
-              static int order[20];
-              int scanned = (n > 20) ? 20 : n;
-              for (int i = 0; i < scanned; i++) order[i] = i;
-              for (int i = 0; i < scanned - 1; i++)
-                for (int j = i + 1; j < scanned; j++)
-                  if (WiFi.RSSI(order[j]) > WiFi.RSSI(order[i])) { int tmp = order[i]; order[i] = order[j]; order[j] = tmp; }
-              total = (scanned < 5) ? scanned : 5;
-              s.apCount = total;
-              for (int i = 0; i < total; i++) {
-                memcpy(s.bssids[i], WiFi.BSSID(order[i]), 6);
-                s.rssis[i] = (int8_t)WiFi.RSSI(order[i]);
-              }
-              WiFi.scanDelete();
-            }
-            stops.push_back(s);
-            saveStops();
-          }
-        }
-        state = SETUP;
-        setupMenuIndex = 0;
-        requestUpdate();
-      });
+  startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Stop Name", "Stop", 31),
+                         [this](const ActivityResult& result) {
+                           if (!result.isCancelled) {
+                             const auto& text = std::get<KeyboardResult>(result.data).text;
+                             if (!text.empty() && (int)stops.size() < 32) {
+                               // Scan WiFi and capture top 5 APs
+                               Stop s{};
+                               strncpy(s.name, text.c_str(), sizeof(s.name) - 1);
+                               int n = WiFi.scanNetworks(false, true);
+                               if (n > 0) {
+                                 int total = (n > 5) ? 5 : n;
+                                 // Sort by RSSI descending
+                                 static int order[20];
+                                 int scanned = (n > 20) ? 20 : n;
+                                 for (int i = 0; i < scanned; i++) order[i] = i;
+                                 for (int i = 0; i < scanned - 1; i++)
+                                   for (int j = i + 1; j < scanned; j++)
+                                     if (WiFi.RSSI(order[j]) > WiFi.RSSI(order[i])) {
+                                       int tmp = order[i];
+                                       order[i] = order[j];
+                                       order[j] = tmp;
+                                     }
+                                 total = (scanned < 5) ? scanned : 5;
+                                 s.apCount = total;
+                                 for (int i = 0; i < total; i++) {
+                                   memcpy(s.bssids[i], WiFi.BSSID(order[i]), 6);
+                                   s.rssis[i] = (int8_t)WiFi.RSSI(order[i]);
+                                 }
+                                 WiFi.scanDelete();
+                               }
+                               stops.push_back(s);
+                               saveStops();
+                             }
+                           }
+                           state = SETUP;
+                           setupMenuIndex = 0;
+                           requestUpdate();
+                         });
 }
 
 // ----------------------------------------------------------------
@@ -138,9 +153,18 @@ void TransitAlertActivity::loop() {
   if (state == SETUP) {
     // Menu: [saved stops...] + "Save Current Stop" + "Start Monitoring"
     int menuCount = (int)stops.size() + 2;
-    buttonNavigator.onNext([this, menuCount] { setupMenuIndex = ButtonNavigator::nextIndex(setupMenuIndex, menuCount); requestUpdate(); });
-    buttonNavigator.onPrevious([this, menuCount] { setupMenuIndex = ButtonNavigator::previousIndex(setupMenuIndex, menuCount); requestUpdate(); });
-    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) { finish(); return; }
+    buttonNavigator.onNext([this, menuCount] {
+      setupMenuIndex = ButtonNavigator::nextIndex(setupMenuIndex, menuCount);
+      requestUpdate();
+    });
+    buttonNavigator.onPrevious([this, menuCount] {
+      setupMenuIndex = ButtonNavigator::previousIndex(setupMenuIndex, menuCount);
+      requestUpdate();
+    });
+    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) {
+      finish();
+      return;
+    }
     if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
       int saveIdx = (int)stops.size();
       int startIdx = (int)stops.size() + 1;
@@ -160,9 +184,19 @@ void TransitAlertActivity::loop() {
   }
 
   if (state == SELECT_TARGET) {
-    buttonNavigator.onNext([this] { targetStop = ButtonNavigator::nextIndex(targetStop, (int)stops.size()); requestUpdate(); });
-    buttonNavigator.onPrevious([this] { targetStop = ButtonNavigator::previousIndex(targetStop, (int)stops.size()); requestUpdate(); });
-    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) { state = SETUP; requestUpdate(); return; }
+    buttonNavigator.onNext([this] {
+      targetStop = ButtonNavigator::nextIndex(targetStop, (int)stops.size());
+      requestUpdate();
+    });
+    buttonNavigator.onPrevious([this] {
+      targetStop = ButtonNavigator::previousIndex(targetStop, (int)stops.size());
+      requestUpdate();
+    });
+    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) {
+      state = SETUP;
+      requestUpdate();
+      return;
+    }
     if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
       matchScore = 0.0f;
       lastScan = 0;
@@ -173,7 +207,12 @@ void TransitAlertActivity::loop() {
   }
 
   if (state == MONITORING) {
-    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) { state = SETUP; setupMenuIndex = 0; requestUpdate(); return; }
+    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) {
+      state = SETUP;
+      setupMenuIndex = 0;
+      requestUpdate();
+      return;
+    }
     unsigned long now = millis();
     if (now - lastScan >= 15000) {
       lastScan = now;
@@ -210,10 +249,18 @@ void TransitAlertActivity::loop() {
 void TransitAlertActivity::render(RenderLock&&) {
   renderer.clearScreen();
   switch (state) {
-    case SETUP:         renderSetup();         break;
-    case SELECT_TARGET: renderSelectTarget();  break;
-    case MONITORING:    renderMonitoring();    break;
-    case ALERT:         renderAlert();         break;
+    case SETUP:
+      renderSetup();
+      break;
+    case SELECT_TARGET:
+      renderSelectTarget();
+      break;
+    case MONITORING:
+      renderMonitoring();
+      break;
+    case ALERT:
+      renderAlert();
+      break;
   }
   renderer.displayBuffer();
 }
@@ -225,12 +272,11 @@ void TransitAlertActivity::renderSetup() const {
   const int listTop = metrics.topPadding + metrics.headerHeight;
   const int listH = renderer.getScreenHeight() - listTop - metrics.buttonHintsHeight;
   int menuCount = (int)stops.size() + 2;
-  GUI.drawList(renderer, Rect{0, listTop, pageWidth, listH}, menuCount, setupMenuIndex,
-               [this](int i) -> std::string {
-                 if (i < (int)stops.size()) return stops[i].name;
-                 if (i == (int)stops.size()) return "Save Current Stop";
-                 return "Start Monitoring";
-               });
+  GUI.drawList(renderer, Rect{0, listTop, pageWidth, listH}, menuCount, setupMenuIndex, [this](int i) -> std::string {
+    if (i < (int)stops.size()) return stops[i].name;
+    if (i == (int)stops.size()) return "Save Current Stop";
+    return "Start Monitoring";
+  });
   const auto labels = mappedInput.mapLabels("Back", "Select", "", "");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
 }

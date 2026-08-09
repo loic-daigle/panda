@@ -1,11 +1,11 @@
 #include "DeviceInfoActivity.h"
 
+#include <Esp.h>
 #include <GfxRenderer.h>
 #include <HalStorage.h>
 #include <WiFi.h>
 #include <esp_system.h>
 #include <esp_timer.h>
-#include <Esp.h>
 
 #include "MappedInputManager.h"
 #include "components/UITheme.h"

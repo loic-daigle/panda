@@ -1,7 +1,9 @@
 #pragma once
 #include <WebServer.h>
+
 #include <string>
 #include <vector>
+
 #include "activities/Activity.h"
 #include "util/ButtonNavigator.h"
 
@@ -35,7 +37,10 @@ class BulletinBoardActivity final : public Activity {
   int finalPostCount = 0;  // saved before posts.clear() in stopBoard()
 
   // Posts stored in RAM (volatile, ephemeral)
-  struct Post { char text[201]; unsigned long timestamp; };
+  struct Post {
+    char text[201];
+    unsigned long timestamp;
+  };
   std::vector<Post> posts;
   static constexpr int MAX_POSTS = 50;
 

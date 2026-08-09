@@ -143,12 +143,18 @@ void BulletinBoardActivity::setupWebServer() {
       if (i > 0) json += ",";
       json += "{\"m\":\"";
       for (const char* p = posts[i].text; *p; p++) {
-        if (*p == '"')       json += "\\\"";
-        else if (*p == '\\') json += "\\\\";
-        else if (*p == '\n') json += "\\n";
-        else if (*p == '<')  json += "&lt;";
-        else if (*p == '>')  json += "&gt;";
-        else                 json += *p;
+        if (*p == '"')
+          json += "\\\"";
+        else if (*p == '\\')
+          json += "\\\\";
+        else if (*p == '\n')
+          json += "\\n";
+        else if (*p == '<')
+          json += "&lt;";
+        else if (*p == '>')
+          json += "&gt;";
+        else
+          json += *p;
       }
       json += "\",\"t\":";
       char tsBuf[16];
@@ -274,12 +280,10 @@ void BulletinBoardActivity::renderConfig() const {
   char timerLabel[32];
   snprintf(timerLabel, sizeof(timerLabel), "Timer: %d min", timerMinutes);
 
-  GUI.drawList(
-      renderer, Rect{0, contentTop, pageWidth, contentHeight}, 2, configIndex,
-      [&](int i) -> std::string {
-        if (i == 0) return timerLabel;
-        return "Start Bulletin Board";
-      });
+  GUI.drawList(renderer, Rect{0, contentTop, pageWidth, contentHeight}, 2, configIndex, [&](int i) -> std::string {
+    if (i == 0) return timerLabel;
+    return "Start Bulletin Board";
+  });
 
   const auto labels = mappedInput.mapLabels("Back", "Select", "^", "v");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);

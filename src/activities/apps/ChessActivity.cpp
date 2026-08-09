@@ -14,15 +14,13 @@
 // 50% gray — classic checkerboard for dark squares
 static void fillDithered50(GfxRenderer& r, int x, int y, int w, int h) {
   for (int dy = 0; dy < h; dy++)
-    for (int dx = (dy % 2); dx < w; dx += 2)
-      r.drawPixel(x + dx, y + dy, true);
+    for (int dx = (dy % 2); dx < w; dx += 2) r.drawPixel(x + dx, y + dy, true);
 }
 
 // 25% gray (light) for selected square
 static void fillDithered25(GfxRenderer& r, int x, int y, int w, int h) {
   for (int dy = 0; dy < h; dy += 2)
-    for (int dx = ((dy/2) % 2); dx < w; dx += 2)
-      r.drawPixel(x + dx, y + dy, true);
+    for (int dx = ((dy / 2) % 2); dx < w; dx += 2) r.drawPixel(x + dx, y + dy, true);
 }
 
 // Draw chess piece icon at center (cx, cy) with given size
@@ -31,144 +29,208 @@ static void drawPieceIcon(GfxRenderer& r, int cx, int cy, int s, uint8_t piece, 
   int hs = s / 2;
 
   uint8_t type = piece;
-  if (type >= 7) type -= 6; // B_PAWN=7 -> 1
+  if (type >= 7) type -= 6;  // B_PAWN=7 -> 1
 
   switch (type) {
-    case 1: { // Pawn
+    case 1: {  // Pawn
       int hr = s / 4;
       for (int dy = -hr; dy <= hr; dy++) {
         int dx = 0;
-        while ((dx+1)*(dx+1) + dy*dy <= hr*hr) dx++;
+        while ((dx + 1) * (dx + 1) + dy * dy <= hr * hr) dx++;
         if (isBlackPiece) {
-          if (dx > 0) r.fillRect(cx - dx, cy - hs/2 + dy, dx*2+1, 1, fg);
+          if (dx > 0) r.fillRect(cx - dx, cy - hs / 2 + dy, dx * 2 + 1, 1, fg);
         } else {
-          if (dx > 0) { r.drawPixel(cx - dx, cy - hs/2 + dy, fg); r.drawPixel(cx + dx, cy - hs/2 + dy, fg); }
+          if (dx > 0) {
+            r.drawPixel(cx - dx, cy - hs / 2 + dy, fg);
+            r.drawPixel(cx + dx, cy - hs / 2 + dy, fg);
+          }
         }
       }
-      for (int dy = 0; dy < hs/2; dy++) {
-        int hw = s/6 + dy * s / (4 * hs);
-        if (isBlackPiece) r.fillRect(cx - hw, cy - hs/2 + hr + dy, hw*2+1, 1, fg);
-        else { r.drawPixel(cx - hw, cy - hs/2 + hr + dy, fg); r.drawPixel(cx + hw, cy - hs/2 + hr + dy, fg); }
+      for (int dy = 0; dy < hs / 2; dy++) {
+        int hw = s / 6 + dy * s / (4 * hs);
+        if (isBlackPiece)
+          r.fillRect(cx - hw, cy - hs / 2 + hr + dy, hw * 2 + 1, 1, fg);
+        else {
+          r.drawPixel(cx - hw, cy - hs / 2 + hr + dy, fg);
+          r.drawPixel(cx + hw, cy - hs / 2 + hr + dy, fg);
+        }
       }
       int bw = s / 3;
-      if (isBlackPiece) r.fillRect(cx - bw, cy + hs/3, bw*2+1, 3, fg);
-      else r.drawRect(cx - bw, cy + hs/3, bw*2+1, 3, fg);
+      if (isBlackPiece)
+        r.fillRect(cx - bw, cy + hs / 3, bw * 2 + 1, 3, fg);
+      else
+        r.drawRect(cx - bw, cy + hs / 3, bw * 2 + 1, 3, fg);
       break;
     }
-    case 2: { // Rook
+    case 2: {  // Rook
       int tw = s / 3;
       int cw = tw / 3;
       if (cw < 2) cw = 2;
       if (isBlackPiece) {
-        r.fillRect(cx - tw, cy - hs + 1, cw, s/5, fg);
-        r.fillRect(cx - cw/2, cy - hs + 1, cw, s/5, fg);
-        r.fillRect(cx + tw - cw + 1, cy - hs + 1, cw, s/5, fg);
+        r.fillRect(cx - tw, cy - hs + 1, cw, s / 5, fg);
+        r.fillRect(cx - cw / 2, cy - hs + 1, cw, s / 5, fg);
+        r.fillRect(cx + tw - cw + 1, cy - hs + 1, cw, s / 5, fg);
       } else {
-        r.drawRect(cx - tw, cy - hs + 1, cw, s/5, fg);
-        r.drawRect(cx - cw/2, cy - hs + 1, cw, s/5, fg);
-        r.drawRect(cx + tw - cw + 1, cy - hs + 1, cw, s/5, fg);
+        r.drawRect(cx - tw, cy - hs + 1, cw, s / 5, fg);
+        r.drawRect(cx - cw / 2, cy - hs + 1, cw, s / 5, fg);
+        r.drawRect(cx + tw - cw + 1, cy - hs + 1, cw, s / 5, fg);
       }
-      if (isBlackPiece) r.fillRect(cx - tw, cy - hs + s/5 + 1, tw*2+1, s*2/5, fg);
-      else r.drawRect(cx - tw, cy - hs + s/5 + 1, tw*2+1, s*2/5, fg);
-      int bw = s * 2/5;
-      if (isBlackPiece) r.fillRect(cx - bw, cy + hs/4, bw*2+1, 3, fg);
-      else r.drawRect(cx - bw, cy + hs/4, bw*2+1, 3, fg);
+      if (isBlackPiece)
+        r.fillRect(cx - tw, cy - hs + s / 5 + 1, tw * 2 + 1, s * 2 / 5, fg);
+      else
+        r.drawRect(cx - tw, cy - hs + s / 5 + 1, tw * 2 + 1, s * 2 / 5, fg);
+      int bw = s * 2 / 5;
+      if (isBlackPiece)
+        r.fillRect(cx - bw, cy + hs / 4, bw * 2 + 1, 3, fg);
+      else
+        r.drawRect(cx - bw, cy + hs / 4, bw * 2 + 1, 3, fg);
       break;
     }
-    case 3: { // Knight
+    case 3: {  // Knight
       int w = s / 3;
       if (isBlackPiece) {
-        r.fillRect(cx - w, cy - hs + 2, w + 2, s/4, fg);
-        r.fillRect(cx - w - s/5, cy - hs + s/6, s/5, s/5, fg);
+        r.fillRect(cx - w, cy - hs + 2, w + 2, s / 4, fg);
+        r.fillRect(cx - w - s / 5, cy - hs + s / 6, s / 5, s / 5, fg);
       } else {
-        r.drawRect(cx - w, cy - hs + 2, w + 2, s/4, fg);
-        r.drawRect(cx - w - s/5, cy - hs + s/6, s/5, s/5, fg);
+        r.drawRect(cx - w, cy - hs + 2, w + 2, s / 4, fg);
+        r.drawRect(cx - w - s / 5, cy - hs + s / 6, s / 5, s / 5, fg);
       }
-      if (isBlackPiece) r.fillRect(cx - w/2, cy - hs + s/4 + 2, w, s/3, fg);
-      else r.drawRect(cx - w/2, cy - hs + s/4 + 2, w, s/3, fg);
-      int bw = s * 2/5;
-      if (isBlackPiece) r.fillRect(cx - bw, cy + hs/4, bw*2+1, 3, fg);
-      else r.drawRect(cx - bw, cy + hs/4, bw*2+1, 3, fg);
+      if (isBlackPiece)
+        r.fillRect(cx - w / 2, cy - hs + s / 4 + 2, w, s / 3, fg);
+      else
+        r.drawRect(cx - w / 2, cy - hs + s / 4 + 2, w, s / 3, fg);
+      int bw = s * 2 / 5;
+      if (isBlackPiece)
+        r.fillRect(cx - bw, cy + hs / 4, bw * 2 + 1, 3, fg);
+      else
+        r.drawRect(cx - bw, cy + hs / 4, bw * 2 + 1, 3, fg);
       break;
     }
-    case 4: { // Bishop
-      if (isBlackPiece) r.fillRect(cx - 1, cy - hs + 1, 3, 3, fg);
-      else r.drawRect(cx - 1, cy - hs + 1, 3, 3, fg);
-      for (int dy = 0; dy < s * 2/5; dy++) {
-        int hw = 1 + dy * s / (3 * s * 2/5);
+    case 4: {  // Bishop
+      if (isBlackPiece)
+        r.fillRect(cx - 1, cy - hs + 1, 3, 3, fg);
+      else
+        r.drawRect(cx - 1, cy - hs + 1, 3, 3, fg);
+      for (int dy = 0; dy < s * 2 / 5; dy++) {
+        int hw = 1 + dy * s / (3 * s * 2 / 5);
         if (hw < 1) hw = 1;
-        if (isBlackPiece) r.fillRect(cx - hw, cy - hs + 4 + dy, hw*2+1, 1, fg);
-        else { r.drawPixel(cx - hw, cy - hs + 4 + dy, fg); r.drawPixel(cx + hw, cy - hs + 4 + dy, fg); }
+        if (isBlackPiece)
+          r.fillRect(cx - hw, cy - hs + 4 + dy, hw * 2 + 1, 1, fg);
+        else {
+          r.drawPixel(cx - hw, cy - hs + 4 + dy, fg);
+          r.drawPixel(cx + hw, cy - hs + 4 + dy, fg);
+        }
       }
-      r.fillRect(cx - s/4, cy - 1, s/2, 2, fg);
-      int bw = s * 2/5;
-      if (isBlackPiece) r.fillRect(cx - bw, cy + hs/4, bw*2+1, 3, fg);
-      else r.drawRect(cx - bw, cy + hs/4, bw*2+1, 3, fg);
+      r.fillRect(cx - s / 4, cy - 1, s / 2, 2, fg);
+      int bw = s * 2 / 5;
+      if (isBlackPiece)
+        r.fillRect(cx - bw, cy + hs / 4, bw * 2 + 1, 3, fg);
+      else
+        r.drawRect(cx - bw, cy + hs / 4, bw * 2 + 1, 3, fg);
       break;
     }
-    case 5: { // Queen
+    case 5: {  // Queen
       int pw = s / 6;
       for (int p = -1; p <= 1; p++) {
-        if (isBlackPiece) r.fillRect(cx + p * pw - 1, cy - hs + 1, 3, 4, fg);
-        else r.drawRect(cx + p * pw - 1, cy - hs + 1, 3, 4, fg);
+        if (isBlackPiece)
+          r.fillRect(cx + p * pw - 1, cy - hs + 1, 3, 4, fg);
+        else
+          r.drawRect(cx + p * pw - 1, cy - hs + 1, 3, 4, fg);
       }
       int bodyTop = cy - hs + 5;
-      int bodyH = s * 2/5;
+      int bodyH = s * 2 / 5;
       for (int dy = 0; dy < bodyH; dy++) {
-        int hw = s/5 + dy * s / (5 * bodyH);
-        if (isBlackPiece) r.fillRect(cx - hw, bodyTop + dy, hw*2+1, 1, fg);
-        else { r.drawPixel(cx - hw, bodyTop + dy, fg); r.drawPixel(cx + hw, bodyTop + dy, fg); }
+        int hw = s / 5 + dy * s / (5 * bodyH);
+        if (isBlackPiece)
+          r.fillRect(cx - hw, bodyTop + dy, hw * 2 + 1, 1, fg);
+        else {
+          r.drawPixel(cx - hw, bodyTop + dy, fg);
+          r.drawPixel(cx + hw, bodyTop + dy, fg);
+        }
       }
-      int bw = s * 2/5;
-      if (isBlackPiece) r.fillRect(cx - bw, cy + hs/4, bw*2+1, 3, fg);
-      else r.drawRect(cx - bw, cy + hs/4, bw*2+1, 3, fg);
+      int bw = s * 2 / 5;
+      if (isBlackPiece)
+        r.fillRect(cx - bw, cy + hs / 4, bw * 2 + 1, 3, fg);
+      else
+        r.drawRect(cx - bw, cy + hs / 4, bw * 2 + 1, 3, fg);
       break;
     }
-    case 6: { // King
-      r.fillRect(cx - 1, cy - hs, 3, s/4, fg);
-      r.fillRect(cx - s/6, cy - hs + 2, s/3, 3, fg);
-      int bodyTop = cy - hs + s/4;
-      int bodyH = s * 2/5;
+    case 6: {  // King
+      r.fillRect(cx - 1, cy - hs, 3, s / 4, fg);
+      r.fillRect(cx - s / 6, cy - hs + 2, s / 3, 3, fg);
+      int bodyTop = cy - hs + s / 4;
+      int bodyH = s * 2 / 5;
       for (int dy = 0; dy < bodyH; dy++) {
-        int hw = s/5 + dy * s / (5 * bodyH);
-        if (isBlackPiece) r.fillRect(cx - hw, bodyTop + dy, hw*2+1, 1, fg);
-        else { r.drawPixel(cx - hw, bodyTop + dy, fg); r.drawPixel(cx + hw, bodyTop + dy, fg); }
+        int hw = s / 5 + dy * s / (5 * bodyH);
+        if (isBlackPiece)
+          r.fillRect(cx - hw, bodyTop + dy, hw * 2 + 1, 1, fg);
+        else {
+          r.drawPixel(cx - hw, bodyTop + dy, fg);
+          r.drawPixel(cx + hw, bodyTop + dy, fg);
+        }
       }
-      int bw = s * 2/5;
-      if (isBlackPiece) r.fillRect(cx - bw, cy + hs/4, bw*2+1, 3, fg);
-      else r.drawRect(cx - bw, cy + hs/4, bw*2+1, 3, fg);
+      int bw = s * 2 / 5;
+      if (isBlackPiece)
+        r.fillRect(cx - bw, cy + hs / 4, bw * 2 + 1, 3, fg);
+      else
+        r.drawRect(cx - bw, cy + hs / 4, bw * 2 + 1, 3, fg);
       break;
     }
-    default: break;
+    default:
+      break;
   }
 }
 
 void ChessActivity::initBoard() {
   memset(board, EMPTY, sizeof(board));
   // Black pieces (top)
-  board[0][0] = B_ROOK;   board[0][1] = B_KNIGHT; board[0][2] = B_BISHOP; board[0][3] = B_QUEEN;
-  board[0][4] = B_KING;   board[0][5] = B_BISHOP; board[0][6] = B_KNIGHT; board[0][7] = B_ROOK;
+  board[0][0] = B_ROOK;
+  board[0][1] = B_KNIGHT;
+  board[0][2] = B_BISHOP;
+  board[0][3] = B_QUEEN;
+  board[0][4] = B_KING;
+  board[0][5] = B_BISHOP;
+  board[0][6] = B_KNIGHT;
+  board[0][7] = B_ROOK;
   for (int c = 0; c < 8; c++) board[1][c] = B_PAWN;
   // White pieces (bottom)
   for (int c = 0; c < 8; c++) board[6][c] = W_PAWN;
-  board[7][0] = W_ROOK;   board[7][1] = W_KNIGHT; board[7][2] = W_BISHOP; board[7][3] = W_QUEEN;
-  board[7][4] = W_KING;   board[7][5] = W_BISHOP; board[7][6] = W_KNIGHT; board[7][7] = W_ROOK;
+  board[7][0] = W_ROOK;
+  board[7][1] = W_KNIGHT;
+  board[7][2] = W_BISHOP;
+  board[7][3] = W_QUEEN;
+  board[7][4] = W_KING;
+  board[7][5] = W_BISHOP;
+  board[7][6] = W_KNIGHT;
+  board[7][7] = W_ROOK;
 }
 
 const char* ChessActivity::pieceChar(uint8_t piece) const {
   switch (piece) {
-    case W_PAWN: case B_PAWN: return "P";
-    case W_ROOK: case B_ROOK: return "R";
-    case W_KNIGHT: case B_KNIGHT: return "N";
-    case W_BISHOP: case B_BISHOP: return "B";
-    case W_QUEEN: case B_QUEEN: return "Q";
-    case W_KING: case B_KING: return "K";
-    default: return "";
+    case W_PAWN:
+    case B_PAWN:
+      return "P";
+    case W_ROOK:
+    case B_ROOK:
+      return "R";
+    case W_KNIGHT:
+    case B_KNIGHT:
+      return "N";
+    case W_BISHOP:
+    case B_BISHOP:
+      return "B";
+    case W_QUEEN:
+    case B_QUEEN:
+      return "Q";
+    case W_KING:
+    case B_KING:
+      return "K";
+    default:
+      return "";
   }
 }
 
-void ChessActivity::addSlidingMoves(int fx, int fy, int dx, int dy,
-                                     std::vector<std::pair<int, int>>& moves) const {
+void ChessActivity::addSlidingMoves(int fx, int fy, int dx, int dy, std::vector<std::pair<int, int>>& moves) const {
   int x = fx + dx, y = fy + dy;
   while (x >= 0 && x < 8 && y >= 0 && y < 8) {
     if (board[x][y] == EMPTY) {
@@ -187,7 +249,8 @@ void ChessActivity::addMovesForPiece(int fx, int fy, std::vector<std::pair<int, 
   int dir = isWhite(p) ? -1 : 1;
 
   switch (p) {
-    case W_PAWN: case B_PAWN: {
+    case W_PAWN:
+    case B_PAWN: {
       int startRow = isWhite(p) ? 6 : 1;
       // Forward
       if (fx + dir >= 0 && fx + dir < 8 && board[fx + dir][fy] == EMPTY) {
@@ -206,25 +269,30 @@ void ChessActivity::addMovesForPiece(int fx, int fy, std::vector<std::pair<int, 
       }
       break;
     }
-    case W_ROOK: case B_ROOK:
-      for (auto [dx, dy] : {std::pair{1,0},{-1,0},{0,1},{0,-1}}) addSlidingMoves(fx, fy, dx, dy, moves);
+    case W_ROOK:
+    case B_ROOK:
+      for (auto [dx, dy] : {std::pair{1, 0}, {-1, 0}, {0, 1}, {0, -1}}) addSlidingMoves(fx, fy, dx, dy, moves);
       break;
-    case W_BISHOP: case B_BISHOP:
-      for (auto [dx, dy] : {std::pair{1,1},{1,-1},{-1,1},{-1,-1}}) addSlidingMoves(fx, fy, dx, dy, moves);
+    case W_BISHOP:
+    case B_BISHOP:
+      for (auto [dx, dy] : {std::pair{1, 1}, {1, -1}, {-1, 1}, {-1, -1}}) addSlidingMoves(fx, fy, dx, dy, moves);
       break;
-    case W_QUEEN: case B_QUEEN:
-      for (auto [dx, dy] : {std::pair{1,0},{-1,0},{0,1},{0,-1},{1,1},{1,-1},{-1,1},{-1,-1}})
+    case W_QUEEN:
+    case B_QUEEN:
+      for (auto [dx, dy] : {std::pair{1, 0}, {-1, 0}, {0, 1}, {0, -1}, {1, 1}, {1, -1}, {-1, 1}, {-1, -1}})
         addSlidingMoves(fx, fy, dx, dy, moves);
       break;
-    case W_KNIGHT: case B_KNIGHT:
-      for (auto [dx, dy] : {std::pair{-2,-1},{-2,1},{-1,-2},{-1,2},{1,-2},{1,2},{2,-1},{2,1}}) {
+    case W_KNIGHT:
+    case B_KNIGHT:
+      for (auto [dx, dy] : {std::pair{-2, -1}, {-2, 1}, {-1, -2}, {-1, 2}, {1, -2}, {1, 2}, {2, -1}, {2, 1}}) {
         int nr = fx + dx, nc = fy + dy;
         if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && !isOwnPiece(board[nr][nc])) {
           moves.push_back({nr, nc});
         }
       }
       break;
-    case W_KING: case B_KING:
+    case W_KING:
+    case B_KING:
       for (int dx = -1; dx <= 1; dx++) {
         for (int dy = -1; dy <= 1; dy++) {
           if (dx == 0 && dy == 0) continue;
@@ -235,7 +303,8 @@ void ChessActivity::addMovesForPiece(int fx, int fy, std::vector<std::pair<int, 
         }
       }
       break;
-    default: break;
+    default:
+      break;
   }
 }
 
@@ -251,7 +320,10 @@ bool ChessActivity::isSquareAttacked(int tx, int ty, bool byWhite) {
       moves.clear();
       addMovesForPiece(r, c, moves);
       for (auto& [mr, mc] : moves) {
-        if (mr == tx && mc == ty) { whiteTurn = savedTurn; return true; }
+        if (mr == tx && mc == ty) {
+          whiteTurn = savedTurn;
+          return true;
+        }
       }
     }
   }
@@ -263,7 +335,11 @@ bool ChessActivity::findKing(bool white, int& kx, int& ky) const {
   uint8_t target = white ? W_KING : B_KING;
   for (int r = 0; r < 8; r++) {
     for (int c = 0; c < 8; c++) {
-      if (board[r][c] == target) { kx = r; ky = c; return true; }
+      if (board[r][c] == target) {
+        kx = r;
+        ky = c;
+        return true;
+      }
     }
   }
   return false;
@@ -335,7 +411,9 @@ void ChessActivity::checkGameState() {
 }
 
 void ChessActivity::botMove() {
-  struct Move { int fx, fy, tx, ty; };
+  struct Move {
+    int fx, fy, tx, ty;
+  };
   static constexpr int MAX_MOVES = 218;
   Move legalMoves[MAX_MOVES];
   int moveCount = 0;
@@ -343,7 +421,7 @@ void ChessActivity::botMove() {
   for (int r = 0; r < 8; r++) {
     for (int c = 0; c < 8; c++) {
       if (!isOwnPiece(board[r][c])) continue;
-      std::vector<std::pair<int,int>> targets;
+      std::vector<std::pair<int, int>> targets;
       addMovesForPiece(r, c, targets);
       for (auto& [tr, tc] : targets) {
         if (!wouldBeInCheck(r, c, tr, tc) && moveCount < MAX_MOVES) {
@@ -418,10 +496,22 @@ void ChessActivity::loop() {
   }
 
   bool moved = false;
-  if (mappedInput.wasReleased(MappedInputManager::Button::Up)) { if (cursorY > 0) cursorY--; moved = true; }
-  if (mappedInput.wasReleased(MappedInputManager::Button::Down)) { if (cursorY < 7) cursorY++; moved = true; }
-  if (mappedInput.wasReleased(MappedInputManager::Button::Left)) { if (cursorX > 0) cursorX--; moved = true; }
-  if (mappedInput.wasReleased(MappedInputManager::Button::Right)) { if (cursorX < 7) cursorX++; moved = true; }
+  if (mappedInput.wasReleased(MappedInputManager::Button::Up)) {
+    if (cursorY > 0) cursorY--;
+    moved = true;
+  }
+  if (mappedInput.wasReleased(MappedInputManager::Button::Down)) {
+    if (cursorY < 7) cursorY++;
+    moved = true;
+  }
+  if (mappedInput.wasReleased(MappedInputManager::Button::Left)) {
+    if (cursorX > 0) cursorX--;
+    moved = true;
+  }
+  if (mappedInput.wasReleased(MappedInputManager::Button::Right)) {
+    if (cursorX < 7) cursorX++;
+    moved = true;
+  }
 
   if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
     if (state == SELECT_PIECE) {
@@ -492,14 +582,14 @@ void ChessActivity::render(RenderLock&&) {
     renderer.drawCenteredText(UI_10_FONT_ID, y, "Select Mode:");
     y += 40;
     if (setupIndex == 0) {
-      renderer.fillRect(pageWidth/2 - 100, y - 4, 200, 30, true);
+      renderer.fillRect(pageWidth / 2 - 100, y - 4, 200, 30, true);
       renderer.drawCenteredText(UI_12_FONT_ID, y, "vs Human", false, EpdFontFamily::BOLD);
     } else {
       renderer.drawCenteredText(UI_12_FONT_ID, y, "vs Human");
     }
     y += 45;
     if (setupIndex == 1) {
-      renderer.fillRect(pageWidth/2 - 100, y - 4, 200, 30, true);
+      renderer.fillRect(pageWidth / 2 - 100, y - 4, 200, 30, true);
       renderer.drawCenteredText(UI_12_FONT_ID, y, "vs Bot (Random)", false, EpdFontFamily::BOLD);
     } else {
       renderer.drawCenteredText(UI_12_FONT_ID, y, "vs Bot (Random)");
@@ -519,12 +609,12 @@ void ChessActivity::render(RenderLock&&) {
   // Reserve 40px below board for turn info
   const int infoHeight = 40;
   const int availHeight = hintsTop - headerBottom - infoHeight - 8;
-  const int availWidth = pageWidth - 2 * 15; // 15px padding each side
+  const int availWidth = pageWidth - 2 * 15;  // 15px padding each side
 
   int cellSize = std::min(availWidth / 8, availHeight / 8);
 
   const int gridSize = cellSize * 8;
-  const int coordSpace = 14; // space for coordinate labels
+  const int coordSpace = 14;  // space for coordinate labels
   const int gridX = (pageWidth - gridSize - coordSpace) / 2;
   const int gridY = headerBottom + (availHeight - gridSize) / 2;
   const int pieceSize = cellSize * 2 / 3;
@@ -545,12 +635,15 @@ void ChessActivity::render(RenderLock&&) {
 
       if (state == SELECT_TARGET) {
         for (auto& [mr, mc] : validMoves) {
-          if (mr == row && mc == col) { isValidTarget = true; break; }
+          if (mr == row && mc == col) {
+            isValidTarget = true;
+            break;
+          }
         }
       }
 
       // Background
-      renderer.fillRect(px, py, cellSize, cellSize, false); // white base
+      renderer.fillRect(px, py, cellSize, cellSize, false);  // white base
       if (darkSquare) {
         fillDithered50(renderer, px, py, cellSize, cellSize);
       }
@@ -572,9 +665,11 @@ void ChessActivity::render(RenderLock&&) {
         int mr = cellSize / 5;
         for (int dy = -mr; dy <= mr; dy++) {
           int dx = 0;
-          while ((dx+1)*(dx+1) + dy*dy <= mr*mr) dx++;
-          if (dx > 0) renderer.fillRect(mcx - dx, mcy + dy, dx*2+1, 1, true);
-          else renderer.drawPixel(mcx, mcy + dy, true);
+          while ((dx + 1) * (dx + 1) + dy * dy <= mr * mr) dx++;
+          if (dx > 0)
+            renderer.fillRect(mcx - dx, mcy + dy, dx * 2 + 1, 1, true);
+          else
+            renderer.drawPixel(mcx, mcy + dy, true);
         }
       }
 
@@ -593,7 +688,7 @@ void ChessActivity::render(RenderLock&&) {
   }
 
   // Coordinate labels
-  static const char* const colLabels[] = {"a","b","c","d","e","f","g","h"};
+  static const char* const colLabels[] = {"a", "b", "c", "d", "e", "f", "g", "h"};
   for (int c = 0; c < 8; c++) {
     int lx = gridX + c * cellSize + cellSize / 2 - 3;
     renderer.drawText(SMALL_FONT_ID, lx, gridY + gridSize + 3, colLabels[c]);

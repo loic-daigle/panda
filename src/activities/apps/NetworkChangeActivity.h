@@ -52,9 +52,6 @@ class NetworkChangeActivity final : public Activity {
   void compareSnapshots();
   void saveSnapshotToFile(const Snapshot& snap);
 
-  static constexpr const char* MENU_ITEMS[] = {
-      "Take Snapshot",
-      "Compare with Saved",
-      "Back"};
+  static constexpr const char* MENU_ITEMS[] = {"Take Snapshot", "Compare with Saved", "Back"};
   static constexpr int MENU_COUNT = 3;
 };

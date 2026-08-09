@@ -24,17 +24,16 @@ static constexpr uint8_t WALL_W = 0x08;
 static constexpr uint8_t WALL_ALL = 0x0F;
 
 // Direction table: dx, dy, wall-leaving, wall-entering-neighbor
-static const int DIR_DX[4] = { 0,  1,  0, -1};
-static const int DIR_DY[4] = {-1,  0,  1,  0};
-static const uint8_t DIR_WALL[4]     = {WALL_N, WALL_E, WALL_S, WALL_W};
+static const int DIR_DX[4] = {0, 1, 0, -1};
+static const int DIR_DY[4] = {-1, 0, 1, 0};
+static const uint8_t DIR_WALL[4] = {WALL_N, WALL_E, WALL_S, WALL_W};
 static const uint8_t DIR_OPP_WALL[4] = {WALL_S, WALL_W, WALL_N, WALL_E};
 
 // ---- Helpers ----
 
 void MazeActivity::fillDithered50(GfxRenderer& r, int x, int y, int w, int h) {
   for (int dy = 0; dy < h; dy++)
-    for (int dx = (dy % 2); dx < w; dx += 2)
-      r.drawPixel(x + dx, y + dy, true);
+    for (int dx = (dy % 2); dx < w; dx += 2) r.drawPixel(x + dx, y + dy, true);
 }
 
 bool MazeActivity::isVisited(int x, int y) const {
@@ -52,8 +51,7 @@ void MazeActivity::setVisited(int x, int y) {
 void MazeActivity::generateMaze() {
   // Initialize all cells with all 4 walls
   for (int y = 0; y < mazeH; y++)
-    for (int x = 0; x < mazeW; x++)
-      maze[y][x] = WALL_ALL;
+    for (int x = 0; x < mazeW; x++) maze[y][x] = WALL_ALL;
 
   // Local bitfield for generation visited state
   const int totalCells = mazeW * mazeH;
@@ -314,9 +312,7 @@ void MazeActivity::onEnter() {
   requestUpdate();
 }
 
-void MazeActivity::onExit() {
-  Activity::onExit();
-}
+void MazeActivity::onExit() { Activity::onExit(); }
 
 void MazeActivity::loop() {
   if (state == SIZE_SELECT) {
@@ -450,7 +446,8 @@ void MazeActivity::render(RenderLock&&) {
     const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
     const int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
 
-    GUI.drawList(renderer, Rect{0, contentTop, pageWidth, contentHeight}, 3, sizeIndex,
+    GUI.drawList(
+        renderer, Rect{0, contentTop, pageWidth, contentHeight}, 3, sizeIndex,
         [](int i) -> std::string {
           static const char* names[] = {"Small (10x15)", "Medium (20x30)", "Large (40x60)"};
           return names[i];

@@ -109,8 +109,7 @@ void DeadDropActivity::setupWebServer() {
   server->on("/", HTTP_GET, [this] { handleRoot(); });
 
   // Upload: second lambda is the upload data handler, first is called on completion
-  server->on(
-      "/upload", HTTP_POST, [this] { handleUpload(); }, [this] { handleUploadData(); });
+  server->on("/upload", HTTP_POST, [this] { handleUpload(); }, [this] { handleUploadData(); });
 
   server->on("/list", HTTP_GET, [this] { handleFileList(); });
   server->on("/download", HTTP_GET, [this] { handleDownload(); });
@@ -373,12 +372,10 @@ void DeadDropActivity::renderConfig() const {
   char timerLabel[32];
   snprintf(timerLabel, sizeof(timerLabel), "Timer: %d min", timerMinutes);
 
-  GUI.drawList(
-      renderer, Rect{0, contentTop, pageWidth, contentHeight}, 2, configIndex,
-      [&](int i) -> std::string {
-        if (i == 0) return timerLabel;
-        return "Start Dead Drop";
-      });
+  GUI.drawList(renderer, Rect{0, contentTop, pageWidth, contentHeight}, 2, configIndex, [&](int i) -> std::string {
+    if (i == 0) return timerLabel;
+    return "Start Dead Drop";
+  });
 
   const auto labels = mappedInput.mapLabels("Back", "Select", "^", "v");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);

@@ -1,11 +1,11 @@
 #include "BangleGadgetbridgeServer.h"
 
+#include <Arduino.h>
+#include <sys/time.h>
+
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
-#include <sys/time.h>
-
-#include <Arduino.h>
 #if !defined(CONFIG_NIMBLE_ENABLED)
 #include <BLE2902.h>
 #endif
@@ -172,14 +172,14 @@ void BangleGadgetbridgeServer::start(const char* deviceName) {
   // extra pump isn't ported here; verify this assumption on a real
   // Gadgetbridge sync).
   pRxChar = service->createCharacteristic(kRxCharUuid, BLECharacteristic::PROPERTY_WRITE |
-                                                            BLECharacteristic::PROPERTY_WRITE_NR |
-                                                            BLECharacteristic::PROPERTY_WRITE_ENC);
+                                                           BLECharacteristic::PROPERTY_WRITE_NR |
+                                                           BLECharacteristic::PROPERTY_WRITE_ENC);
   if (!rxCallbacks) rxCallbacks = std::make_unique<RxCallbacks>(*this);
   pRxChar->setCallbacks(rxCallbacks.get());
 
-  pTxChar = service->createCharacteristic(
-      kTxCharUuid, BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_READ |
-                       BLECharacteristic::PROPERTY_READ_ENC);
+  pTxChar =
+      service->createCharacteristic(kTxCharUuid, BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_READ |
+                                                     BLECharacteristic::PROPERTY_READ_ENC);
 #if !defined(CONFIG_NIMBLE_ENABLED)
   pTxChar->addDescriptor(new BLE2902());
 #endif
@@ -223,8 +223,7 @@ void BangleGadgetbridgeServer::stop() {
 
 void BangleGadgetbridgeServer::send(const std::string& jsonLine) {
   if (!deviceConnected || !pTxChar) {
-    LOG_DBG("BGB", "send() dropped (connected=%d, txChar=%p): %s", deviceConnected, (void*)pTxChar,
-            jsonLine.c_str());
+    LOG_DBG("BGB", "send() dropped (connected=%d, txChar=%p): %s", deviceConnected, (void*)pTxChar, jsonLine.c_str());
     return;
   }
   // Gadgetbridge's Bangle.js line-splitter (onCharacteristicChanged in
@@ -336,8 +335,7 @@ void BangleGadgetbridgeServer::handleLine(const std::string& rawLine) {
   if (!line.empty() && line.front() == '\x10') line.erase(0, 1);
   while (!line.empty() && line.back() == '\r') line.pop_back();
 
-  LOG_DBG("BGB", "RX line (%u chars): %s", (unsigned)line.size(),
-          line.substr(0, 120).c_str());
+  LOG_DBG("BGB", "RX line (%u chars): %s", (unsigned)line.size(), line.substr(0, 120).c_str());
 
   // Sent on every connect (BangleJSDeviceSupport.transmitTime()), not wrapped
   // in GB(...) -- it's meant to be eval()'d by a real Espruino REPL, not

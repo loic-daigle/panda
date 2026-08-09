@@ -3,44 +3,36 @@
 // Run: pio test -e native -f test_unit_converter
 
 #include <unity.h>
+
 #include <cmath>
 #include <string>
 
 // ---- extracted conversion logic ----
 
-double convertLength(double value, double fromBase, double toBase) {
-  return (value * fromBase) / toBase;
-}
+double convertLength(double value, double fromBase, double toBase) { return (value * fromBase) / toBase; }
 
 double celsiusToFahrenheit(double c) { return c * 9.0 / 5.0 + 32.0; }
 double fahrenheitToCelsius(double f) { return (f - 32.0) * 5.0 / 9.0; }
 double celsiusToKelvin(double c) { return c + 273.15; }
 double kelvinToCelsius(double k) { return k - 273.15; }
 
-double convertData(double value, double fromBase, double toBase) {
-  return (value * fromBase) / toBase;
-}
+double convertData(double value, double fromBase, double toBase) { return (value * fromBase) / toBase; }
 
 // Base units: meter, kg, m/s, byte
-struct Unit { const char* name; double toBase; };
-
-static const Unit lengthUnits[] = {
-  {"m", 1.0}, {"km", 1000.0}, {"cm", 0.01}, {"mm", 0.001},
-  {"mi", 1609.344}, {"yd", 0.9144}, {"ft", 0.3048}, {"in", 0.0254}
+struct Unit {
+  const char* name;
+  double toBase;
 };
 
-static const Unit weightUnits[] = {
-  {"kg", 1.0}, {"g", 0.001}, {"mg", 0.000001},
-  {"lb", 0.453592}, {"oz", 0.0283495}, {"t", 1000.0}
-};
+static const Unit lengthUnits[] = {{"m", 1.0},       {"km", 1000.0}, {"cm", 0.01},   {"mm", 0.001},
+                                   {"mi", 1609.344}, {"yd", 0.9144}, {"ft", 0.3048}, {"in", 0.0254}};
 
-static const Unit dataUnits[] = {
-  {"B", 1.0}, {"KB", 1024.0}, {"MB", 1048576.0},
-  {"GB", 1073741824.0}, {"bit", 0.125}
-};
+static const Unit weightUnits[] = {{"kg", 1.0},      {"g", 0.001},      {"mg", 0.000001},
+                                   {"lb", 0.453592}, {"oz", 0.0283495}, {"t", 1000.0}};
 
-#define ASSERT_NEAR(expected, actual, tolerance) \
-  TEST_ASSERT_FLOAT_WITHIN(tolerance, expected, actual)
+static const Unit dataUnits[] = {{"B", 1.0}, {"KB", 1024.0}, {"MB", 1048576.0}, {"GB", 1073741824.0}, {"bit", 0.125}};
+
+#define ASSERT_NEAR(expected, actual, tolerance) TEST_ASSERT_FLOAT_WITHIN(tolerance, expected, actual)
 
 // ---- tests ----
 

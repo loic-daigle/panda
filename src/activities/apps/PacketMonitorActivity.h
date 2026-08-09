@@ -1,12 +1,11 @@
 #pragma once
-#include <cstdint>
-#include <string>
-
+#include <HalStorage.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/portmacro.h>
 #include <freertos/semphr.h>
 
-#include <HalStorage.h>
+#include <cstdint>
+#include <string>
 
 #include "activities/Activity.h"
 

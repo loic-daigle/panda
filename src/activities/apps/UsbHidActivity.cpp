@@ -4,8 +4,9 @@
 #include <HalStorage.h>
 #include <I18n.h>
 #include <Logging.h>
-#include <cstring>
+
 #include <cstdlib>
+#include <cstring>
 
 #include "MappedInputManager.h"
 #include "components/UITheme.h"
@@ -61,10 +62,8 @@ void UsbHidActivity::loadDuckyFiles() {
 
     int len = static_cast<int>(strlen(nameBuf));
     // Accept only .txt files
-    if (len > 4 && nameBuf[len - 4] == '.' &&
-        (nameBuf[len - 3] == 't' || nameBuf[len - 3] == 'T') &&
-        (nameBuf[len - 2] == 'x' || nameBuf[len - 2] == 'X') &&
-        (nameBuf[len - 1] == 't' || nameBuf[len - 1] == 'T')) {
+    if (len > 4 && nameBuf[len - 4] == '.' && (nameBuf[len - 3] == 't' || nameBuf[len - 3] == 'T') &&
+        (nameBuf[len - 2] == 'x' || nameBuf[len - 2] == 'X') && (nameBuf[len - 1] == 't' || nameBuf[len - 1] == 'T')) {
       if (duckyFiles.size() < 64) {
         DuckyFile df;
         strncpy(df.name, nameBuf, sizeof(df.name) - 1);
@@ -192,7 +191,7 @@ UsbHidActivity::DuckyLine UsbHidActivity::parseLine(const char* line) const {
     dl.cmd = DuckyLine::REPEAT;
     dl.value = atoi(line + 7);
   } else {
-    dl.cmd = DuckyLine::REM; // Unknown — skip silently
+    dl.cmd = DuckyLine::REM;  // Unknown — skip silently
   }
 
   return dl;
@@ -218,12 +217,12 @@ uint8_t UsbHidActivity::keyNameToHidCode(const char* name) {
   if (strcmp(name, "ENTER") == 0 || strcmp(name, "RETURN") == 0) return 0x28;
   if (strcmp(name, "ESCAPE") == 0 || strcmp(name, "ESC") == 0) return 0x29;
   if (strcmp(name, "BACKSPACE") == 0 || strcmp(name, "DELETE") == 0) return 0x2A;
-  if (strcmp(name, "TAB") == 0)    return 0x2B;
-  if (strcmp(name, "SPACE") == 0)  return 0x2C;
-  if (strcmp(name, "UP") == 0)     return 0x52;
-  if (strcmp(name, "DOWN") == 0)   return 0x51;
-  if (strcmp(name, "LEFT") == 0)   return 0x50;
-  if (strcmp(name, "RIGHT") == 0)  return 0x4F;
+  if (strcmp(name, "TAB") == 0) return 0x2B;
+  if (strcmp(name, "SPACE") == 0) return 0x2C;
+  if (strcmp(name, "UP") == 0) return 0x52;
+  if (strcmp(name, "DOWN") == 0) return 0x51;
+  if (strcmp(name, "LEFT") == 0) return 0x50;
+  if (strcmp(name, "RIGHT") == 0) return 0x4F;
 
   // F1-F12
   if (name[0] == 'F' && name[1] >= '1' && name[1] <= '9') {
@@ -252,56 +251,91 @@ uint8_t UsbHidActivity::charToHidCode(char c, uint8_t& modifier) {
   if (c >= '1' && c <= '9') return static_cast<uint8_t>(0x1E + (c - '1'));
 
   // Control / whitespace
-  if (c == '\n' || c == '\r') return 0x28; // Enter
-  if (c == '\t')              return 0x2B; // Tab
-  if (c == ' ')               return 0x2C; // Space
+  if (c == '\n' || c == '\r') return 0x28;  // Enter
+  if (c == '\t') return 0x2B;               // Tab
+  if (c == ' ') return 0x2C;                // Space
 
   // Digit 0 and symbols on the top row (no shift)
   switch (c) {
-    case '0': return 0x27;
-    case '-': return 0x2D;
-    case '=': return 0x2E;
-    case '[': return 0x2F;
-    case ']': return 0x30;
-    case '\\': return 0x31;
-    case ';': return 0x33;
-    case '\'': return 0x34;
-    case '`': return 0x35;
-    case ',': return 0x36;
-    case '.': return 0x37;
-    case '/': return 0x38;
-    default: break;
+    case '0':
+      return 0x27;
+    case '-':
+      return 0x2D;
+    case '=':
+      return 0x2E;
+    case '[':
+      return 0x2F;
+    case ']':
+      return 0x30;
+    case '\\':
+      return 0x31;
+    case ';':
+      return 0x33;
+    case '\'':
+      return 0x34;
+    case '`':
+      return 0x35;
+    case ',':
+      return 0x36;
+    case '.':
+      return 0x37;
+    case '/':
+      return 0x38;
+    default:
+      break;
   }
 
   // Symbols requiring Shift
   modifier = 0x02;
   switch (c) {
-    case '!': return 0x1E; // Shift+1
-    case '@': return 0x1F; // Shift+2
-    case '#': return 0x20; // Shift+3
-    case '$': return 0x21; // Shift+4
-    case '%': return 0x22; // Shift+5
-    case '^': return 0x23; // Shift+6
-    case '&': return 0x24; // Shift+7
-    case '*': return 0x25; // Shift+8
-    case '(': return 0x26; // Shift+9
-    case ')': return 0x27; // Shift+0
-    case '_': return 0x2D; // Shift+-
-    case '+': return 0x2E; // Shift+=
-    case '{': return 0x2F; // Shift+[
-    case '}': return 0x30; // Shift+]
-    case '|': return 0x31; // Shift+backslash
-    case ':': return 0x33; // Shift+;
-    case '"': return 0x34; // Shift+'
-    case '~': return 0x35; // Shift+`
-    case '<': return 0x36; // Shift+,
-    case '>': return 0x37; // Shift+.
-    case '?': return 0x38; // Shift+/
-    default: break;
+    case '!':
+      return 0x1E;  // Shift+1
+    case '@':
+      return 0x1F;  // Shift+2
+    case '#':
+      return 0x20;  // Shift+3
+    case '$':
+      return 0x21;  // Shift+4
+    case '%':
+      return 0x22;  // Shift+5
+    case '^':
+      return 0x23;  // Shift+6
+    case '&':
+      return 0x24;  // Shift+7
+    case '*':
+      return 0x25;  // Shift+8
+    case '(':
+      return 0x26;  // Shift+9
+    case ')':
+      return 0x27;  // Shift+0
+    case '_':
+      return 0x2D;  // Shift+-
+    case '+':
+      return 0x2E;  // Shift+=
+    case '{':
+      return 0x2F;  // Shift+[
+    case '}':
+      return 0x30;  // Shift+]
+    case '|':
+      return 0x31;  // Shift+backslash
+    case ':':
+      return 0x33;  // Shift+;
+    case '"':
+      return 0x34;  // Shift+'
+    case '~':
+      return 0x35;  // Shift+`
+    case '<':
+      return 0x36;  // Shift+,
+    case '>':
+      return 0x37;  // Shift+.
+    case '?':
+      return 0x38;  // Shift+/
+    default:
+      break;
   }
 
   modifier = 0;
-  return 0; // Unknown character — skip
+  return 0;  // Unknown character — skip
 }
 
 // ---------------------------------------------------------------------------
@@ -370,7 +404,7 @@ void UsbHidActivity::executeNextLine() {
     case DuckyLine::DELAY:
       waiting = true;
       lineStartTime = millis();
-      return; // Do NOT advance currentLine yet
+      return;  // Do NOT advance currentLine yet
 
     case DuckyLine::ENTER:
       sendKeystroke(0x28, 0);
@@ -409,12 +443,11 @@ void UsbHidActivity::executeNextLine() {
       break;
 
     case DuckyLine::F_KEY:
-      if (dl.value >= 1 && dl.value <= 12)
-        sendKeystroke(static_cast<uint8_t>(0x3A + dl.value - 1), 0);
+      if (dl.value >= 1 && dl.value <= 12) sendKeystroke(static_cast<uint8_t>(0x3A + dl.value - 1), 0);
       break;
 
     case DuckyLine::GUI_KEY: {
-      uint8_t mod = 0x08; // Left GUI modifier
+      uint8_t mod = 0x08;  // Left GUI modifier
       if (dl.payload[0] != '\0') {
         // Check if payload is a named key (e.g. "ENTER", "r", "TAB")
         uint8_t code = keyNameToHidCode(dl.payload);
@@ -431,7 +464,7 @@ void UsbHidActivity::executeNextLine() {
     }
 
     case DuckyLine::ALT_KEY: {
-      uint8_t mod = 0x04; // Left Alt modifier
+      uint8_t mod = 0x04;  // Left Alt modifier
       if (dl.payload[0] != '\0') {
         // Support "ALT F4", "ALT TAB", "ALT DELETE", etc.
         uint8_t code = keyNameToHidCode(dl.payload);
@@ -448,7 +481,7 @@ void UsbHidActivity::executeNextLine() {
     }
 
     case DuckyLine::CTRL_KEY: {
-      uint8_t mod = 0x01; // Left Ctrl modifier
+      uint8_t mod = 0x01;  // Left Ctrl modifier
       if (dl.payload[0] != '\0') {
         const char* rest = dl.payload;
 
@@ -485,7 +518,7 @@ void UsbHidActivity::executeNextLine() {
     }
 
     case DuckyLine::SHIFT_KEY: {
-      uint8_t mod = 0x02; // Left Shift modifier
+      uint8_t mod = 0x02;  // Left Shift modifier
       if (dl.payload[0] != '\0') {
         uint8_t code = keyNameToHidCode(dl.payload);
         if (!code) {
@@ -504,8 +537,7 @@ void UsbHidActivity::executeNextLine() {
       if (currentLine > 0 && dl.value > 0) {
         // Find the previous non-REM, non-REPEAT line
         int prevLine = currentLine - 1;
-        while (prevLine >= 0 && (script[prevLine].cmd == DuckyLine::REM ||
-                                  script[prevLine].cmd == DuckyLine::REPEAT)) {
+        while (prevLine >= 0 && (script[prevLine].cmd == DuckyLine::REM || script[prevLine].cmd == DuckyLine::REPEAT)) {
           prevLine--;
         }
         if (prevLine >= 0) {
@@ -576,12 +608,18 @@ void UsbHidActivity::loop() {
       return;
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Up)) {
-      if (previewScroll > 0) { previewScroll--; requestUpdate(); }
+      if (previewScroll > 0) {
+        previewScroll--;
+        requestUpdate();
+      }
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Down)) {
       int maxScroll = static_cast<int>(previewLines.size()) - 1;
       if (maxScroll < 0) maxScroll = 0;
-      if (previewScroll < maxScroll) { previewScroll++; requestUpdate(); }
+      if (previewScroll < maxScroll) {
+        previewScroll++;
+        requestUpdate();
+      }
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
       state = CONFIRM_RUN;
@@ -623,7 +661,7 @@ void UsbHidActivity::loop() {
         currentLine++;
         requestUpdate();
       }
-      return; // Still waiting on DELAY
+      return;  // Still waiting on DELAY
     }
 
     executeNextLine();
@@ -668,13 +706,13 @@ void UsbHidActivity::loop() {
 void UsbHidActivity::render(RenderLock&&) {
   renderer.clearScreen();
   const auto& metrics = UITheme::getInstance().getMetrics();
-  const auto pageWidth  = renderer.getScreenWidth();
+  const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
-  const int headerY    = metrics.topPadding;
-  const int headerBot  = headerY + metrics.headerHeight;
-  const int listTop    = headerBot + metrics.verticalSpacing;
-  const int hintsTop   = pageHeight - metrics.buttonHintsHeight;
+  const int headerY = metrics.topPadding;
+  const int headerBot = headerY + metrics.headerHeight;
+  const int listTop = headerBot + metrics.verticalSpacing;
+  const int hintsTop = pageHeight - metrics.buttonHintsHeight;
   const int listHeight = hintsTop - metrics.verticalSpacing - listTop;
 
   // -------------------------------------------------------------------------
@@ -684,16 +722,14 @@ void UsbHidActivity::render(RenderLock&&) {
     const int count = static_cast<int>(duckyFiles.size());
     if (count == 0) {
       renderer.drawCenteredText(UI_10_FONT_ID, pageHeight / 2 - 30, "No scripts found");
-      renderer.drawCenteredText(SMALL_FONT_ID, pageHeight / 2 + 5,
-                                "Place .txt files in /biscuit/ducky/");
+      renderer.drawCenteredText(SMALL_FONT_ID, pageHeight / 2 + 5, "Place .txt files in /biscuit/ducky/");
       const auto labels = mappedInput.mapLabels("Back", "", "", "");
       GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
     } else {
       GUI.drawList(
           renderer, Rect{0, listTop, pageWidth, listHeight}, count, fileIndex,
           [this](int i) -> std::string { return duckyFiles[i].name; },
-          [](int) -> std::string { return "DuckyScript payload"; },
-          [](int) -> UIIcon { return UIIcon::File; },
+          [](int) -> std::string { return "DuckyScript payload"; }, [](int) -> UIIcon { return UIIcon::File; },
           [](int) -> std::string { return ""; });
 
       const auto labels = mappedInput.mapLabels("Back", "Load", "^", "v");
@@ -707,7 +743,8 @@ void UsbHidActivity::render(RenderLock&&) {
   if (state == PREVIEW) {
     // Show filename as header subtitle
     const char* fname = (!duckyFiles.empty() && fileIndex < static_cast<int>(duckyFiles.size()))
-                        ? duckyFiles[fileIndex].name : "Script";
+                            ? duckyFiles[fileIndex].name
+                            : "Script";
 
     char subtitle[32];
     snprintf(subtitle, sizeof(subtitle), "%d cmds", static_cast<int>(script.size()));
@@ -733,8 +770,7 @@ void UsbHidActivity::render(RenderLock&&) {
       }
     }
     char statBuf[48];
-    snprintf(statBuf, sizeof(statBuf), "~%d commands, est. %ds",
-             static_cast<int>(script.size()), estimatedMs / 1000);
+    snprintf(statBuf, sizeof(statBuf), "~%d commands, est. %ds", static_cast<int>(script.size()), estimatedMs / 1000);
     renderer.drawCenteredText(SMALL_FONT_ID, hintsTop - 20, statBuf);
 
     const auto labels = mappedInput.mapLabels("Back", "Continue", "^", "v");
@@ -767,7 +803,7 @@ void UsbHidActivity::render(RenderLock&&) {
     GUI.drawHeader(renderer, Rect{0, headerY, pageWidth, metrics.headerHeight}, "Running...");
 
     const int total = static_cast<int>(script.size());
-    const int done  = currentLine;
+    const int done = currentLine;
 
     // Current command text
     char cmdBuf[80] = "—";
@@ -780,15 +816,33 @@ void UsbHidActivity::render(RenderLock&&) {
         case DuckyLine::DELAY:
           snprintf(cmdBuf, sizeof(cmdBuf), "DELAY %d ms", dl.value);
           break;
-        case DuckyLine::ENTER:     strncpy(cmdBuf, "ENTER",     sizeof(cmdBuf) - 1); break;
-        case DuckyLine::TAB:       strncpy(cmdBuf, "TAB",       sizeof(cmdBuf) - 1); break;
-        case DuckyLine::SPACE:     strncpy(cmdBuf, "SPACE",     sizeof(cmdBuf) - 1); break;
-        case DuckyLine::BACKSPACE: strncpy(cmdBuf, "BACKSPACE", sizeof(cmdBuf) - 1); break;
-        case DuckyLine::ESCAPE:    strncpy(cmdBuf, "ESCAPE",    sizeof(cmdBuf) - 1); break;
-        case DuckyLine::ARROW_UP:  strncpy(cmdBuf, "UP",        sizeof(cmdBuf) - 1); break;
-        case DuckyLine::ARROW_DOWN: strncpy(cmdBuf, "DOWN",     sizeof(cmdBuf) - 1); break;
-        case DuckyLine::ARROW_LEFT: strncpy(cmdBuf, "LEFT",     sizeof(cmdBuf) - 1); break;
-        case DuckyLine::ARROW_RIGHT: strncpy(cmdBuf, "RIGHT",   sizeof(cmdBuf) - 1); break;
+        case DuckyLine::ENTER:
+          strncpy(cmdBuf, "ENTER", sizeof(cmdBuf) - 1);
+          break;
+        case DuckyLine::TAB:
+          strncpy(cmdBuf, "TAB", sizeof(cmdBuf) - 1);
+          break;
+        case DuckyLine::SPACE:
+          strncpy(cmdBuf, "SPACE", sizeof(cmdBuf) - 1);
+          break;
+        case DuckyLine::BACKSPACE:
+          strncpy(cmdBuf, "BACKSPACE", sizeof(cmdBuf) - 1);
+          break;
+        case DuckyLine::ESCAPE:
+          strncpy(cmdBuf, "ESCAPE", sizeof(cmdBuf) - 1);
+          break;
+        case DuckyLine::ARROW_UP:
+          strncpy(cmdBuf, "UP", sizeof(cmdBuf) - 1);
+          break;
+        case DuckyLine::ARROW_DOWN:
+          strncpy(cmdBuf, "DOWN", sizeof(cmdBuf) - 1);
+          break;
+        case DuckyLine::ARROW_LEFT:
+          strncpy(cmdBuf, "LEFT", sizeof(cmdBuf) - 1);
+          break;
+        case DuckyLine::ARROW_RIGHT:
+          strncpy(cmdBuf, "RIGHT", sizeof(cmdBuf) - 1);
+          break;
         case DuckyLine::GUI_KEY:
           snprintf(cmdBuf, sizeof(cmdBuf), "GUI %s", dl.payload);
           break;
@@ -848,13 +902,12 @@ void UsbHidActivity::render(RenderLock&&) {
   if (state == DONE) {
     GUI.drawHeader(renderer, Rect{0, headerY, pageWidth, metrics.headerHeight}, "Done");
 
-    renderer.drawCenteredText(UI_12_FONT_ID, pageHeight / 2 - 50,
-                              "Script complete.", true, EpdFontFamily::BOLD);
+    renderer.drawCenteredText(UI_12_FONT_ID, pageHeight / 2 - 50, "Script complete.", true, EpdFontFamily::BOLD);
 
     unsigned long elapsed = millis() - runStartTime;
     char statBuf[64];
-    snprintf(statBuf, sizeof(statBuf), "%d keystrokes in %lu.%lus",
-             totalKeystrokes, elapsed / 1000, (elapsed % 1000) / 100);
+    snprintf(statBuf, sizeof(statBuf), "%d keystrokes in %lu.%lus", totalKeystrokes, elapsed / 1000,
+             (elapsed % 1000) / 100);
     renderer.drawCenteredText(UI_10_FONT_ID, pageHeight / 2 - 10, statBuf);
 
     const auto labels = mappedInput.mapLabels("Back", "Re-run", "", "");
@@ -875,5 +928,5 @@ void UsbHidActivity::render(RenderLock&&) {
     return;
   }
 
-  renderer.displayBuffer(); // Fallback
+  renderer.displayBuffer();  // Fallback
 }

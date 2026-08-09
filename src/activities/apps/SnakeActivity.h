@@ -34,7 +34,7 @@ class SnakeActivity final : public Activity {
     int x, y;
   };
   std::vector<Point> snake;
-  int dirX = 1, dirY = 0;     // current direction
+  int dirX = 1, dirY = 0;          // current direction
   int nextDirX = 1, nextDirY = 0;  // buffered next direction
 
   // Food

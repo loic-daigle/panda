@@ -4,8 +4,8 @@
 #include <BLEHIDDevice.h>
 #include <BLEServer.h>
 #include <GfxRenderer.h>
-#include <HalStorage.h>
 #include <HIDKeyboardTypes.h>
+#include <HalStorage.h>
 #include <Logging.h>
 
 #include <algorithm>
@@ -16,14 +16,10 @@
 #include "fontIds.h"
 #include "util/RadioManager.h"
 
-static const uint8_t HID_REPORT_DESCRIPTOR[] = {
-    0x05, 0x01, 0x09, 0x06, 0xA1, 0x01, 0x85, 0x01,
-    0x05, 0x07, 0x19, 0xE0, 0x29, 0xE7, 0x15, 0x00,
-    0x25, 0x01, 0x75, 0x01, 0x95, 0x08, 0x81, 0x02,
-    0x95, 0x01, 0x75, 0x08, 0x81, 0x01, 0x95, 0x06,
-    0x75, 0x08, 0x15, 0x00, 0x25, 0x65, 0x05, 0x07,
-    0x19, 0x00, 0x29, 0x65, 0x81, 0x00, 0xC0
-};
+static const uint8_t HID_REPORT_DESCRIPTOR[] = {0x05, 0x01, 0x09, 0x06, 0xA1, 0x01, 0x85, 0x01, 0x05, 0x07, 0x19, 0xE0,
+                                                0x29, 0xE7, 0x15, 0x00, 0x25, 0x01, 0x75, 0x01, 0x95, 0x08, 0x81, 0x02,
+                                                0x95, 0x01, 0x75, 0x08, 0x81, 0x01, 0x95, 0x06, 0x75, 0x08, 0x15, 0x00,
+                                                0x25, 0x65, 0x05, 0x07, 0x19, 0x00, 0x29, 0x65, 0x81, 0x00, 0xC0};
 
 // Built-in demo scripts (no SD card needed)
 static constexpr const char* BUILTIN_DEMO_NAME = "(Demo) Hello World";
@@ -47,6 +43,7 @@ static const char* BUILTIN_DEMO_LINES[] = {
 
 class BleKeyboardActivity::ServerCallbacks : public BLEServerCallbacks {
   BleKeyboardActivity& activity;
+
  public:
   explicit ServerCallbacks(BleKeyboardActivity& act) : activity(act) {}
   void onConnect(BLEServer*) override {
@@ -196,9 +193,7 @@ void BleKeyboardActivity::sendKey(uint8_t keyCode, uint8_t modifiers) {
   releaseKeys();
 }
 
-void BleKeyboardActivity::sendKeyCombo(uint8_t modifiers, uint8_t keyCode) {
-  sendKey(keyCode, modifiers);
-}
+void BleKeyboardActivity::sendKeyCombo(uint8_t modifiers, uint8_t keyCode) { sendKey(keyCode, modifiers); }
 
 void BleKeyboardActivity::releaseKeys() {
   if (!pInputChar || !deviceConnected) return;
@@ -222,31 +217,68 @@ uint8_t BleKeyboardActivity::charToKeyCode(char c) {
   if (c >= '1' && c <= '9') return 0x1E + (c - '1');
   if (c == '0') return 0x27;
   switch (c) {
-    case '\n': case '\r': return 0x28;
-    case '\t': return 0x2B;
-    case ' ':  return 0x2C;
-    case '-': case '_': return 0x2D;
-    case '=': case '+': return 0x2E;
-    case '[': case '{': return 0x2F;
-    case ']': case '}': return 0x30;
-    case '\\': case '|': return 0x31;
-    case ';': case ':': return 0x33;
-    case '\'': case '"': return 0x34;
-    case '`': case '~': return 0x35;
-    case ',': case '<': return 0x36;
-    case '.': case '>': return 0x37;
-    case '/': case '?': return 0x38;
-    case '!': return 0x1E;
-    case '@': return 0x1F;
-    case '#': return 0x20;
-    case '$': return 0x21;
-    case '%': return 0x22;
-    case '^': return 0x23;
-    case '&': return 0x24;
-    case '*': return 0x25;
-    case '(': return 0x26;
-    case ')': return 0x27;
-    default: return 0;
+    case '\n':
+    case '\r':
+      return 0x28;
+    case '\t':
+      return 0x2B;
+    case ' ':
+      return 0x2C;
+    case '-':
+    case '_':
+      return 0x2D;
+    case '=':
+    case '+':
+      return 0x2E;
+    case '[':
+    case '{':
+      return 0x2F;
+    case ']':
+    case '}':
+      return 0x30;
+    case '\\':
+    case '|':
+      return 0x31;
+    case ';':
+    case ':':
+      return 0x33;
+    case '\'':
+    case '"':
+      return 0x34;
+    case '`':
+    case '~':
+      return 0x35;
+    case ',':
+    case '<':
+      return 0x36;
+    case '.':
+    case '>':
+      return 0x37;
+    case '/':
+    case '?':
+      return 0x38;
+    case '!':
+      return 0x1E;
+    case '@':
+      return 0x1F;
+    case '#':
+      return 0x20;
+    case '$':
+      return 0x21;
+    case '%':
+      return 0x22;
+    case '^':
+      return 0x23;
+    case '&':
+      return 0x24;
+    case '*':
+      return 0x25;
+    case '(':
+      return 0x26;
+    case ')':
+      return 0x27;
+    default:
+      return 0;
   }
 }
 
@@ -276,12 +308,18 @@ uint8_t BleKeyboardActivity::specialKeyCode(const std::string& keyName) {
   if (keyName == "PRINTSCREEN") return 0x46;
   if (keyName == "SCROLLLOCK") return 0x47;
   if (keyName == "PAUSE") return 0x48;
-  if (keyName == "F1") return 0x3A;  if (keyName == "F2") return 0x3B;
-  if (keyName == "F3") return 0x3C;  if (keyName == "F4") return 0x3D;
-  if (keyName == "F5") return 0x3E;  if (keyName == "F6") return 0x3F;
-  if (keyName == "F7") return 0x40;  if (keyName == "F8") return 0x41;
-  if (keyName == "F9") return 0x42;  if (keyName == "F10") return 0x43;
-  if (keyName == "F11") return 0x44; if (keyName == "F12") return 0x45;
+  if (keyName == "F1") return 0x3A;
+  if (keyName == "F2") return 0x3B;
+  if (keyName == "F3") return 0x3C;
+  if (keyName == "F4") return 0x3D;
+  if (keyName == "F5") return 0x3E;
+  if (keyName == "F6") return 0x3F;
+  if (keyName == "F7") return 0x40;
+  if (keyName == "F8") return 0x41;
+  if (keyName == "F9") return 0x42;
+  if (keyName == "F10") return 0x43;
+  if (keyName == "F11") return 0x44;
+  if (keyName == "F12") return 0x45;
   return 0;
 }
 
@@ -369,56 +407,111 @@ void BleKeyboardActivity::executeCurrentLine() {
 
   executeLine(scriptLines[currentLine]);
   currentLine++;
-  if (currentLine % 5 == 0) { yield(); }
+  if (currentLine % 5 == 0) {
+    yield();
+  }
   requestUpdate();
 }
 
 void BleKeyboardActivity::loop() {
   if (state == SELECT_SCRIPT) {
-    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) { finish(); return; }
+    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
+      finish();
+      return;
+    }
     if (mappedInput.wasPressed(MappedInputManager::Button::Confirm) && !scriptFiles.empty()) {
       selectedScript = scriptFiles[selectedIndex];
-      { RenderLock lock(*this); loadScriptContent(selectedScript); }
+      {
+        RenderLock lock(*this);
+        loadScriptContent(selectedScript);
+      }
       state = PREVIEW;
       requestUpdate();
       return;
     }
     int listSize = static_cast<int>(scriptFiles.size());
-    buttonNavigator.onNext([this, listSize] { selectedIndex = ButtonNavigator::nextIndex(selectedIndex, listSize); requestUpdate(); });
-    buttonNavigator.onPrevious([this, listSize] { selectedIndex = ButtonNavigator::previousIndex(selectedIndex, listSize); requestUpdate(); });
+    buttonNavigator.onNext([this, listSize] {
+      selectedIndex = ButtonNavigator::nextIndex(selectedIndex, listSize);
+      requestUpdate();
+    });
+    buttonNavigator.onPrevious([this, listSize] {
+      selectedIndex = ButtonNavigator::previousIndex(selectedIndex, listSize);
+      requestUpdate();
+    });
     return;
   }
 
   if (state == PREVIEW) {
-    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) { state = SELECT_SCRIPT; requestUpdate(); return; }
-    if (mappedInput.wasPressed(MappedInputManager::Button::Confirm)) { state = ADVERTISING; startAdvertising(); requestUpdate(); return; }
+    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
+      state = SELECT_SCRIPT;
+      requestUpdate();
+      return;
+    }
+    if (mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
+      state = ADVERTISING;
+      startAdvertising();
+      requestUpdate();
+      return;
+    }
     return;
   }
 
   if (state == ADVERTISING) {
-    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) { stopAdvertising(); state = SELECT_SCRIPT; requestUpdate(); return; }
+    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
+      stopAdvertising();
+      state = SELECT_SCRIPT;
+      requestUpdate();
+      return;
+    }
     return;
   }
 
   if (state == PAIRED) {
-    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) { stopAdvertising(); state = SELECT_SCRIPT; requestUpdate(); return; }
+    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
+      stopAdvertising();
+      state = SELECT_SCRIPT;
+      requestUpdate();
+      return;
+    }
     if (mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
-      state = EXECUTING; currentLine = 0; repeatCount = 0; delayUntil = 0; lastCommand.clear(); requestUpdate(); return;
+      state = EXECUTING;
+      currentLine = 0;
+      repeatCount = 0;
+      delayUntil = 0;
+      lastCommand.clear();
+      requestUpdate();
+      return;
     }
     return;
   }
 
   if (state == EXECUTING) {
-    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) { stopAdvertising(); state = DONE; requestUpdate(); return; }
-    if (!deviceConnected) { state = DONE; requestUpdate(); return; }
-    if (delayUntil > 0) { if (millis() < delayUntil) return; delayUntil = 0; }
+    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
+      stopAdvertising();
+      state = DONE;
+      requestUpdate();
+      return;
+    }
+    if (!deviceConnected) {
+      state = DONE;
+      requestUpdate();
+      return;
+    }
+    if (delayUntil > 0) {
+      if (millis() < delayUntil) return;
+      delayUntil = 0;
+    }
     executeCurrentLine();
     return;
   }
 
   if (state == DONE) {
-    if (mappedInput.wasPressed(MappedInputManager::Button::Back) || mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
-      stopAdvertising(); state = SELECT_SCRIPT; requestUpdate(); return;
+    if (mappedInput.wasPressed(MappedInputManager::Button::Back) ||
+        mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
+      stopAdvertising();
+      state = SELECT_SCRIPT;
+      requestUpdate();
+      return;
     }
   }
 }
@@ -439,15 +532,14 @@ void BleKeyboardActivity::render(RenderLock&&) {
       renderer.drawCenteredText(UI_10_FONT_ID, pageHeight / 2 - 10, "No scripts found");
       renderer.drawCenteredText(SMALL_FONT_ID, pageHeight / 2 + 15, "Place .txt files in /biscuit/ducky/");
     } else {
-      GUI.drawList(renderer, Rect{0, contentTop, pageWidth, contentHeight},
-          static_cast<int>(scriptFiles.size()), selectedIndex,
-          [this](int index) {
-            std::string name = scriptFiles[index];
-            // Don't strip extension for built-in demo
-            if (name == BUILTIN_DEMO_NAME) return name;
-            if (name.size() > 4) name = name.substr(0, name.size() - 4);
-            return name;
-          });
+      GUI.drawList(renderer, Rect{0, contentTop, pageWidth, contentHeight}, static_cast<int>(scriptFiles.size()),
+                   selectedIndex, [this](int index) {
+                     std::string name = scriptFiles[index];
+                     // Don't strip extension for built-in demo
+                     if (name == BUILTIN_DEMO_NAME) return name;
+                     if (name.size() > 4) name = name.substr(0, name.size() - 4);
+                     return name;
+                   });
     }
 
     const auto labels = mappedInput.mapLabels("Back", scriptFiles.empty() ? "" : "Select", "^", "v");

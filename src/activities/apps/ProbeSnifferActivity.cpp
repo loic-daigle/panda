@@ -221,8 +221,7 @@ void ProbeSnifferActivity::render(RenderLock&&) {
 
       renderer.drawText(SMALL_FONT_ID, leftPad, y, "SSID", true, EpdFontFamily::BOLD);
       y += 22;
-      renderer.drawText(UI_10_FONT_ID, leftPad, y,
-                        entry.ssid.empty() ? "(broadcast)" : entry.ssid.c_str());
+      renderer.drawText(UI_10_FONT_ID, leftPad, y, entry.ssid.empty() ? "(broadcast)" : entry.ssid.c_str());
       y += lineH;
 
       renderer.drawText(SMALL_FONT_ID, leftPad, y, tr(STR_RSSI), true, EpdFontFamily::BOLD);
@@ -260,8 +259,7 @@ void ProbeSnifferActivity::render(RenderLock&&) {
 
   char subtitle[24];
   snprintf(subtitle, sizeof(subtitle), "%d probes", entryCount);
-  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 "Probe Sniffer", subtitle);
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Probe Sniffer", subtitle);
 
   const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
   const int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
@@ -288,9 +286,8 @@ void ProbeSnifferActivity::render(RenderLock&&) {
           const uint32_t count = entries[i].count;
           portEXIT_CRITICAL(&dataMux);
           char buf[48];
-          snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X %ddBm %lux",
-                   mac[0], mac[1], mac[2], mac[3], mac[4], mac[5],
-                   rssi, static_cast<unsigned long>(count));
+          snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X %ddBm %lux", mac[0], mac[1], mac[2], mac[3], mac[4],
+                   mac[5], rssi, static_cast<unsigned long>(count));
           return std::string(buf);
         });
   }
@@ -316,10 +313,9 @@ void ProbeSnifferActivity::saveToCsv() {
   const size_t count = entriesCopy.size();
   for (size_t i = 0; i < count; i++) {
     char line[96];
-    snprintf(line, sizeof(line), "%02X:%02X:%02X:%02X:%02X:%02X,%s,%d,%lu\n",
-             entriesCopy[i].mac[0], entriesCopy[i].mac[1], entriesCopy[i].mac[2],
-             entriesCopy[i].mac[3], entriesCopy[i].mac[4], entriesCopy[i].mac[5],
-             entriesCopy[i].ssid.c_str(), entriesCopy[i].rssi,
+    snprintf(line, sizeof(line), "%02X:%02X:%02X:%02X:%02X:%02X,%s,%d,%lu\n", entriesCopy[i].mac[0],
+             entriesCopy[i].mac[1], entriesCopy[i].mac[2], entriesCopy[i].mac[3], entriesCopy[i].mac[4],
+             entriesCopy[i].mac[5], entriesCopy[i].ssid.c_str(), entriesCopy[i].rssi,
              static_cast<unsigned long>(entriesCopy[i].count));
     csv += line;
   }
@@ -330,7 +326,6 @@ void ProbeSnifferActivity::saveToCsv() {
 
 std::string ProbeSnifferActivity::macToString(const uint8_t* mac) {
   char buf[18];
-  snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X",
-           mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+  snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
   return std::string(buf);
 }

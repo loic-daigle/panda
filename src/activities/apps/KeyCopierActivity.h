@@ -23,17 +23,14 @@ class KeyCopierActivity final : public Activity {
   };
 
   static constexpr KeyType KEY_TYPES[] = {
-      {"Kwikset KW1",  5, 1, 7},
-      {"Schlage SC1",  5, 0, 9},
-      {"Yale Y1",      5, 1, 9},
-      {"Custom 6-pin", 6, 0, 9},
-      {"Custom 7-pin", 7, 0, 9},
+      {"Kwikset KW1", 5, 1, 7},  {"Schlage SC1", 5, 0, 9},  {"Yale Y1", 5, 1, 9},
+      {"Custom 6-pin", 6, 0, 9}, {"Custom 7-pin", 7, 0, 9},
   };
   static constexpr int KEY_TYPE_COUNT = 5;
 
-  int typeIndex = 0;    // selected key type
-  int cutIndex = 0;     // selected cut position (0-based)
-  int cuts[8] = {};     // cut depths, one per position
+  int typeIndex = 0;  // selected key type
+  int cutIndex = 0;   // selected cut position (0-based)
+  int cuts[8] = {};   // cut depths, one per position
 
   // type select list cursor
   int typeSelectIndex = 0;

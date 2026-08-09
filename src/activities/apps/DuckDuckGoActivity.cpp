@@ -65,13 +65,41 @@ std::string decodeHtmlEntities(const std::string& input) {
       size_t semi = input.find(';', i);
       if (semi != std::string::npos && semi - i < 10) {
         std::string entity = input.substr(i + 1, semi - i - 1);
-        if (entity == "amp") { output += '&'; i = semi + 1; continue; }
-        if (entity == "quot") { output += '"'; i = semi + 1; continue; }
-        if (entity == "lt") { output += '<'; i = semi + 1; continue; }
-        if (entity == "gt") { output += '>'; i = semi + 1; continue; }
-        if (entity == "apos") { output += '\''; i = semi + 1; continue; }
-        if (entity == "nbsp") { output += ' '; i = semi + 1; continue; }
-        if (entity == "#x27" || entity == "#39") { output += '\''; i = semi + 1; continue; }
+        if (entity == "amp") {
+          output += '&';
+          i = semi + 1;
+          continue;
+        }
+        if (entity == "quot") {
+          output += '"';
+          i = semi + 1;
+          continue;
+        }
+        if (entity == "lt") {
+          output += '<';
+          i = semi + 1;
+          continue;
+        }
+        if (entity == "gt") {
+          output += '>';
+          i = semi + 1;
+          continue;
+        }
+        if (entity == "apos") {
+          output += '\'';
+          i = semi + 1;
+          continue;
+        }
+        if (entity == "nbsp") {
+          output += ' ';
+          i = semi + 1;
+          continue;
+        }
+        if (entity == "#x27" || entity == "#39") {
+          output += '\'';
+          i = semi + 1;
+          continue;
+        }
       }
     }
     output += input[i];
@@ -241,7 +269,10 @@ bool parseDuckDuckGoResults(const std::string& htmlPath, std::vector<DuckLink>& 
                 if (targetUrl.rfind("http", 0) == 0) {
                   bool dup = false;
                   for (const auto& l : links) {
-                    if (l.url == targetUrl) { dup = true; break; }
+                    if (l.url == targetUrl) {
+                      dup = true;
+                      break;
+                    }
                   }
                   if (!dup) {
                     links.push_back({cleanText, targetUrl});
@@ -312,12 +343,18 @@ bool convertHtmlFileToText(const std::string& srcPath, const std::string& destPa
 
     if (inEntity) {
       if (ch == ';') {
-        if (entityBuf == "amp") emit('&');
-        else if (entityBuf == "quot") emit('"');
-        else if (entityBuf == "lt") emit('<');
-        else if (entityBuf == "gt") emit('>');
-        else if (entityBuf == "apos" || entityBuf == "#x27" || entityBuf == "#39") emit('\'');
-        else if (entityBuf == "nbsp") emit(' ');
+        if (entityBuf == "amp")
+          emit('&');
+        else if (entityBuf == "quot")
+          emit('"');
+        else if (entityBuf == "lt")
+          emit('<');
+        else if (entityBuf == "gt")
+          emit('>');
+        else if (entityBuf == "apos" || entityBuf == "#x27" || entityBuf == "#39")
+          emit('\'');
+        else if (entityBuf == "nbsp")
+          emit(' ');
         inEntity = false;
         entityBuf.clear();
         continue;
@@ -330,10 +367,20 @@ bool convertHtmlFileToText(const std::string& srcPath, const std::string& destPa
       continue;
     }
 
-    if (ch == '<') { inTag = true; continue; }
-    if (ch == '>') { inTag = false; continue; }
+    if (ch == '<') {
+      inTag = true;
+      continue;
+    }
+    if (ch == '>') {
+      inTag = false;
+      continue;
+    }
     if (inTag) continue;
-    if (ch == '&') { inEntity = true; entityBuf.clear(); continue; }
+    if (ch == '&') {
+      inEntity = true;
+      entityBuf.clear();
+      continue;
+    }
 
     emit(ch);
   }
@@ -731,7 +778,7 @@ void DuckDuckGoActivity::render(RenderLock&&) {
   if (state == DDGState::OfflineList) {
     char subtitle[32];
     snprintf(subtitle, sizeof(subtitle), "%d saved page%s", static_cast<int>(offlineWebsites.size()),
-              offlineWebsites.size() == 1 ? "" : "s");
+             offlineWebsites.size() == 1 ? "" : "s");
     GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "DuckDuckGo", subtitle);
   } else {
     GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "DuckDuckGo");

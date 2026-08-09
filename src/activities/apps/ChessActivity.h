@@ -16,8 +16,21 @@ class ChessActivity final : public Activity {
 
  private:
   enum State { SETUP, SELECT_PIECE, SELECT_TARGET, GAME_OVER };
-  enum Piece : uint8_t { EMPTY = 0, W_PAWN, W_ROOK, W_KNIGHT, W_BISHOP, W_QUEEN, W_KING,
-                         B_PAWN, B_ROOK, B_KNIGHT, B_BISHOP, B_QUEEN, B_KING };
+  enum Piece : uint8_t {
+    EMPTY = 0,
+    W_PAWN,
+    W_ROOK,
+    W_KNIGHT,
+    W_BISHOP,
+    W_QUEEN,
+    W_KING,
+    B_PAWN,
+    B_ROOK,
+    B_KNIGHT,
+    B_BISHOP,
+    B_QUEEN,
+    B_KING
+  };
 
   uint8_t board[8][8]{};
   int cursorX = 4, cursorY = 7;
@@ -33,7 +46,7 @@ class ChessActivity final : public Activity {
   bool vsBot = false;
   bool botThinking = false;
   unsigned long botThinkStart = 0;
-  int setupIndex = 0; // 0=vs Human, 1=vs Bot
+  int setupIndex = 0;  // 0=vs Human, 1=vs Bot
 
   void botMove();
   void initBoard();

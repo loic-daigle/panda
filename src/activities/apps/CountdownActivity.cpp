@@ -15,8 +15,8 @@
 // Vertical segments are segH wide and (segH + segH) tall (half digit height)
 // ---------------------------------------------------------------------------
 
-static constexpr int SEG_W = 52;   // horizontal segment width
-static constexpr int SEG_H = 8;    // segment thickness
+static constexpr int SEG_W = 52;  // horizontal segment width
+static constexpr int SEG_H = 8;   // segment thickness
 // Full digit bounding box derived from these:
 //   width  = SEG_W + 2*SEG_H  (~68px)
 //   height = 2*(SEG_H + (SEG_W/2)) + SEG_H  (~120px)
@@ -24,7 +24,7 @@ static constexpr int SEG_H = 8;    // segment thickness
 static constexpr int HALF_H = SEG_W / 2;  // 26
 
 // Digit bounding box helpers
-static constexpr int DIGIT_W = SEG_W + 2 * SEG_H;   // 68
+static constexpr int DIGIT_W = SEG_W + 2 * SEG_H;       // 68
 static constexpr int DIGIT_H = 2 * HALF_H + 3 * SEG_H;  // 76  (top half + 3 bars)
 
 // Spacing between digit pairs and colons
@@ -36,16 +36,16 @@ static constexpr int TIME_TOTAL_W = 3 * (2 * DIGIT_W + DIGIT_GAP) + 2 * COLON_W;
 // Segment pattern table.
 // Bit layout: TOP=0x01, TL=0x02, TR=0x04, MID=0x08, BL=0x10, BR=0x20, BOT=0x40
 static constexpr uint8_t SEGS[10] = {
-    0x01 | 0x02 | 0x04 | 0x10 | 0x20 | 0x40,  // 0: top tl tr bl br bot
-    0x04 | 0x20,                                // 1: tr br
-    0x01 | 0x04 | 0x08 | 0x10 | 0x40,          // 2: top tr mid bl bot
-    0x01 | 0x04 | 0x08 | 0x20 | 0x40,          // 3: top tr mid br bot
-    0x02 | 0x04 | 0x08 | 0x20,                  // 4: tl tr mid br
-    0x01 | 0x02 | 0x08 | 0x20 | 0x40,          // 5: top tl mid br bot
-    0x01 | 0x02 | 0x08 | 0x10 | 0x20 | 0x40,   // 6: top tl mid bl br bot
-    0x01 | 0x04 | 0x20,                         // 7: top tr br
+    0x01 | 0x02 | 0x04 | 0x10 | 0x20 | 0x40,         // 0: top tl tr bl br bot
+    0x04 | 0x20,                                     // 1: tr br
+    0x01 | 0x04 | 0x08 | 0x10 | 0x40,                // 2: top tr mid bl bot
+    0x01 | 0x04 | 0x08 | 0x20 | 0x40,                // 3: top tr mid br bot
+    0x02 | 0x04 | 0x08 | 0x20,                       // 4: tl tr mid br
+    0x01 | 0x02 | 0x08 | 0x20 | 0x40,                // 5: top tl mid br bot
+    0x01 | 0x02 | 0x08 | 0x10 | 0x20 | 0x40,         // 6: top tl mid bl br bot
+    0x01 | 0x04 | 0x20,                              // 7: top tr br
     0x01 | 0x02 | 0x04 | 0x08 | 0x10 | 0x20 | 0x40,  // 8: all
-    0x01 | 0x02 | 0x04 | 0x08 | 0x20 | 0x40,   // 9: top tl tr mid br bot
+    0x01 | 0x02 | 0x04 | 0x08 | 0x20 | 0x40,         // 9: top tl tr mid br bot
 };
 
 // ---------------------------------------------------------------------------
@@ -72,40 +72,32 @@ void CountdownActivity::drawLargeDigit(int x, int y, int digit, int segW, int se
 
   // Horizontal segment helper: left edge + top edge, full width
   // top (y=0)
-  if (pat & 0x01)
-    renderer.fillRect(x + segH, y, segW, segH, true);
+  if (pat & 0x01) renderer.fillRect(x + segH, y, segW, segH, true);
 
   // middle (y = segH + halfH)
-  if (pat & 0x08)
-    renderer.fillRect(x + segH, y + segH + halfH, segW, segH, true);
+  if (pat & 0x08) renderer.fillRect(x + segH, y + segH + halfH, segW, segH, true);
 
   // bottom (y = 2*segH + 2*halfH)
-  if (pat & 0x40)
-    renderer.fillRect(x + segH, y + 2 * segH + 2 * halfH, segW, segH, true);
+  if (pat & 0x40) renderer.fillRect(x + segH, y + 2 * segH + 2 * halfH, segW, segH, true);
 
   // top-left vertical: x=0, from y=segH to y=segH+halfH
-  if (pat & 0x02)
-    renderer.fillRect(x, y + segH, segH, halfH, true);
+  if (pat & 0x02) renderer.fillRect(x, y + segH, segH, halfH, true);
 
   // top-right vertical: x=segW+segH, from y=segH to y=segH+halfH
-  if (pat & 0x04)
-    renderer.fillRect(x + segW + segH, y + segH, segH, halfH, true);
+  if (pat & 0x04) renderer.fillRect(x + segW + segH, y + segH, segH, halfH, true);
 
   // bottom-left vertical: x=0, from y=2*segH+halfH to y=2*segH+2*halfH
-  if (pat & 0x10)
-    renderer.fillRect(x, y + 2 * segH + halfH, segH, halfH, true);
+  if (pat & 0x10) renderer.fillRect(x, y + 2 * segH + halfH, segH, halfH, true);
 
   // bottom-right vertical: x=segW+segH
-  if (pat & 0x20)
-    renderer.fillRect(x + segW + segH, y + 2 * segH + halfH, segH, halfH, true);
+  if (pat & 0x20) renderer.fillRect(x + segW + segH, y + 2 * segH + halfH, segH, halfH, true);
 }
 
 // ---------------------------------------------------------------------------
 // drawLargeTime — draws "HH:MM:SS" centered at centerX, top at y.
 // highlightField: -1=none, 0=HH, 1=MM, 2=SS (draws underline below pair)
 // ---------------------------------------------------------------------------
-void CountdownActivity::drawLargeTime(int centerX, int y, int h, int m, int s,
-                                       int highlightField) const {
+void CountdownActivity::drawLargeTime(int centerX, int y, int h, int m, int s, int highlightField) const {
   const int sw = SEG_W;
   const int sh = SEG_H;
   const int dw = DIGIT_W;
@@ -212,22 +204,29 @@ void CountdownActivity::loop() {
       requestUpdate();
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Up)) {
-      if (editField == 0) { hours = (hours + 1) % 24; }
-      else if (editField == 1) { minutes = (minutes + 1) % 60; }
-      else { seconds = (seconds + 1) % 60; }
+      if (editField == 0) {
+        hours = (hours + 1) % 24;
+      } else if (editField == 1) {
+        minutes = (minutes + 1) % 60;
+      } else {
+        seconds = (seconds + 1) % 60;
+      }
       requestUpdate();
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Down)) {
-      if (editField == 0) { hours = (hours == 0) ? 23 : hours - 1; }
-      else if (editField == 1) { minutes = (minutes == 0) ? 59 : minutes - 1; }
-      else { seconds = (seconds == 0) ? 59 : seconds - 1; }
+      if (editField == 0) {
+        hours = (hours == 0) ? 23 : hours - 1;
+      } else if (editField == 1) {
+        minutes = (minutes == 0) ? 59 : minutes - 1;
+      } else {
+        seconds = (seconds == 0) ? 59 : seconds - 1;
+      }
       requestUpdate();
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
-      unsigned long totalMs =
-          static_cast<unsigned long>(hours) * 3600000UL +
-          static_cast<unsigned long>(minutes) * 60000UL +
-          static_cast<unsigned long>(seconds) * 1000UL;
+      unsigned long totalMs = static_cast<unsigned long>(hours) * 3600000UL +
+                              static_cast<unsigned long>(minutes) * 60000UL +
+                              static_cast<unsigned long>(seconds) * 1000UL;
       if (totalMs == 0) return;  // nothing to count down
       origHours = hours;
       origMinutes = minutes;
@@ -302,10 +301,9 @@ void CountdownActivity::loop() {
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
       // Restart same duration immediately
-      unsigned long totalMs =
-          static_cast<unsigned long>(origHours) * 3600000UL +
-          static_cast<unsigned long>(origMinutes) * 60000UL +
-          static_cast<unsigned long>(origSeconds) * 1000UL;
+      unsigned long totalMs = static_cast<unsigned long>(origHours) * 3600000UL +
+                              static_cast<unsigned long>(origMinutes) * 60000UL +
+                              static_cast<unsigned long>(origSeconds) * 1000UL;
       targetTime = millis() + totalMs;
       state = RUNNING;
       lastDisplayMs = 0;
@@ -383,10 +381,9 @@ void CountdownActivity::render(RenderLock&&) {
     drawLargeTime(centerX, timeY, h, m, s, -1);
 
     // Progress bar
-    unsigned long totalMs =
-        static_cast<unsigned long>(origHours) * 3600000UL +
-        static_cast<unsigned long>(origMinutes) * 60000UL +
-        static_cast<unsigned long>(origSeconds) * 1000UL;
+    unsigned long totalMs = static_cast<unsigned long>(origHours) * 3600000UL +
+                            static_cast<unsigned long>(origMinutes) * 60000UL +
+                            static_cast<unsigned long>(origSeconds) * 1000UL;
 
     const int barX = metrics.contentSidePadding;
     const int barW = pageWidth - 2 * metrics.contentSidePadding;
@@ -399,8 +396,7 @@ void CountdownActivity::render(RenderLock&&) {
       unsigned long elapsed = (now >= targetTime) ? totalMs : (totalMs - (targetTime - now));
       if (elapsed > totalMs) elapsed = totalMs;
       int fillW = static_cast<int>((long long)elapsed * (barW - 2) / (long long)totalMs);
-      if (fillW > 0)
-        renderer.fillRect(barX + 1, barY + 1, fillW, barH - 2, true);
+      if (fillW > 0) renderer.fillRect(barX + 1, barY + 1, fillW, barH - 2, true);
     }
 
     // Elapsed / total label
@@ -432,8 +428,8 @@ void CountdownActivity::render(RenderLock&&) {
     drawLargeTime(centerX, timeY, h, m, s, -1);
 
     // PAUSED label
-    renderer.drawCenteredText(UI_12_FONT_ID, timeY + DIGIT_H + metrics.verticalSpacing + 6,
-                               "PAUSED", true, EpdFontFamily::BOLD);
+    renderer.drawCenteredText(UI_12_FONT_ID, timeY + DIGIT_H + metrics.verticalSpacing + 6, "PAUSED", true,
+                              EpdFontFamily::BOLD);
 
     const auto labels = mappedInput.mapLabels("Reset", "Resume", "", "");
     GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
@@ -453,10 +449,8 @@ void CountdownActivity::render(RenderLock&&) {
     renderer.drawCenteredText(UI_10_FONT_ID, midY + 10, buf);
 
     // Decorative horizontal lines
-    renderer.drawLine(metrics.contentSidePadding, midY - 48,
-                      pageWidth - metrics.contentSidePadding, midY - 48, true);
-    renderer.drawLine(metrics.contentSidePadding, midY + 30,
-                      pageWidth - metrics.contentSidePadding, midY + 30, true);
+    renderer.drawLine(metrics.contentSidePadding, midY - 48, pageWidth - metrics.contentSidePadding, midY - 48, true);
+    renderer.drawLine(metrics.contentSidePadding, midY + 30, pageWidth - metrics.contentSidePadding, midY + 30, true);
 
     const auto labels = mappedInput.mapLabels("Reset", "Restart", "", "");
     GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);

@@ -1,6 +1,6 @@
 #pragma once
-#include <WiFi.h>
 #include <Logging.h>
+#include <WiFi.h>
 
 #include "WifiCredentialStore.h"
 

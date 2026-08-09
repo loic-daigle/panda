@@ -16,32 +16,30 @@ static constexpr int AUTH_COUNT = 3;
 
 void WifiCredsActivity::launchSsidKeyboard() {
   state = INPUT_SSID;
-  startActivityForResult(
-      std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "WiFi SSID", "", 32),
-      [this](const ActivityResult& result) {
-        if (result.isCancelled) {
-          finish();
-        } else {
-          ssid = std::get<KeyboardResult>(result.data).text;
-          launchPassKeyboard();
-        }
-      });
+  startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "WiFi SSID", "", 32),
+                         [this](const ActivityResult& result) {
+                           if (result.isCancelled) {
+                             finish();
+                           } else {
+                             ssid = std::get<KeyboardResult>(result.data).text;
+                             launchPassKeyboard();
+                           }
+                         });
 }
 
 void WifiCredsActivity::launchPassKeyboard() {
   state = INPUT_PASS;
-  startActivityForResult(
-      std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "WiFi Password", "", 63),
-      [this](const ActivityResult& result) {
-        if (result.isCancelled) {
-          finish();
-        } else {
-          password = std::get<KeyboardResult>(result.data).text;
-          authType = 0;
-          state = SELECT_AUTH;
-          requestUpdate();
-        }
-      });
+  startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "WiFi Password", "", 63),
+                         [this](const ActivityResult& result) {
+                           if (result.isCancelled) {
+                             finish();
+                           } else {
+                             password = std::get<KeyboardResult>(result.data).text;
+                             authType = 0;
+                             state = SELECT_AUTH;
+                             requestUpdate();
+                           }
+                         });
 }
 
 // ---- Activity lifecycle ----
@@ -141,8 +139,7 @@ void WifiCredsActivity::render(RenderLock&&) {
     const int hintH = metrics.buttonHintsHeight;
     const int ssidLabelH = 28;
     const int startY = headerBottom + metrics.verticalSpacing;
-    const int availableHeight =
-        pageHeight - startY - hintH - metrics.verticalSpacing - ssidLabelH;
+    const int availableHeight = pageHeight - startY - hintH - metrics.verticalSpacing - ssidLabelH;
     const int availableWidth = pageWidth - 40;
 
     const Rect qrBounds(20, startY, availableWidth, availableHeight);
@@ -171,9 +168,15 @@ void WifiCredsActivity::render(RenderLock&&) {
 std::string WifiCredsActivity::buildWifiUri() const {
   std::string uri = "WIFI:T:";
   switch (authType) {
-    case 0: uri += "WPA";    break;
-    case 1: uri += "WEP";    break;
-    case 2: uri += "nopass"; break;
+    case 0:
+      uri += "WPA";
+      break;
+    case 1:
+      uri += "WEP";
+      break;
+    case 2:
+      uri += "nopass";
+      break;
   }
   uri += ";S:";
   for (char c : ssid) {

@@ -33,7 +33,10 @@ int TotpActivity::base32Decode(const char* input, uint8_t* output, int outLen) {
 
 uint32_t TotpActivity::generateTotp(const uint8_t* key, int keyLen, uint64_t counter, int digits) {
   uint8_t msg[8];
-  for (int i = 7; i >= 0; i--) { msg[i] = counter & 0xFF; counter >>= 8; }
+  for (int i = 7; i >= 0; i--) {
+    msg[i] = counter & 0xFF;
+    counter >>= 8;
+  }
   uint8_t hmac[20];
   mbedtls_md_context_t ctx;
   mbedtls_md_init(&ctx);
@@ -43,8 +46,8 @@ uint32_t TotpActivity::generateTotp(const uint8_t* key, int keyLen, uint64_t cou
   mbedtls_md_hmac_finish(&ctx, hmac);
   mbedtls_md_free(&ctx);
   int offset = hmac[19] & 0x0F;
-  uint32_t code = ((uint32_t)(hmac[offset] & 0x7F) << 24) | ((uint32_t)hmac[offset+1] << 16) |
-                  ((uint32_t)hmac[offset+2] << 8) | hmac[offset+3];
+  uint32_t code = ((uint32_t)(hmac[offset] & 0x7F) << 24) | ((uint32_t)hmac[offset + 1] << 16) |
+                  ((uint32_t)hmac[offset + 2] << 8) | hmac[offset + 3];
   uint32_t mod = 1;
   for (int i = 0; i < digits; i++) mod *= 10;
   return code % mod;
@@ -69,7 +72,11 @@ void TotpActivity::loadAccounts() {
   auto file = Storage.open(SAVE_PATH);
   if (!file) return;
   file.read(reinterpret_cast<uint8_t*>(&accountCount), sizeof(accountCount));
-  if (accountCount < 0 || accountCount > MAX_ACCOUNTS) { accountCount = 0; file.close(); return; }
+  if (accountCount < 0 || accountCount > MAX_ACCOUNTS) {
+    accountCount = 0;
+    file.close();
+    return;
+  }
   file.read(reinterpret_cast<uint8_t*>(accounts), sizeof(Account) * accountCount);
   file.close();
 }
@@ -97,7 +104,10 @@ void TotpActivity::onExit() { Activity::onExit(); }
 // ---- Loop ----
 void TotpActivity::loop() {
   if (state == ACCOUNT_LIST) {
-    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) { finish(); return; }
+    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
+      finish();
+      return;
+    }
     if (mappedInput.wasPressed(MappedInputManager::Button::Up)) {
       int total = accountCount + 1;
       selectedIndex = ButtonNavigator::previousIndex(selectedIndex, total);
@@ -113,28 +123,30 @@ void TotpActivity::loop() {
         // "Add Account"
         state = ADD_ACCOUNT;
         memset(pendingName, 0, sizeof(pendingName));
-        startActivityForResult(
-            std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Account Name", "", 31),
-            [this](const ActivityResult& r) {
-              if (r.isCancelled) { state = ACCOUNT_LIST; return; }
-              const auto& text = std::get<KeyboardResult>(r.data).text;
-              strncpy(pendingName, text.c_str(), sizeof(pendingName) - 1);
-              startActivityForResult(
-                  std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Base32 Secret", "", 64),
-                  [this](const ActivityResult& r2) {
-                    state = ACCOUNT_LIST;
-                    if (r2.isCancelled) return;
-                    if (accountCount >= MAX_ACCOUNTS) return;
-                    const auto& sec = std::get<KeyboardResult>(r2.data).text;
-                    Account& acc = accounts[accountCount++];
-                    memset(&acc, 0, sizeof(acc));
-                    strncpy(acc.name, pendingName, sizeof(acc.name) - 1);
-                    strncpy(acc.secret, sec.c_str(), sizeof(acc.secret) - 1);
-                    acc.digits = 6;
-                    acc.period = 30;
-                    saveAccounts();
-                  });
-            });
+        startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Account Name", "", 31),
+                               [this](const ActivityResult& r) {
+                                 if (r.isCancelled) {
+                                   state = ACCOUNT_LIST;
+                                   return;
+                                 }
+                                 const auto& text = std::get<KeyboardResult>(r.data).text;
+                                 strncpy(pendingName, text.c_str(), sizeof(pendingName) - 1);
+                                 startActivityForResult(std::make_unique<KeyboardEntryActivity>(
+                                                            renderer, mappedInput, "Base32 Secret", "", 64),
+                                                        [this](const ActivityResult& r2) {
+                                                          state = ACCOUNT_LIST;
+                                                          if (r2.isCancelled) return;
+                                                          if (accountCount >= MAX_ACCOUNTS) return;
+                                                          const auto& sec = std::get<KeyboardResult>(r2.data).text;
+                                                          Account& acc = accounts[accountCount++];
+                                                          memset(&acc, 0, sizeof(acc));
+                                                          strncpy(acc.name, pendingName, sizeof(acc.name) - 1);
+                                                          strncpy(acc.secret, sec.c_str(), sizeof(acc.secret) - 1);
+                                                          acc.digits = 6;
+                                                          acc.period = 30;
+                                                          saveAccounts();
+                                                        });
+                               });
       } else {
         state = SHOW_CODE;
         requestUpdate();
@@ -151,7 +163,10 @@ void TotpActivity::loop() {
     }
     // Auto-refresh once per second
     static unsigned long lastMs = 0;
-    if (millis() - lastMs >= 1000) { lastMs = millis(); requestUpdate(); }
+    if (millis() - lastMs >= 1000) {
+      lastMs = millis();
+      requestUpdate();
+    }
     return;
   }
 }
@@ -163,8 +178,10 @@ void TotpActivity::render(RenderLock&&) {
   const int pageWidth = renderer.getScreenWidth();
   GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Authenticator");
 
-  if (state == ACCOUNT_LIST) renderList();
-  else if (state == SHOW_CODE) renderCode();
+  if (state == ACCOUNT_LIST)
+    renderList();
+  else if (state == SHOW_CODE)
+    renderCode();
 
   renderer.displayBuffer();
 }
@@ -177,11 +194,10 @@ void TotpActivity::renderList() const {
   const int listH = pageHeight - listTop - metrics.buttonHintsHeight;
   const int total = accountCount + 1;
 
-  GUI.drawList(renderer, Rect{0, listTop, pageWidth, listH}, total, selectedIndex,
-    [this](int i) -> std::string {
-      if (i < accountCount) return accounts[i].name;
-      return "+ Add Account";
-    });
+  GUI.drawList(renderer, Rect{0, listTop, pageWidth, listH}, total, selectedIndex, [this](int i) -> std::string {
+    if (i < accountCount) return accounts[i].name;
+    return "+ Add Account";
+  });
 
   const auto labels = mappedInput.mapLabels("Back", "Select", "^", "v");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);

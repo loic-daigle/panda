@@ -14,21 +14,20 @@ void QrGeneratorActivity::onEnter() {
   state = TEXT_INPUT;
   textPayload.clear();
 
-  startActivityForResult(
-      std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "QR Code Text", "", 0),
-      [this](const ActivityResult& result) {
-        if (result.isCancelled) {
-          finish();
-        } else {
-          textPayload = std::get<KeyboardResult>(result.data).text;
-          if (textPayload.empty()) {
-            finish();
-          } else {
-            state = QR_DISPLAY;
-            requestUpdate();
-          }
-        }
-      });
+  startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "QR Code Text", "", 0),
+                         [this](const ActivityResult& result) {
+                           if (result.isCancelled) {
+                             finish();
+                           } else {
+                             textPayload = std::get<KeyboardResult>(result.data).text;
+                             if (textPayload.empty()) {
+                               finish();
+                             } else {
+                               state = QR_DISPLAY;
+                               requestUpdate();
+                             }
+                           }
+                         });
 }
 
 void QrGeneratorActivity::onExit() { Activity::onExit(); }
@@ -72,8 +71,8 @@ void QrGeneratorActivity::render(RenderLock&&) {
     GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, tr(STR_QR_GENERATOR));
 
     const int availableWidth = pageWidth - 40;
-    const int availableHeight =
-        pageHeight - metrics.topPadding - metrics.headerHeight - metrics.verticalSpacing * 2 - metrics.buttonHintsHeight;
+    const int availableHeight = pageHeight - metrics.topPadding - metrics.headerHeight - metrics.verticalSpacing * 2 -
+                                metrics.buttonHintsHeight;
     const int startY = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
 
     const Rect qrBounds(20, startY, availableWidth, availableHeight);

@@ -27,7 +27,7 @@ class VendorOuiActivity final : public Activity {
   };
 
   State state = MENU;
-  int menuIndex = 0;       // 0=Enter MAC, 1=WiFi Scan
+  int menuIndex = 0;  // 0=Enter MAC, 1=WiFi Scan
   int scanIndex = 0;
   ButtonNavigator buttonNavigator;
 

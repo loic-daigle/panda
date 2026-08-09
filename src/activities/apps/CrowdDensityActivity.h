@@ -1,7 +1,8 @@
 #pragma once
-#include <cstdint>
 #include <esp_wifi.h>
 #include <freertos/portmacro.h>
+
+#include <cstdint>
 
 #include "activities/Activity.h"
 
@@ -24,7 +25,7 @@ class CrowdDensityActivity final : public Activity {
   State state = READY;
 
   void startCapture();
-  static constexpr int HISTORY_SIZE = 60;   // 30 minutes at 30 s intervals
+  static constexpr int HISTORY_SIZE = 60;  // 30 minutes at 30 s intervals
   static constexpr int MAX_MACS = 256;
   static constexpr unsigned long SAMPLE_INTERVAL_MS = 30000UL;
   static constexpr unsigned long DISPLAY_INTERVAL_MS = 2000UL;

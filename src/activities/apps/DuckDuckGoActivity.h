@@ -6,11 +6,7 @@
 #include "activities/Activity.h"
 #include "util/ButtonNavigator.h"
 
-enum class DDGState {
-  OfflineList,
-  SearchResults,
-  Loading
-};
+enum class DDGState { OfflineList, SearchResults, Loading };
 
 struct DuckLink {
   std::string title;

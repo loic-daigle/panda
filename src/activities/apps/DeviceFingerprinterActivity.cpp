@@ -45,22 +45,18 @@ const char* DeviceFingerprinterActivity::estimateOs(const uint8_t* mac, int prob
 
   // Known OUI prefixes
   // Intel NICs (common in Windows/Linux laptops)
-  if ((mac[0] == 0x00 && mac[1] == 0x1B && mac[2] == 0x21) ||
-      (mac[0] == 0x00 && mac[1] == 0x1E && mac[2] == 0x67) ||
-      (mac[0] == 0x8C && mac[1] == 0xEC && mac[2] == 0x4B) ||
-      (mac[0] == 0xA4 && mac[1] == 0xC3 && mac[2] == 0xF0)) {
+  if ((mac[0] == 0x00 && mac[1] == 0x1B && mac[2] == 0x21) || (mac[0] == 0x00 && mac[1] == 0x1E && mac[2] == 0x67) ||
+      (mac[0] == 0x8C && mac[1] == 0xEC && mac[2] == 0x4B) || (mac[0] == 0xA4 && mac[1] == 0xC3 && mac[2] == 0xF0)) {
     return "Windows";
   }
 
   // Realtek (common in Windows/Linux)
-  if ((mac[0] == 0x00 && mac[1] == 0xE0 && mac[2] == 0x4C) ||
-      (mac[0] == 0x48 && mac[1] == 0x02 && mac[2] == 0x2A)) {
+  if ((mac[0] == 0x00 && mac[1] == 0xE0 && mac[2] == 0x4C) || (mac[0] == 0x48 && mac[1] == 0x02 && mac[2] == 0x2A)) {
     return "Windows";
   }
 
   // Raspberry Pi / Linux embedded
-  if ((mac[0] == 0xB8 && mac[1] == 0x27 && mac[2] == 0xEB) ||
-      (mac[0] == 0xDC && mac[1] == 0xA6 && mac[2] == 0x32) ||
+  if ((mac[0] == 0xB8 && mac[1] == 0x27 && mac[2] == 0xEB) || (mac[0] == 0xDC && mac[1] == 0xA6 && mac[2] == 0x32) ||
       (mac[0] == 0xE4 && mac[1] == 0x5F && mac[2] == 0x01)) {
     return "Linux";
   }
@@ -208,8 +204,7 @@ void DeviceFingerprinterActivity::render(RenderLock&&) {
   const auto pageHeight = renderer.getScreenHeight();
 
   if (state == READY) {
-    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                   "Device Fingerprinter");
+    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Device Fingerprinter");
     const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
     const int centerY = contentTop + (pageHeight - contentTop - metrics.buttonHintsHeight) / 2;
     renderer.drawCenteredText(UI_10_FONT_ID, centerY - 30, "Identify nearby device types");
@@ -228,8 +223,8 @@ void DeviceFingerprinterActivity::render(RenderLock&&) {
 
   char subtitle[24];
   snprintf(subtitle, sizeof(subtitle), "%d devices", devCount);
-  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 "Device Fingerprinter", subtitle);
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Device Fingerprinter",
+                 subtitle);
 
   const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
   const int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
@@ -241,8 +236,7 @@ void DeviceFingerprinterActivity::render(RenderLock&&) {
     if (deviceIndex >= devCount) deviceIndex = devCount - 1;
 
     GUI.drawList(
-        renderer, Rect{0, contentTop, pageWidth, contentHeight},
-        devCount, deviceIndex,
+        renderer, Rect{0, contentTop, pageWidth, contentHeight}, devCount, deviceIndex,
         [&devicesCopy](int i) -> std::string {
           const auto& d = devicesCopy[i];
           const bool randomized = (d.mac[0] & 0x02) != 0;
@@ -250,15 +244,14 @@ void DeviceFingerprinterActivity::render(RenderLock&&) {
             return std::string("Randomized  ") + d.estimatedOs;
           }
           char buf[32];
-          snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X",
-                   d.mac[0], d.mac[1], d.mac[2], d.mac[3], d.mac[4], d.mac[5]);
+          snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X", d.mac[0], d.mac[1], d.mac[2], d.mac[3], d.mac[4],
+                   d.mac[5]);
           return std::string(buf) + "  " + d.estimatedOs;
         },
         [&devicesCopy](int i) -> std::string {
           const auto& d = devicesCopy[i];
           char buf[32];
-          snprintf(buf, sizeof(buf), "Probes: %d  RSSI: %d dBm",
-                   d.probeCount, static_cast<int>(d.rssi));
+          snprintf(buf, sizeof(buf), "Probes: %d  RSSI: %d dBm", d.probeCount, static_cast<int>(d.rssi));
           return std::string(buf);
         });
   }

@@ -36,15 +36,14 @@ void PasswordManagerActivity::loop() {
   if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
     const auto& entries = PASSWORD_STORE.getEntries();
     if (selectorIndex < static_cast<int>(entries.size())) {
-      startActivityForResult(
-          std::make_unique<PasswordDetailActivity>(renderer, mappedInput, selectorIndex),
-          [this](const ActivityResult&) {
-            // Refresh after returning from detail (entry might have been deleted)
-            if (selectorIndex >= getItemCount()) {
-              selectorIndex = std::max(0, getItemCount() - 1);
-            }
-            requestUpdate();
-          });
+      startActivityForResult(std::make_unique<PasswordDetailActivity>(renderer, mappedInput, selectorIndex),
+                             [this](const ActivityResult&) {
+                               // Refresh after returning from detail (entry might have been deleted)
+                               if (selectorIndex >= getItemCount()) {
+                                 selectorIndex = std::max(0, getItemCount() - 1);
+                               }
+                               requestUpdate();
+                             });
     } else {
       // Generate New
       startActivityForResult(std::make_unique<PasswordGeneratorActivity>(renderer, mappedInput),

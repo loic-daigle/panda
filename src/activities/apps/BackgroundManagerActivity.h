@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+
 #include "activities/Activity.h"
 #include "util/ButtonNavigator.h"
 
@@ -14,7 +15,10 @@ class BackgroundManagerActivity final : public Activity {
   void render(RenderLock&&) override;
 
  private:
-  struct BgItem { std::string name; std::string status; };
+  struct BgItem {
+    std::string name;
+    std::string status;
+  };
   std::vector<BgItem> items;
   ButtonNavigator buttonNavigator;
   int selectorIndex = 0;

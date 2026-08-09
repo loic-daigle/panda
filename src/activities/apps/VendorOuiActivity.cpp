@@ -14,8 +14,7 @@ static constexpr int MENU_COUNT = 2;
 static constexpr const char* OUI_PATH = "/biscuit/oui.txt";
 
 void VendorOuiActivity::formatMac(const uint8_t* bytes, char* buf, size_t len) {
-  snprintf(buf, len, "%02X:%02X:%02X:%02X:%02X:%02X",
-           bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]);
+  snprintf(buf, len, "%02X:%02X:%02X:%02X:%02X:%02X", bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5]);
 }
 
 bool VendorOuiActivity::parseHexMac(const char* str, uint8_t* out6) {
@@ -39,7 +38,10 @@ bool VendorOuiActivity::parseHexMac(const char* str, uint8_t* out6) {
 void VendorOuiActivity::lookupOui(const uint8_t* ouiBytes) {
   vendorResult = "Unknown vendor";
   auto f = Storage.open(OUI_PATH);
-  if (!f) { vendorResult = "oui.txt not found"; return; }
+  if (!f) {
+    vendorResult = "oui.txt not found";
+    return;
+  }
 
   // Build 6-char hex OUI prefix to match
   char prefix[7];
@@ -62,7 +64,10 @@ void VendorOuiActivity::lookupOui(const uint8_t* ouiBytes) {
           char b = prefix[i];
           if (a >= 'a' && a <= 'f') a -= 32;
           if (b >= 'a' && b <= 'f') b -= 32;
-          if (a != b) { match = false; break; }
+          if (a != b) {
+            match = false;
+            break;
+          }
         }
         if (match && line[6] == '\t') {
           vendorResult = std::string(line + 7);
@@ -97,25 +102,27 @@ void VendorOuiActivity::onExit() {
 }
 
 void VendorOuiActivity::startKeyboardEntry() {
-  startActivityForResult(
-      std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Enter MAC Address", "", 17),
-      [this](const ActivityResult& result) {
-        if (result.isCancelled) { state = MENU; return; }
-        inputMac = std::get<KeyboardResult>(result.data).text;
-        uint8_t mac[6] = {};
-        if (!parseHexMac(inputMac.c_str(), mac)) {
-          vendorResult = "Invalid MAC format";
-          char macBuf[20] = "??:??:??:??:??:??";
-          displayMac = macBuf;
-        } else {
-          char macBuf[20];
-          formatMac(mac, macBuf, sizeof(macBuf));
-          displayMac = macBuf;
-          lookupOui(mac);
-        }
-        lookupDone = true;
-        state = RESULT;
-      });
+  startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Enter MAC Address", "", 17),
+                         [this](const ActivityResult& result) {
+                           if (result.isCancelled) {
+                             state = MENU;
+                             return;
+                           }
+                           inputMac = std::get<KeyboardResult>(result.data).text;
+                           uint8_t mac[6] = {};
+                           if (!parseHexMac(inputMac.c_str(), mac)) {
+                             vendorResult = "Invalid MAC format";
+                             char macBuf[20] = "??:??:??:??:??:??";
+                             displayMac = macBuf;
+                           } else {
+                             char macBuf[20];
+                             formatMac(mac, macBuf, sizeof(macBuf));
+                             displayMac = macBuf;
+                             lookupOui(mac);
+                           }
+                           lookupDone = true;
+                           state = RESULT;
+                         });
 }
 
 void VendorOuiActivity::startWifiScan() {
@@ -142,7 +149,10 @@ void VendorOuiActivity::startWifiScan() {
 
 void VendorOuiActivity::loop() {
   if (state == MENU) {
-    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) { finish(); return; }
+    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) {
+      finish();
+      return;
+    }
     buttonNavigator.onNext([this] {
       menuIndex = ButtonNavigator::nextIndex(menuIndex, MENU_COUNT);
       requestUpdate();
@@ -152,8 +162,10 @@ void VendorOuiActivity::loop() {
       requestUpdate();
     });
     if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
-      if (menuIndex == 0) startKeyboardEntry();
-      else startWifiScan();
+      if (menuIndex == 0)
+        startKeyboardEntry();
+      else
+        startWifiScan();
     }
     return;
   }
@@ -164,13 +176,23 @@ void VendorOuiActivity::loop() {
   }
 
   if (state == SCAN_LIST) {
-    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) { state = MENU; requestUpdate(); return; }
+    if (mappedInput.wasReleased(MappedInputManager::Button::Back)) {
+      state = MENU;
+      requestUpdate();
+      return;
+    }
     const int count = static_cast<int>(scanResults.size());
     buttonNavigator.onNext([this, count] {
-      if (count > 0) { scanIndex = ButtonNavigator::nextIndex(scanIndex, count); requestUpdate(); }
+      if (count > 0) {
+        scanIndex = ButtonNavigator::nextIndex(scanIndex, count);
+        requestUpdate();
+      }
     });
     buttonNavigator.onPrevious([this, count] {
-      if (count > 0) { scanIndex = ButtonNavigator::previousIndex(scanIndex, count); requestUpdate(); }
+      if (count > 0) {
+        scanIndex = ButtonNavigator::previousIndex(scanIndex, count);
+        requestUpdate();
+      }
     });
     if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
       if (!scanResults.empty()) {
@@ -209,7 +231,7 @@ void VendorOuiActivity::render(RenderLock&&) {
     int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
     int contentH = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
     GUI.drawList(renderer, Rect{0, contentTop, pageWidth, contentH}, MENU_COUNT, menuIndex,
-        [](int i) -> std::string { return MENU_LABELS[i]; });
+                 [](int i) -> std::string { return MENU_LABELS[i]; });
     const auto labels = mappedInput.mapLabels("Back", "Select", "", "");
     GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
   } else if (state == SCANNING) {
@@ -221,7 +243,8 @@ void VendorOuiActivity::render(RenderLock&&) {
     if (count == 0) {
       renderer.drawCenteredText(UI_10_FONT_ID, midY, "No APs found");
     } else {
-      GUI.drawList(renderer, Rect{0, contentTop, pageWidth, contentH}, count, scanIndex,
+      GUI.drawList(
+          renderer, Rect{0, contentTop, pageWidth, contentH}, count, scanIndex,
           [this](int i) -> std::string { return scanResults[i].ssid.empty() ? "(hidden)" : scanResults[i].ssid; },
           [this](int i) -> std::string {
             char buf[20];

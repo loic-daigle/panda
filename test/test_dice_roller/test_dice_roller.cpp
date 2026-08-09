@@ -3,8 +3,9 @@
 // Run: pio test -e native -f test_dice_roller
 
 #include <unity.h>
-#include <cstdlib>
+
 #include <cstdint>
+#include <cstdlib>
 #include <vector>
 
 // ---- extracted logic (no hardware dependency) ----

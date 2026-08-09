@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+
 #include "activities/Activity.h"
 #include "util/ButtonNavigator.h"
 
@@ -23,14 +24,30 @@ class UsbHidActivity final : public Activity {
   // DuckyScript engine
   struct DuckyLine {
     enum Cmd {
-      STRING, DELAY, KEY, COMBO, ENTER, TAB, SPACE, BACKSPACE, ESCAPE,
-      ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT,
-      F_KEY, GUI_KEY, ALT_KEY, CTRL_KEY, SHIFT_KEY,
-      REPEAT, REM
+      STRING,
+      DELAY,
+      KEY,
+      COMBO,
+      ENTER,
+      TAB,
+      SPACE,
+      BACKSPACE,
+      ESCAPE,
+      ARROW_UP,
+      ARROW_DOWN,
+      ARROW_LEFT,
+      ARROW_RIGHT,
+      F_KEY,
+      GUI_KEY,
+      ALT_KEY,
+      CTRL_KEY,
+      SHIFT_KEY,
+      REPEAT,
+      REM
     };
     Cmd cmd = REM;
     char payload[128] = {};
-    int value = 0;       // delay ms, F-key number, repeat count
+    int value = 0;  // delay ms, F-key number, repeat count
     uint8_t modifier = 0;
   };
 

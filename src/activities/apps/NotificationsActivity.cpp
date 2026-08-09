@@ -199,7 +199,7 @@ void NotificationsActivity::loop() {
     // than wait indefinitely with no way out but a phone-side disconnect.
     if (millis() - syncStartMs > SYNC_TIMEOUT_MS) {
       syncResultMessage = (state == SYNC_ADVERTISING) ? "No connection - check Gadgetbridge and try again"
-                                                        : "Timed out - no notifications received";
+                                                      : "Timed out - no notifications received";
       stopSync();
       state = SYNC_DONE;
       requestUpdate();

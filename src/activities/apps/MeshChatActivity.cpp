@@ -46,7 +46,10 @@ void MeshChatActivity::onExit() {
   Activity::onExit();
   deinitEspNow();
   activeInstance = nullptr;
-  if (peersMux) { vSemaphoreDelete(peersMux); peersMux = nullptr; }
+  if (peersMux) {
+    vSemaphoreDelete(peersMux);
+    peersMux = nullptr;
+  }
 }
 
 void MeshChatActivity::initEspNow() {
@@ -136,7 +139,10 @@ void MeshChatActivity::onDataRecv(const esp_now_recv_info_t* recvInfo, const uin
           bool duplicate = false;
           portENTER_CRITICAL(&activeInstance->relayMux);
           for (int i = 0; i < DEDUP_RING_SIZE; i++) {
-            if (activeInstance->recentHashes[i] == h) { duplicate = true; break; }
+            if (activeInstance->recentHashes[i] == h) {
+              duplicate = true;
+              break;
+            }
           }
           if (!duplicate && activeInstance->relayCount < RELAY_QUEUE_SIZE) {
             // Store hash in dedup ring
@@ -163,8 +169,7 @@ void MeshChatActivity::onDataRecv(const esp_now_recv_info_t* recvInfo, const uin
     memcpy(peerName, data + 7, 15);
     peerName[15] = '\0';
 
-    if (activeInstance->peersMux &&
-        xSemaphoreTake(activeInstance->peersMux, pdMS_TO_TICKS(10)) == pdTRUE) {
+    if (activeInstance->peersMux && xSemaphoreTake(activeInstance->peersMux, pdMS_TO_TICKS(10)) == pdTRUE) {
       bool found = false;
       for (auto& p : activeInstance->peers) {
         if (memcmp(p.mac, mac, 6) == 0) {
@@ -286,17 +291,16 @@ void MeshChatActivity::loop() {
 
       // Confirm -> compose message (keyboard)
       if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
-        startActivityForResult(
-            std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Message", "", 199),
-            [this](const ActivityResult& result) {
-              if (!result.isCancelled) {
-                const auto& text = std::get<KeyboardResult>(result.data).text;
-                if (!text.empty()) {
-                  sendMessage(text.c_str());
-                }
-              }
-              requestUpdate();
-            });
+        startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Message", "", 199),
+                               [this](const ActivityResult& result) {
+                                 if (!result.isCancelled) {
+                                   const auto& text = std::get<KeyboardResult>(result.data).text;
+                                   if (!text.empty()) {
+                                     sendMessage(text.c_str());
+                                   }
+                                 }
+                                 requestUpdate();
+                               });
       }
 
       // Right -> show peers
@@ -346,8 +350,12 @@ void MeshChatActivity::loop() {
 void MeshChatActivity::render(RenderLock&&) {
   renderer.clearScreen();
   switch (state) {
-    case CHAT_VIEW: renderChatView(); break;
-    case PEERS: renderPeers(); break;
+    case CHAT_VIEW:
+      renderChatView();
+      break;
+    case PEERS:
+      renderPeers();
+      break;
   }
   renderer.displayBuffer();
 }
@@ -373,8 +381,8 @@ void MeshChatActivity::renderChatView() const {
   int localCount, localHead, localScroll;
 
   portENTER_CRITICAL(&msgMux);
-  localCount  = messageCount;
-  localHead   = messageHead;
+  localCount = messageCount;
+  localHead = messageHead;
   localScroll = scrollOffset;
 
   if (localCount > 0) {
@@ -394,8 +402,7 @@ void MeshChatActivity::renderChatView() const {
   } else {
     snprintf(subtitle, sizeof(subtitle), "%d msgs | %d peers", localCount, peersCount);
   }
-  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 "Mesh Chat", subtitle);
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Mesh Chat", subtitle);
 
   const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
   const int contentBottom = pageHeight - metrics.buttonHintsHeight - metrics.verticalSpacing;
@@ -441,36 +448,30 @@ void MeshChatActivity::renderPeers() const {
 
   char subtitle[32];
   snprintf(subtitle, sizeof(subtitle), "%d nearby", static_cast<int>(peersCopy.size()));
-  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 "Peers", subtitle);
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Peers", subtitle);
 
   const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
   const int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
 
   if (peersCopy.empty()) {
-    renderer.drawCenteredText(UI_10_FONT_ID, contentTop + contentHeight / 2,
-                              "No peers discovered yet...");
+    renderer.drawCenteredText(UI_10_FONT_ID, contentTop + contentHeight / 2, "No peers discovered yet...");
   } else {
     GUI.drawList(
-        renderer, Rect{0, contentTop, pageWidth, contentHeight},
-        static_cast<int>(peersCopy.size()), peerSelectorIndex,
-        [&peersCopy](int index) -> std::string {
-          return std::string(peersCopy[index].name);
-        },
+        renderer, Rect{0, contentTop, pageWidth, contentHeight}, static_cast<int>(peersCopy.size()), peerSelectorIndex,
+        [&peersCopy](int index) -> std::string { return std::string(peersCopy[index].name); },
         [&peersCopy](int index) -> std::string {
           char buf[48];
           unsigned long ago = (millis() - peersCopy[index].lastSeen) / 1000;
-          snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X  %lus ago",
-                   peersCopy[index].mac[0], peersCopy[index].mac[1], peersCopy[index].mac[2],
-                   peersCopy[index].mac[3], peersCopy[index].mac[4], peersCopy[index].mac[5], ago);
+          snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X  %lus ago", peersCopy[index].mac[0],
+                   peersCopy[index].mac[1], peersCopy[index].mac[2], peersCopy[index].mac[3], peersCopy[index].mac[4],
+                   peersCopy[index].mac[5], ago);
           return buf;
         });
   }
 
   char relayStr[24];
   snprintf(relayStr, sizeof(relayStr), "Relay: %s", relayMode ? "ON" : "OFF");
-  renderer.drawText(SMALL_FONT_ID, metrics.contentSidePadding,
-                    pageHeight - metrics.buttonHintsHeight - 22, relayStr);
+  renderer.drawText(SMALL_FONT_ID, metrics.contentSidePadding, pageHeight - metrics.buttonHintsHeight - 22, relayStr);
 
   const auto labels = mappedInput.mapLabels(tr(STR_BACK), "Relay", "^", "v");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);

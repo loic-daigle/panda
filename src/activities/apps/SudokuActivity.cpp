@@ -13,8 +13,7 @@
 // 25% gray (light) — every other pixel in checkerboard on even rows only
 static void fillDithered25(GfxRenderer& r, int x, int y, int w, int h) {
   for (int dy = 0; dy < h; dy += 2)
-    for (int dx = ((dy/2) % 2); dx < w; dx += 2)
-      r.drawPixel(x + dx, y + dy, true);
+    for (int dx = ((dy / 2) % 2); dx < w; dx += 2) r.drawPixel(x + dx, y + dy, true);
 }
 
 bool SudokuActivity::isValid(const uint8_t b[9][9], int row, int col, uint8_t num) const {
@@ -214,8 +213,8 @@ void SudokuActivity::render(RenderLock&&) {
       }
 
       // Highlight cells with same number as cursor
-      if (state == PLAYING && !isCursor && board[r][c] > 0 &&
-          board[cursorY][cursorX] > 0 && board[r][c] == board[cursorY][cursorX]) {
+      if (state == PLAYING && !isCursor && board[r][c] > 0 && board[cursorY][cursorX] > 0 &&
+          board[r][c] == board[cursorY][cursorX]) {
         fillDithered25(renderer, px, py, cellSize, cellSize);
       }
 
@@ -223,8 +222,7 @@ void SudokuActivity::render(RenderLock&&) {
         char num[2] = {static_cast<char>('0' + board[r][c]), 0};
         EpdFontFamily::Style style = fixed[r][c] ? EpdFontFamily::BOLD : EpdFontFamily::REGULAR;
         int tw = renderer.getTextWidth(SMALL_FONT_ID, num, style);
-        renderer.drawText(SMALL_FONT_ID, px + (cellSize - tw) / 2, py + (cellSize - fontH) / 2, num, true,
-                          style);
+        renderer.drawText(SMALL_FONT_ID, px + (cellSize - tw) / 2, py + (cellSize - fontH) / 2, num, true, style);
       }
     }
   }

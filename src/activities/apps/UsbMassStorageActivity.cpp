@@ -56,39 +56,32 @@ void UsbMassStorageActivity::render(RenderLock&&) {
   renderer.clearScreen();
 
   const auto& metrics = UITheme::getInstance().getMetrics();
-  const auto pageWidth  = renderer.getScreenWidth();
+  const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
   const int headerBottom = metrics.topPadding + metrics.headerHeight;
 
-  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 "USB Storage");
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "USB Storage");
 
   switch (state) {
     // ------------------------------------------------------------------
     case READY: {
       int y = headerBottom + 60;
 
-      renderer.drawCenteredText(UI_12_FONT_ID, y,
-                                "Share SD card as USB drive",
-                                true, EpdFontFamily::BOLD);
+      renderer.drawCenteredText(UI_12_FONT_ID, y, "Share SD card as USB drive", true, EpdFontFamily::BOLD);
       y += 50;
 
-      renderer.drawCenteredText(UI_10_FONT_ID, y,
-                                "Connect USB-C cable to PC,");
+      renderer.drawCenteredText(UI_10_FONT_ID, y, "Connect USB-C cable to PC,");
       y += 30;
-      renderer.drawCenteredText(UI_10_FONT_ID, y,
-                                "then press OK to enable mass storage.");
+      renderer.drawCenteredText(UI_10_FONT_ID, y, "then press OK to enable mass storage.");
       y += 55;
 
       // Warning box
       const int warnPad = 16;
-      const int warnW   = pageWidth - warnPad * 2;
-      const int warnH   = 58;
+      const int warnW = pageWidth - warnPad * 2;
+      const int warnH = 58;
       renderer.drawRect(warnPad, y, warnW, warnH, true);
-      renderer.drawCenteredText(SMALL_FONT_ID, y + 12,
-                                "Warning: SD card will be unavailable");
-      renderer.drawCenteredText(SMALL_FONT_ID, y + 30,
-                                "to firmware while active.");
+      renderer.drawCenteredText(SMALL_FONT_ID, y + 12, "Warning: SD card will be unavailable");
+      renderer.drawCenteredText(SMALL_FONT_ID, y + 30, "to firmware while active.");
 
       const auto labels = mappedInput.mapLabels("Back", "Enable", "", "");
       GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
@@ -98,10 +91,10 @@ void UsbMassStorageActivity::render(RenderLock&&) {
     // ------------------------------------------------------------------
     case ACTIVE: {
       // Simple stylised USB icon — rectangular body + connector tab
-      const int iconW  = 80;
-      const int iconH  = 110;
-      const int iconX  = pageWidth  / 2 - iconW / 2;
-      const int iconY  = headerBottom + 40;
+      const int iconW = 80;
+      const int iconH = 110;
+      const int iconX = pageWidth / 2 - iconW / 2;
+      const int iconY = headerBottom + 40;
 
       // Main body (white fill, black border)
       renderer.fillRect(iconX, iconY, iconW, iconH, false);
@@ -118,22 +111,18 @@ void UsbMassStorageActivity::render(RenderLock&&) {
       // Two small contact rectangles inside the tab
       const int contactW = 8;
       const int contactH = 10;
-      renderer.fillRect(tabX + 5,          tabY + 5, contactW, contactH, true);
+      renderer.fillRect(tabX + 5, tabY + 5, contactW, contactH, true);
       renderer.fillRect(tabX + tabW - 5 - contactW, tabY + 5, contactW, contactH, true);
 
       // Horizontal line across body middle (decorative)
       renderer.fillRect(iconX + 8, iconY + iconH / 2 - 1, iconW - 16, 2, true);
 
       int y = iconY + iconH + tabH + 30;
-      renderer.drawCenteredText(UI_12_FONT_ID, y,
-                                "USB Storage Active",
-                                true, EpdFontFamily::BOLD);
+      renderer.drawCenteredText(UI_12_FONT_ID, y, "USB Storage Active", true, EpdFontFamily::BOLD);
       y += 40;
-      renderer.drawCenteredText(UI_10_FONT_ID, y,
-                                "PC can now read/write the SD card.");
+      renderer.drawCenteredText(UI_10_FONT_ID, y, "PC can now read/write the SD card.");
       y += 30;
-      renderer.drawCenteredText(UI_10_FONT_ID, y,
-                                "Press Back to safely disconnect.");
+      renderer.drawCenteredText(UI_10_FONT_ID, y, "Press Back to safely disconnect.");
 
       const auto labels = mappedInput.mapLabels("Disconnect", "", "", "");
       GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
@@ -144,12 +133,9 @@ void UsbMassStorageActivity::render(RenderLock&&) {
     case EJECTED: {
       int y = pageHeight / 2 - 40;
 
-      renderer.drawCenteredText(UI_12_FONT_ID, y,
-                                "Safely disconnected.",
-                                true, EpdFontFamily::BOLD);
+      renderer.drawCenteredText(UI_12_FONT_ID, y, "Safely disconnected.", true, EpdFontFamily::BOLD);
       y += 50;
-      renderer.drawCenteredText(UI_10_FONT_ID, y,
-                                "SD card restored for firmware use.");
+      renderer.drawCenteredText(UI_10_FONT_ID, y, "SD card restored for firmware use.");
 
       const auto labels = mappedInput.mapLabels("Back", "", "", "");
       GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);

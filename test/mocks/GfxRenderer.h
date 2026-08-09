@@ -5,16 +5,16 @@
 // ============================================================
 
 #include <cstdint>
+#include <functional>
 #include <string>
 #include <vector>
-#include <functional>
 
 namespace EpdFontFamily {
-  enum Style { REGULAR = 0, BOLD = 1, ITALIC = 2 };
+enum Style { REGULAR = 0, BOLD = 1, ITALIC = 2 };
 }
 
 namespace HalDisplay {
-  enum RefreshMode { FAST_REFRESH = 0, HALF_REFRESH = 1, FULL_REFRESH = 2 };
+enum RefreshMode { FAST_REFRESH = 0, HALF_REFRESH = 1, FULL_REFRESH = 2 };
 }
 
 struct Rect {
@@ -46,9 +46,7 @@ class GfxRenderer {
   uint8_t* getFrameBuffer() { return nullptr; }
 
   std::string truncatedText(int, const char* t, int, int = 0) { return t; }
-  std::vector<std::string> wrappedText(int, const char* t, int, int = 10) {
-    return {std::string(t)};
-  }
+  std::vector<std::string> wrappedText(int, const char* t, int, int = 10) { return {std::string(t)}; }
 
   // Track draw calls for test assertions
   struct DrawCall {

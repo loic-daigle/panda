@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+
 #include "activities/Activity.h"
 
 class SecurityPinActivity final : public Activity {
@@ -21,8 +22,8 @@ class SecurityPinActivity final : public Activity {
 
   // PIN entry
   char pinBuffer[7] = {};  // Max 6 digits + null
-  int pinPos = 0;           // Current digit position
-  int pinLength = 4;        // Total PIN length being entered (4-6)
+  int pinPos = 0;          // Current digit position
+  int pinLength = 4;       // Total PIN length being entered (4-6)
 
   // Stored hashes
   uint8_t storedPinHash[32] = {};

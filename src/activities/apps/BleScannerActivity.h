@@ -1,9 +1,10 @@
 #pragma once
+#include <BLEDevice.h>
+
 #include <cstdint>
 #include <string>
 #include <vector>
 
-#include <BLEDevice.h>
 #include "activities/Activity.h"
 #include "util/ButtonNavigator.h"
 

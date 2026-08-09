@@ -63,7 +63,10 @@ void CaptivePortalActivity::loadTemplates() {
   templates.push_back(BUILTIN_NAME);  // always first
 
   auto dir = Storage.open("/biscuit/portals");
-  if (!dir || !dir.isDirectory()) { if (dir) dir.close(); return; }
+  if (!dir || !dir.isDirectory()) {
+    if (dir) dir.close();
+    return;
+  }
 
   char name[128];
   for (auto file = dir.openNextFile(); file; file = dir.openNextFile()) {
@@ -98,8 +101,14 @@ void CaptivePortalActivity::startPortal() {
 }
 
 void CaptivePortalActivity::stopPortal() {
-  if (webServer) { webServer->stop(); webServer.reset(); }
-  if (dnsServer) { dnsServer->stop(); dnsServer.reset(); }
+  if (webServer) {
+    webServer->stop();
+    webServer.reset();
+  }
+  if (dnsServer) {
+    dnsServer->stop();
+    dnsServer.reset();
+  }
   WiFi.softAPdisconnect(true);
   WiFi.mode(WIFI_OFF);
 }
@@ -112,7 +121,10 @@ void CaptivePortalActivity::handleRoot() {
   }
   std::string path = "/biscuit/portals/" + selectedTemplate;
   auto file = Storage.open(path.c_str());
-  if (!file) { webServer->send(200, "text/html", BUILTIN_HTML); return; }
+  if (!file) {
+    webServer->send(200, "text/html", BUILTIN_HTML);
+    return;
+  }
 
   size_t fileLen = file.size();
   webServer->setContentLength(fileLen);
@@ -163,7 +175,9 @@ void CaptivePortalActivity::loop() {
     dnsServer->processNextRequest();
     webServer->handleClient();
     if (mappedInput.wasReleased(MappedInputManager::Button::Back)) {
-      stopPortal(); state = STOPPED; requestUpdate();
+      stopPortal();
+      state = STOPPED;
+      requestUpdate();
     }
     return;
   }
@@ -175,8 +189,18 @@ void CaptivePortalActivity::loop() {
 
   if (state == SELECT_TEMPLATE) {
     const int count = static_cast<int>(templates.size());
-    buttonNavigator.onNext([this, count] { if (count > 0) { selectorIndex = ButtonNavigator::nextIndex(selectorIndex, count); requestUpdate(); } });
-    buttonNavigator.onPrevious([this, count] { if (count > 0) { selectorIndex = ButtonNavigator::previousIndex(selectorIndex, count); requestUpdate(); } });
+    buttonNavigator.onNext([this, count] {
+      if (count > 0) {
+        selectorIndex = ButtonNavigator::nextIndex(selectorIndex, count);
+        requestUpdate();
+      }
+    });
+    buttonNavigator.onPrevious([this, count] {
+      if (count > 0) {
+        selectorIndex = ButtonNavigator::previousIndex(selectorIndex, count);
+        requestUpdate();
+      }
+    });
 
     if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
       if (!templates.empty()) {
@@ -185,7 +209,11 @@ void CaptivePortalActivity::loop() {
         startActivityForResult(
             std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "AP Name", "Free WiFi", 32),
             [this](const ActivityResult& result) {
-              if (result.isCancelled) { state = SELECT_TEMPLATE; requestUpdate(); return; }
+              if (result.isCancelled) {
+                state = SELECT_TEMPLATE;
+                requestUpdate();
+                return;
+              }
               apSsid = std::get<KeyboardResult>(result.data).text;
               if (apSsid.empty()) apSsid = "Free WiFi";
               startPortal();
@@ -240,8 +268,8 @@ void CaptivePortalActivity::render(RenderLock&&) {
   // SELECT_TEMPLATE
   const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
   const int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
-  GUI.drawList(renderer, Rect{0, contentTop, pageWidth, contentHeight},
-      static_cast<int>(templates.size()), selectorIndex,
+  GUI.drawList(
+      renderer, Rect{0, contentTop, pageWidth, contentHeight}, static_cast<int>(templates.size()), selectorIndex,
       [this](int i) -> std::string { return templates[i]; }, nullptr);
 
   const auto labels = mappedInput.mapLabels("Back", "Select", "^", "v");

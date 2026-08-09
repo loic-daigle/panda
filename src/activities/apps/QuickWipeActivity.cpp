@@ -141,9 +141,7 @@ void QuickWipeActivity::onEnter() {
   requestUpdate();
 }
 
-void QuickWipeActivity::onExit() {
-  Activity::onExit();
-}
+void QuickWipeActivity::onExit() { Activity::onExit(); }
 
 void QuickWipeActivity::startWipe() {
   state = WIPING;
@@ -256,10 +254,18 @@ void QuickWipeActivity::render(RenderLock&& lock) {
   GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Quick Wipe");
 
   switch (state) {
-    case CONFIRM:   renderConfirm();   break;
-    case WIPING:    renderWiping();    break;
-    case DONE:      renderDone();      break;
-    case VERIFIED:  renderVerified();  break;
+    case CONFIRM:
+      renderConfirm();
+      break;
+    case WIPING:
+      renderWiping();
+      break;
+    case DONE:
+      renderDone();
+      break;
+    case VERIFIED:
+      renderVerified();
+      break;
   }
 
   renderer.displayBuffer();
@@ -312,8 +318,7 @@ void QuickWipeActivity::renderConfirm() const {
 
   // Divider before button hints
   const int divY = pageHeight - metrics.buttonHintsHeight - metrics.verticalSpacing - 1;
-  renderer.drawLine(metrics.contentSidePadding, divY,
-                    pageWidth - metrics.contentSidePadding, divY, true);
+  renderer.drawLine(metrics.contentSidePadding, divY, pageWidth - metrics.contentSidePadding, divY, true);
 
   const auto labels = mappedInput.mapLabels("Cancel", "Hold to Wipe", "", "");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
@@ -345,8 +350,7 @@ void QuickWipeActivity::renderDone() const {
 
   // Bottom divider
   const int divY = pageHeight - metrics.buttonHintsHeight - metrics.verticalSpacing - 1;
-  renderer.drawLine(metrics.contentSidePadding, divY,
-                    pageWidth - metrics.contentSidePadding, divY, true);
+  renderer.drawLine(metrics.contentSidePadding, divY, pageWidth - metrics.contentSidePadding, divY, true);
 
   const auto labels = mappedInput.mapLabels("Exit", "Verify", "", "");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
@@ -376,8 +380,7 @@ void QuickWipeActivity::renderVerified() const {
 
   // Bottom divider
   const int divY = pageHeight - metrics.buttonHintsHeight - metrics.verticalSpacing - 1;
-  renderer.drawLine(metrics.contentSidePadding, divY,
-                    pageWidth - metrics.contentSidePadding, divY, true);
+  renderer.drawLine(metrics.contentSidePadding, divY, pageWidth - metrics.contentSidePadding, divY, true);
 
   const auto labels = mappedInput.mapLabels("Back", "", "", "");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);

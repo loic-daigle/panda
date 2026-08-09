@@ -12,60 +12,54 @@
 #include "util/ButtonNavigator.h"
 
 // Pattern data — packed bits, row-major, MSB = leftmost pixel
-static constexpr uint8_t PAT_BLINKER[] = {0xE0};  // ###
-static constexpr uint8_t PAT_BLOCK[] = {0xC0, 0xC0};  // ## / ##
-static constexpr uint8_t PAT_BEEHIVE[] = {0x60, 0x90, 0x60};  // .##. / #..# / .##.
-static constexpr uint8_t PAT_TOAD[] = {0x70, 0xE0};  // .### / ###.
+static constexpr uint8_t PAT_BLINKER[] = {0xE0};                   // ###
+static constexpr uint8_t PAT_BLOCK[] = {0xC0, 0xC0};               // ## / ##
+static constexpr uint8_t PAT_BEEHIVE[] = {0x60, 0x90, 0x60};       // .##. / #..# / .##.
+static constexpr uint8_t PAT_TOAD[] = {0x70, 0xE0};                // .### / ###.
 static constexpr uint8_t PAT_BEACON[] = {0xC0, 0xC0, 0x30, 0x30};  // ##.. / ##.. / ..## / ..##
-static constexpr uint8_t PAT_GLIDER[] = {0x40, 0x20, 0xE0};  // .#. / ..# / ###
-static constexpr uint8_t PAT_LWSS[] = {0x48, 0x80, 0x88, 0xF0};  // .#..# / #.... / #...# / ####.
-static constexpr uint8_t PAT_RPENTOMINO[] = {0x60, 0xC0, 0x40};  // .## / ##. / .#.
-static constexpr uint8_t PAT_DIEHARD[] = {0x02, 0xC0, 0x47};  // ......#. / ##...... / .#...###
-static constexpr uint8_t PAT_ACORN[] = {0x40, 0x10, 0xCE};  // .#..... / ...#... / ##..###
+static constexpr uint8_t PAT_GLIDER[] = {0x40, 0x20, 0xE0};        // .#. / ..# / ###
+static constexpr uint8_t PAT_LWSS[] = {0x48, 0x80, 0x88, 0xF0};    // .#..# / #.... / #...# / ####.
+static constexpr uint8_t PAT_RPENTOMINO[] = {0x60, 0xC0, 0x40};    // .## / ##. / .#.
+static constexpr uint8_t PAT_DIEHARD[] = {0x02, 0xC0, 0x47};       // ......#. / ##...... / .#...###
+static constexpr uint8_t PAT_ACORN[] = {0x40, 0x10, 0xCE};         // .#..... / ...#... / ##..###
 
 // Pulsar (13x13) — 2 bytes per row
 static constexpr uint8_t PAT_PULSAR[] = {
-  0x0E, 0x38,  // ..###...###..
-  0x00, 0x00,  // .............
-  0x42, 0x10,  // #....#.#....#
-  0x42, 0x10,  // #....#.#....#
-  0x42, 0x10,  // #....#.#....#
-  0x0E, 0x38,  // ..###...###..
-  0x00, 0x00,  // .............
-  0x0E, 0x38,  // ..###...###..
-  0x42, 0x10,  // #....#.#....#
-  0x42, 0x10,  // #....#.#....#
-  0x42, 0x10,  // #....#.#....#
-  0x00, 0x00,  // .............
-  0x0E, 0x38,  // ..###...###..
+    0x0E, 0x38,  // ..###...###..
+    0x00, 0x00,  // .............
+    0x42, 0x10,  // #....#.#....#
+    0x42, 0x10,  // #....#.#....#
+    0x42, 0x10,  // #....#.#....#
+    0x0E, 0x38,  // ..###...###..
+    0x00, 0x00,  // .............
+    0x0E, 0x38,  // ..###...###..
+    0x42, 0x10,  // #....#.#....#
+    0x42, 0x10,  // #....#.#....#
+    0x42, 0x10,  // #....#.#....#
+    0x00, 0x00,  // .............
+    0x0E, 0x38,  // ..###...###..
 };
 
 // Gosper Glider Gun (36x9) — 5 bytes per row
 static constexpr uint8_t PAT_GOSPER_GUN[] = {
-  0x00, 0x00, 0x01, 0x00, 0x00,
-  0x00, 0x00, 0x05, 0x00, 0x00,
-  0x00, 0x06, 0x06, 0x00, 0x18,
-  0x00, 0x08, 0xA6, 0x00, 0x18,
-  0x60, 0x10, 0x46, 0x00, 0x00,
-  0x60, 0x10, 0xA2, 0x80, 0x00,
-  0x00, 0x10, 0x40, 0x80, 0x00,
-  0x00, 0x08, 0x80, 0x00, 0x00,
-  0x00, 0x06, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x06, 0x06, 0x00, 0x18,
+    0x00, 0x08, 0xA6, 0x00, 0x18, 0x60, 0x10, 0x46, 0x00, 0x00, 0x60, 0x10, 0xA2, 0x80, 0x00,
+    0x00, 0x10, 0x40, 0x80, 0x00, 0x00, 0x08, 0x80, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00,
 };
 
 const GameOfLifeActivity::PatternDef GameOfLifeActivity::PATTERNS[] = {
-  {"Glider", "Moves diagonally forever", 3, 3, PAT_GLIDER},
-  {"LWSS", "Lightweight Spaceship", 5, 4, PAT_LWSS},
-  {"R-pentomino", "Methuselah - 1103 gens", 3, 3, PAT_RPENTOMINO},
-  {"Acorn", "Methuselah - 5206 gens", 7, 3, PAT_ACORN},
-  {"Diehard", "Vanishes after 130 gens", 8, 3, PAT_DIEHARD},
-  {"Gosper Gun", "Infinite glider stream", 36, 9, PAT_GOSPER_GUN},
-  {"Pulsar", "Period-3 oscillator", 13, 13, PAT_PULSAR},
-  {"Beacon", "Period-2 oscillator", 4, 4, PAT_BEACON},
-  {"Blinker", "Simplest oscillator", 3, 1, PAT_BLINKER},
-  {"Toad", "Period-2 oscillator", 4, 2, PAT_TOAD},
-  {"Block", "Still life", 2, 2, PAT_BLOCK},
-  {"Beehive", "Still life", 4, 3, PAT_BEEHIVE},
+    {"Glider", "Moves diagonally forever", 3, 3, PAT_GLIDER},
+    {"LWSS", "Lightweight Spaceship", 5, 4, PAT_LWSS},
+    {"R-pentomino", "Methuselah - 1103 gens", 3, 3, PAT_RPENTOMINO},
+    {"Acorn", "Methuselah - 5206 gens", 7, 3, PAT_ACORN},
+    {"Diehard", "Vanishes after 130 gens", 8, 3, PAT_DIEHARD},
+    {"Gosper Gun", "Infinite glider stream", 36, 9, PAT_GOSPER_GUN},
+    {"Pulsar", "Period-3 oscillator", 13, 13, PAT_PULSAR},
+    {"Beacon", "Period-2 oscillator", 4, 4, PAT_BEACON},
+    {"Blinker", "Simplest oscillator", 3, 1, PAT_BLINKER},
+    {"Toad", "Period-2 oscillator", 4, 2, PAT_TOAD},
+    {"Block", "Still life", 2, 2, PAT_BLOCK},
+    {"Beehive", "Still life", 4, 3, PAT_BEEHIVE},
 };
 
 void GameOfLifeActivity::onEnter() {
@@ -243,8 +237,14 @@ void GameOfLifeActivity::loop() {
       extState = RUNNING_SIM;
       requestUpdate();
     }
-    buttonNavigator.onNext([this] { patternIndex = ButtonNavigator::nextIndex(patternIndex, PATTERN_COUNT); requestUpdate(); });
-    buttonNavigator.onPrevious([this] { patternIndex = ButtonNavigator::previousIndex(patternIndex, PATTERN_COUNT); requestUpdate(); });
+    buttonNavigator.onNext([this] {
+      patternIndex = ButtonNavigator::nextIndex(patternIndex, PATTERN_COUNT);
+      requestUpdate();
+    });
+    buttonNavigator.onPrevious([this] {
+      patternIndex = ButtonNavigator::previousIndex(patternIndex, PATTERN_COUNT);
+      requestUpdate();
+    });
   }
 }
 
@@ -261,7 +261,8 @@ void GameOfLifeActivity::render(RenderLock&&) {
     const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
     const int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
 
-    GUI.drawList(renderer, Rect{0, contentTop, pageWidth, contentHeight}, PATTERN_COUNT, patternIndex,
+    GUI.drawList(
+        renderer, Rect{0, contentTop, pageWidth, contentHeight}, PATTERN_COUNT, patternIndex,
         [](int i) -> std::string { return GameOfLifeActivity::PATTERNS[i].name; },
         [](int i) -> std::string { return GameOfLifeActivity::PATTERNS[i].description; });
 
@@ -315,8 +316,7 @@ void GameOfLifeActivity::render(RenderLock&&) {
 
   // Info bar: generation + population in compact format
   char infoBuf[64];
-  snprintf(infoBuf, sizeof(infoBuf), "Gen: %d   Pop: %d   %s",
-           generation, population, running ? "RUNNING" : "PAUSED");
+  snprintf(infoBuf, sizeof(infoBuf), "Gen: %d   Pop: %d   %s", generation, population, running ? "RUNNING" : "PAUSED");
   renderer.drawCenteredText(SMALL_FONT_ID, infoBarY, infoBuf);
 
   // Separator line

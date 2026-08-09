@@ -1,14 +1,13 @@
 #pragma once
 
+#include <HalPowerManager.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
+
 #include <cstddef>
 #include <functional>
 #include <memory>
 #include <string>
-
-#include <freertos/FreeRTOS.h>
-#include <freertos/semphr.h>
-
-#include <HalPowerManager.h>
 
 class Activity;
 class BLEServer;

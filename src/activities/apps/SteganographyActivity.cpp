@@ -49,9 +49,7 @@ void SteganographyActivity::loadFileList() {
     // Accept .bmp and .BMP
     if (len > 4) {
       const char* ext = name + len - 4;
-      if (ext[0] == '.' &&
-          (ext[1] == 'b' || ext[1] == 'B') &&
-          (ext[2] == 'm' || ext[2] == 'M') &&
+      if (ext[0] == '.' && (ext[1] == 'b' || ext[1] == 'B') && (ext[2] == 'm' || ext[2] == 'M') &&
           (ext[3] == 'p' || ext[3] == 'P')) {
         strncpy(fileNames[fileCount], name, sizeof(fileNames[0]) - 1);
         fileNames[fileCount][sizeof(fileNames[0]) - 1] = '\0';
@@ -119,9 +117,15 @@ bool SteganographyActivity::embedMessage(const char* path, const char* msg, int 
   while (remaining > 0 && copyOk) {
     uint32_t toRead = (remaining < sizeof(buf)) ? remaining : sizeof(buf);
     int got = src.read(buf, toRead);
-    if (got <= 0) { copyOk = false; break; }
+    if (got <= 0) {
+      copyOk = false;
+      break;
+    }
     size_t wrote = dst.write(buf, (size_t)got);
-    if (wrote != (size_t)got) { copyOk = false; break; }
+    if (wrote != (size_t)got) {
+      copyOk = false;
+      break;
+    }
     remaining -= (uint32_t)got;
   }
   src.close();
@@ -171,31 +175,61 @@ bool SteganographyActivity::extractMessage(const char* path) {
   if (!f) return false;
 
   // Read declared BMP size
-  if (!f.seekSet(2)) { f.close(); return false; }
+  if (!f.seekSet(2)) {
+    f.close();
+    return false;
+  }
   uint32_t bmpSize = 0;
-  if (f.read(&bmpSize, 4) != 4) { f.close(); return false; }
+  if (f.read(&bmpSize, 4) != 4) {
+    f.close();
+    return false;
+  }
 
   uint32_t fileSize = (uint32_t)f.size();
   // Need at least STEG(4) + len(4) + checksum(1) after BMP data
-  if (fileSize <= bmpSize + 9U) { f.close(); return false; }
+  if (fileSize <= bmpSize + 9U) {
+    f.close();
+    return false;
+  }
 
   // Seek to where the STEG marker should start
-  if (!f.seekSet(bmpSize)) { f.close(); return false; }
+  if (!f.seekSet(bmpSize)) {
+    f.close();
+    return false;
+  }
 
   char magic[4];
-  if (f.read(magic, 4) != 4) { f.close(); return false; }
-  if (memcmp(magic, "STEG", 4) != 0) { f.close(); return false; }
+  if (f.read(magic, 4) != 4) {
+    f.close();
+    return false;
+  }
+  if (memcmp(magic, "STEG", 4) != 0) {
+    f.close();
+    return false;
+  }
 
   uint32_t len32 = 0;
-  if (f.read(&len32, 4) != 4) { f.close(); return false; }
-  if (len32 == 0 || len32 > (uint32_t)MAX_MSG_LEN) { f.close(); return false; }
+  if (f.read(&len32, 4) != 4) {
+    f.close();
+    return false;
+  }
+  if (len32 == 0 || len32 > (uint32_t)MAX_MSG_LEN) {
+    f.close();
+    return false;
+  }
 
   int got = f.read(messageBuffer, (size_t)len32);
-  if (got != (int)len32) { f.close(); return false; }
+  if (got != (int)len32) {
+    f.close();
+    return false;
+  }
   messageBuffer[len32] = '\0';
 
   uint8_t storedChecksum = 0;
-  if (f.read(&storedChecksum, 1) != 1) { f.close(); return false; }
+  if (f.read(&storedChecksum, 1) != 1) {
+    f.close();
+    return false;
+  }
   f.close();
 
   uint8_t calcChecksum = 0;
@@ -275,33 +309,31 @@ void SteganographyActivity::loop() {
 
     if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
       if (fileCount > 0) {
-        snprintf(selectedPath, sizeof(selectedPath), "/biscuit/drawings/%s",
-                 fileNames[fileIndex]);
+        snprintf(selectedPath, sizeof(selectedPath), "/biscuit/drawings/%s", fileNames[fileIndex]);
         if (mode == EMBED) {
           // Launch keyboard to collect secret message
-          startActivityForResult(
-              std::make_unique<KeyboardEntryActivity>(renderer, mappedInput,
-                                                     "Secret Message", "", MAX_MSG_LEN, InputType::Text),
-              [this](const ActivityResult& result) {
-                if (!result.isCancelled) {
-                  const auto& kb = std::get<KeyboardResult>(result.data);
-                  int len = static_cast<int>(kb.text.size());
-                  if (len > MAX_MSG_LEN) len = MAX_MSG_LEN;
-                  memcpy(messageBuffer, kb.text.c_str(), (size_t)len);
-                  messageBuffer[len] = '\0';
-                  messageLen = len;
-                  if (messageLen > 0) {
-                    doEmbed();
-                  } else {
-                    // Empty message — go back to mode select
-                    state = MODE_SELECT;
-                    requestUpdate();
-                  }
-                } else {
-                  state = MODE_SELECT;
-                  requestUpdate();
-                }
-              });
+          startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Secret Message", "",
+                                                                         MAX_MSG_LEN, InputType::Text),
+                                 [this](const ActivityResult& result) {
+                                   if (!result.isCancelled) {
+                                     const auto& kb = std::get<KeyboardResult>(result.data);
+                                     int len = static_cast<int>(kb.text.size());
+                                     if (len > MAX_MSG_LEN) len = MAX_MSG_LEN;
+                                     memcpy(messageBuffer, kb.text.c_str(), (size_t)len);
+                                     messageBuffer[len] = '\0';
+                                     messageLen = len;
+                                     if (messageLen > 0) {
+                                       doEmbed();
+                                     } else {
+                                       // Empty message — go back to mode select
+                                       state = MODE_SELECT;
+                                       requestUpdate();
+                                     }
+                                   } else {
+                                     state = MODE_SELECT;
+                                     requestUpdate();
+                                   }
+                                 });
         } else {
           doExtract();
         }
@@ -327,10 +359,8 @@ void SteganographyActivity::loop() {
     const auto& metrics = UITheme::getInstance().getMetrics();
     const int lineH = renderer.getLineHeight(UI_10_FONT_ID);
     const int pageHeight = renderer.getScreenHeight();
-    const int contentTop =
-        metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
-    const int contentHeight =
-        pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
+    const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
+    const int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
     int visibleLines = contentHeight / lineH;
     if (visibleLines < 1) visibleLines = 1;
 
@@ -366,23 +396,19 @@ void SteganographyActivity::render(RenderLock&&) {
   const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
-  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 "Stego Notes");
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Stego Notes");
 
   if (state == MODE_SELECT) {
-    const int contentTop =
-        metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
-    const int contentHeight =
-        pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
+    const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
+    const int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
 
     static const char* const modeLabels[2] = {"Embed Message", "Extract Message"};
-    GUI.drawList(renderer, Rect{0, contentTop, pageWidth, contentHeight},
-                 2, static_cast<int>(mode),
-                 [](int i) -> std::string { return modeLabels[i]; },
-                 [](int i) -> std::string {
-                   return (i == 0) ? "Hide text in a BMP image"
-                                   : "Read hidden text from a BMP image";
-                 });
+    GUI.drawList(
+        renderer, Rect{0, contentTop, pageWidth, contentHeight}, 2, static_cast<int>(mode),
+        [](int i) -> std::string { return modeLabels[i]; },
+        [](int i) -> std::string {
+          return (i == 0) ? "Hide text in a BMP image" : "Read hidden text from a BMP image";
+        });
 
     const auto labels = mappedInput.mapLabels("Back", "Select", "^", "v");
     GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
@@ -391,23 +417,20 @@ void SteganographyActivity::render(RenderLock&&) {
   }
 
   if (state == FILE_SELECT) {
-    const int contentTop =
-        metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
-    const int contentHeight =
-        pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
+    const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
+    const int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
 
     if (fileCount == 0) {
-      renderer.drawCenteredText(UI_10_FONT_ID, pageHeight / 2,
-                                "No BMP files in /biscuit/drawings");
+      renderer.drawCenteredText(UI_10_FONT_ID, pageHeight / 2, "No BMP files in /biscuit/drawings");
     } else {
-      GUI.drawList(renderer, Rect{0, contentTop, pageWidth, contentHeight},
-                   fileCount, fileIndex,
-                   [this](int i) -> std::string { return fileNames[i]; },
-                   [this](int i) -> std::string {
-                     char buf[48];
-                     snprintf(buf, sizeof(buf), "/biscuit/drawings/%s", fileNames[i]);
-                     return buf;
-                   });
+      GUI.drawList(
+          renderer, Rect{0, contentTop, pageWidth, contentHeight}, fileCount, fileIndex,
+          [this](int i) -> std::string { return fileNames[i]; },
+          [this](int i) -> std::string {
+            char buf[48];
+            snprintf(buf, sizeof(buf), "/biscuit/drawings/%s", fileNames[i]);
+            return buf;
+          });
     }
 
     const char* action = (mode == EMBED) ? "Embed" : "Extract";
@@ -420,15 +443,13 @@ void SteganographyActivity::render(RenderLock&&) {
   if (state == EMBED_DONE) {
     int y = pageHeight / 2 - 40;
     if (embedSuccess) {
-      renderer.drawCenteredText(UI_12_FONT_ID, y, "Message embedded!", true,
-                                EpdFontFamily::BOLD);
+      renderer.drawCenteredText(UI_12_FONT_ID, y, "Message embedded!", true, EpdFontFamily::BOLD);
       y += 45;
       // Show just the filename part
       const char* slash = strrchr(selectedPath, '/');
       renderer.drawCenteredText(UI_10_FONT_ID, y, slash ? slash + 1 : selectedPath);
     } else {
-      renderer.drawCenteredText(UI_12_FONT_ID, y, "Embed failed", true,
-                                EpdFontFamily::BOLD);
+      renderer.drawCenteredText(UI_12_FONT_ID, y, "Embed failed", true, EpdFontFamily::BOLD);
       y += 45;
       renderer.drawCenteredText(UI_10_FONT_ID, y, "Check that the file exists and is writable");
     }
@@ -440,18 +461,15 @@ void SteganographyActivity::render(RenderLock&&) {
   }
 
   if (state == EXTRACT_RESULT) {
-    const int contentTop =
-        metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
-    const int contentHeight =
-        pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
+    const int contentTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
+    const int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
     const int lineH = renderer.getLineHeight(UI_10_FONT_ID);
     const int maxWidth = pageWidth - 2 * metrics.contentSidePadding;
     int visibleLines = contentHeight / lineH;
     if (visibleLines < 1) visibleLines = 1;
 
     if (!extractFound || messageLen == 0) {
-      renderer.drawCenteredText(UI_10_FONT_ID, pageHeight / 2,
-                                "No hidden message found");
+      renderer.drawCenteredText(UI_10_FONT_ID, pageHeight / 2, "No hidden message found");
     } else {
       if (linesCacheDirty) {
         cachedLines = renderer.wrappedText(UI_10_FONT_ID, messageBuffer, maxWidth, 0);
@@ -460,10 +478,8 @@ void SteganographyActivity::render(RenderLock&&) {
       totalLines = static_cast<int>(cachedLines.size());
 
       int y = contentTop;
-      for (int i = scrollOffset;
-           i < scrollOffset + visibleLines && i < totalLines; i++) {
-        renderer.drawText(UI_10_FONT_ID, metrics.contentSidePadding, y,
-                          cachedLines[i].c_str());
+      for (int i = scrollOffset; i < scrollOffset + visibleLines && i < totalLines; i++) {
+        renderer.drawText(UI_10_FONT_ID, metrics.contentSidePadding, y, cachedLines[i].c_str());
         y += lineH;
       }
 
@@ -474,10 +490,8 @@ void SteganographyActivity::render(RenderLock&&) {
         char pageInfo[16];
         snprintf(pageInfo, sizeof(pageInfo), "%d/%d", currentPage, totalPages);
         int pw = renderer.getTextWidth(SMALL_FONT_ID, pageInfo);
-        renderer.drawText(SMALL_FONT_ID,
-                          pageWidth - pw - metrics.contentSidePadding,
-                          pageHeight - metrics.buttonHintsHeight - 20,
-                          pageInfo);
+        renderer.drawText(SMALL_FONT_ID, pageWidth - pw - metrics.contentSidePadding,
+                          pageHeight - metrics.buttonHintsHeight - 20, pageInfo);
       }
     }
 

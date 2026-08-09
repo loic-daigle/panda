@@ -8,12 +8,11 @@
 #include <Logging.h>
 #include <Txt.h>
 #include <WiFi.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 
 #include <algorithm>
 #include <cctype>
-
-#include <freertos/FreeRTOS.h>
-#include <freertos/task.h>
 
 #include "MappedInputManager.h"
 #include "activities/ActivityManager.h"
@@ -418,7 +417,9 @@ void WikipediaActivity::loadOfflineArticlesList() {
   std::sort(offlineArticles.begin(), offlineArticles.end());
 }
 
-std::string WikipediaActivity::articleFilePathFor(const std::string& title) const { return sanitizedArticlePath(title); }
+std::string WikipediaActivity::articleFilePathFor(const std::string& title) const {
+  return sanitizedArticlePath(title);
+}
 
 void WikipediaActivity::openArticle(const std::string& title) {
   const std::string filepath = articleFilePathFor(title);
@@ -515,8 +516,9 @@ void WikipediaActivity::runBackgroundFetch() {
 }
 
 bool WikipediaActivity::fetchSearchData() {
-  const std::string url = UrlUtils::encodeUnsafeUrlChars(
-      "https://en.wikipedia.org/w/api.php?action=opensearch&search=" + searchQuery + "&limit=10&namespace=0&format=json");
+  const std::string url =
+      UrlUtils::encodeUnsafeUrlChars("https://en.wikipedia.org/w/api.php?action=opensearch&search=" + searchQuery +
+                                     "&limit=10&namespace=0&format=json");
 
   auto result = HttpDownloader::downloadToFile(url, kSearchTmpPath, nullptr, nullptr);
   if (result != HttpDownloader::OK) {
@@ -747,7 +749,7 @@ void WikipediaActivity::render(RenderLock&&) {
   if (state == WikiState::OfflineList) {
     char subtitle[32];
     snprintf(subtitle, sizeof(subtitle), "%d saved article%s", static_cast<int>(offlineArticles.size()),
-              offlineArticles.size() == 1 ? "" : "s");
+             offlineArticles.size() == 1 ? "" : "s");
     GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Wikipedia", subtitle);
   } else {
     GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Wikipedia");
@@ -759,8 +761,9 @@ void WikipediaActivity::render(RenderLock&&) {
 
   if (state == WikiState::Loading) {
     const int centerY = contentTop + contentHeight / 2;
-    renderer.drawCenteredText(UI_12_FONT_ID, centerY - 30, isSearchTask ? "Searching Wikipedia..." : "Downloading article...",
-                              true, EpdFontFamily::BOLD);
+    renderer.drawCenteredText(UI_12_FONT_ID, centerY - 30,
+                              isSearchTask ? "Searching Wikipedia..." : "Downloading article...", true,
+                              EpdFontFamily::BOLD);
     GUI.drawSpinner(renderer, pageWidth / 2, centerY + 20, nullptr, spinnerFrame);
     const auto labels = mappedInput.mapLabels(tr(STR_BACK), nullptr, nullptr, nullptr);
     GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);

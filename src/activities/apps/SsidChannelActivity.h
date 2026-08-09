@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+
 #include "activities/Activity.h"
 #include "util/ButtonNavigator.h"
 
@@ -28,7 +29,11 @@ class SsidChannelActivity final : public Activity {
   static constexpr const char* SSID_PREFIX = "BC_";
 
   // Receive
-  struct ReceivedMsg { std::string text; int8_t rssi; unsigned long timestamp; };
+  struct ReceivedMsg {
+    std::string text;
+    int8_t rssi;
+    unsigned long timestamp;
+  };
   std::vector<ReceivedMsg> received;
   static constexpr int MAX_RECEIVED = 20;
   int msgIndex = 0;

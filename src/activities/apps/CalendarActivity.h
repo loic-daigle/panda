@@ -116,7 +116,7 @@ class CalendarActivity final : public Activity {
   // each `GB({...})` line already stripped of its envelope.
   void handleGbJson(const std::string& json);
   void upsertEvent(uint32_t id, int type, time_t timestamp, uint32_t durationSec, const char* title,
-                    const char* location, bool allDay);
+                   const char* location, bool allDay);
   void removeEvent(uint32_t id);
   // Replies to Gadgetbridge's "force_calendar_sync_start" with the ids we
   // already have on file, per the protocol notes above.

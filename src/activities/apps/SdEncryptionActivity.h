@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+
 #include "activities/Activity.h"
 
 class SdEncryptionActivity final : public Activity {
@@ -23,19 +24,19 @@ class SdEncryptionActivity final : public Activity {
   // Progress tracking (set during blocking processing)
   int processedFiles = 0;
   int totalFiles = 0;
-  bool lastOpEncrypt = true;   // true=encrypt, false=decrypt
+  bool lastOpEncrypt = true;  // true=encrypt, false=decrypt
   bool hadError = false;
   char errorMsg[48] = {};
 
   // Paths
-  static constexpr const char* BISCUIT_DIR    = "/biscuit";
-  static constexpr const char* VERIFY_PATH    = "/biscuit/.encrypt_verify";
+  static constexpr const char* BISCUIT_DIR = "/biscuit";
+  static constexpr const char* VERIFY_PATH = "/biscuit/.encrypt_verify";
   // Magic header written before IV+ciphertext
-  static constexpr const char* MAGIC          = "BENC";
-  static constexpr int         MAGIC_LEN      = 4;
-  static constexpr int         IV_LEN         = 16;
-  static constexpr int         KEY_LEN        = 32;
-  static constexpr uint32_t    MAX_FILE_BYTES = 32 * 1024;
+  static constexpr const char* MAGIC = "BENC";
+  static constexpr int MAGIC_LEN = 4;
+  static constexpr int IV_LEN = 16;
+  static constexpr int KEY_LEN = 32;
+  static constexpr uint32_t MAX_FILE_BYTES = 32 * 1024;
 
   // ENC-001: file name collection buffers moved to class members to avoid
   // 4 KB stack allocation inside result-handler lambda (deep call chain).
@@ -44,7 +45,7 @@ class SdEncryptionActivity final : public Activity {
   char fileNames[MAX_FILES][FNAME_MAX];  // ~4 KB, heap-allocated with the object
 
   // ENC-004: two-phase Change-PIN state
-  bool    changePinPhase2 = false;
+  bool changePinPhase2 = false;
   uint8_t oldKey[KEY_LEN] = {};  // holds verified current-key during phase 1→2
 
   // Derive AES-256 key from PIN via iterated SHA-256

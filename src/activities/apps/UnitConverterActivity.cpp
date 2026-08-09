@@ -28,10 +28,7 @@ const std::vector<UnitConverterActivity::Category>& UnitConverterActivity::getCa
         {"Pound", "lb", 0.453592, 0},
         {"Ounce", "oz", 0.0283495, 0},
         {"Ton", "t", 1000.0, 0}}},
-      {"Temperature",
-       {{"Celsius", "C", 1.0, 0},
-        {"Fahrenheit", "F", 0.5556, -17.7778},
-        {"Kelvin", "K", 1.0, -273.15}}},
+      {"Temperature", {{"Celsius", "C", 1.0, 0}, {"Fahrenheit", "F", 0.5556, -17.7778}, {"Kelvin", "K", 1.0, -273.15}}},
       {"Data",
        {{"Byte", "B", 1.0, 0},
         {"Kilobyte", "KB", 1024.0, 0},
@@ -254,9 +251,8 @@ void UnitConverterActivity::renderCategorySelect() const {
   int contentHeight = pageHeight - contentTop - metrics.buttonHintsHeight - metrics.verticalSpacing;
 
   auto& cats = getCategories();
-  GUI.drawList(
-      renderer, Rect{0, contentTop, pageWidth, contentHeight}, static_cast<int>(cats.size()), categoryIndex,
-      [&cats](int i) { return std::string(cats[i].name); });
+  GUI.drawList(renderer, Rect{0, contentTop, pageWidth, contentHeight}, static_cast<int>(cats.size()), categoryIndex,
+               [&cats](int i) { return std::string(cats[i].name); });
 
   const auto labels = mappedInput.mapLabels(tr(STR_BACK), tr(STR_SELECT), "", "");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);

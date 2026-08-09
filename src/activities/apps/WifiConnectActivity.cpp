@@ -5,8 +5,6 @@
 #include <Logging.h>
 #include <WiFi.h>
 
-#include "util/RadioManager.h"
-
 #include <algorithm>
 #include <map>
 
@@ -15,6 +13,7 @@
 #include "activities/util/KeyboardEntryActivity.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
+#include "util/RadioManager.h"
 
 void WifiConnectActivity::onEnter() {
   Activity::onEnter();

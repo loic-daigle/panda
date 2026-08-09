@@ -35,7 +35,10 @@ void ReadingStatsActivity::scanLibrary() {
     if (Storage.exists(progressPath.c_str())) {
       booksWithProgress++;
       HalFile pf = Storage.open(progressPath.c_str());
-      if (pf) { storageBytesUsed += pf.fileSize(); pf.close(); }
+      if (pf) {
+        storageBytesUsed += pf.fileSize();
+        pf.close();
+      }
     }
     entry.close();
   }
@@ -60,7 +63,10 @@ void ReadingStatsActivity::onEnter() {
 void ReadingStatsActivity::onExit() { Activity::onExit(); }
 
 void ReadingStatsActivity::loop() {
-  if (mappedInput.wasPressed(MappedInputManager::Button::Back)) { finish(); return; }
+  if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
+    finish();
+    return;
+  }
   if (mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
     // Rescan
     scanLibrary();

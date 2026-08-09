@@ -16,8 +16,8 @@ class SudokuActivity final : public Activity {
  private:
   enum State { PLAYING, SOLVED, NO_SOLUTION };
 
-  uint8_t board[9][9]{};    // current board (0 = empty)
-  bool fixed[9][9]{};       // true = given clue, not editable
+  uint8_t board[9][9]{};  // current board (0 = empty)
+  bool fixed[9][9]{};     // true = given clue, not editable
   int cursorX = 0;
   int cursorY = 0;
   State state = PLAYING;

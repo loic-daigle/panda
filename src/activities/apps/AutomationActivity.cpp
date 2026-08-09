@@ -16,19 +16,27 @@
 
 const char* AutomationActivity::triggerName(Rule::TriggerType t) {
   switch (t) {
-    case Rule::WIFI_APPEAR:    return "WiFi Appear";
-    case Rule::WIFI_DISAPPEAR: return "WiFi Disappear";
-    case Rule::TIMER:          return "Timer";
-    default:                   return "None";
+    case Rule::WIFI_APPEAR:
+      return "WiFi Appear";
+    case Rule::WIFI_DISAPPEAR:
+      return "WiFi Disappear";
+    case Rule::TIMER:
+      return "Timer";
+    default:
+      return "None";
   }
 }
 
 const char* AutomationActivity::actionName(Rule::ActionType a) {
   switch (a) {
-    case Rule::LOG_EVENT:        return "Log Event";
-    case Rule::ENABLE_RF_SILENCE: return "RF Silence";
-    case Rule::SHOW_ALERT:       return "Show Alert";
-    default:                     return "None";
+    case Rule::LOG_EVENT:
+      return "Log Event";
+    case Rule::ENABLE_RF_SILENCE:
+      return "RF Silence";
+    case Rule::SHOW_ALERT:
+      return "Show Alert";
+    default:
+      return "None";
   }
 }
 
@@ -192,20 +200,19 @@ void AutomationActivity::loop() {
       state = EDIT_VALUE;
       requestUpdate();
 
-      startActivityForResult(
-          std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, prompt, "", maxLen),
-          [this](const ActivityResult& result) {
-            if (result.isCancelled) {
-              state = RULE_LIST;
-            } else {
-              const auto& text = std::get<KeyboardResult>(result.data).text;
-              strncpy(editRule.triggerValue, text.c_str(), sizeof(editRule.triggerValue) - 1);
-              editRule.triggerValue[sizeof(editRule.triggerValue) - 1] = '\0';
-              editFieldIndex = 0;
-              state = EDIT_ACTION;
-            }
-            requestUpdate();
-          });
+      startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, prompt, "", maxLen),
+                             [this](const ActivityResult& result) {
+                               if (result.isCancelled) {
+                                 state = RULE_LIST;
+                               } else {
+                                 const auto& text = std::get<KeyboardResult>(result.data).text;
+                                 strncpy(editRule.triggerValue, text.c_str(), sizeof(editRule.triggerValue) - 1);
+                                 editRule.triggerValue[sizeof(editRule.triggerValue) - 1] = '\0';
+                                 editFieldIndex = 0;
+                                 state = EDIT_ACTION;
+                               }
+                               requestUpdate();
+                             });
       return;
     }
 
@@ -268,11 +275,20 @@ void AutomationActivity::render(RenderLock&&) {
   GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Automation");
 
   switch (state) {
-    case RULE_LIST:      renderRuleList();    break;
-    case EDIT_TRIGGER:   renderEditTrigger(); break;
-    case EDIT_ACTION:    renderEditAction();  break;
-    case CONFIRM_DELETE: GUI.drawPopup(renderer, "Delete this rule?"); break;
-    case EDIT_VALUE:     /* handled by sub-activity */ break;
+    case RULE_LIST:
+      renderRuleList();
+      break;
+    case EDIT_TRIGGER:
+      renderEditTrigger();
+      break;
+    case EDIT_ACTION:
+      renderEditAction();
+      break;
+    case CONFIRM_DELETE:
+      GUI.drawPopup(renderer, "Delete this rule?");
+      break;
+    case EDIT_VALUE: /* handled by sub-activity */
+      break;
   }
 
   renderer.displayBuffer();
@@ -297,8 +313,7 @@ void AutomationActivity::renderRuleList() const {
         const auto& r = rules[i];
         char buf[64];
         if (r.triggerValue[0] != '\0') {
-          snprintf(buf, sizeof(buf), "%s: %s -> %s", triggerName(r.trigger), r.triggerValue,
-                   actionName(r.action));
+          snprintf(buf, sizeof(buf), "%s: %s -> %s", triggerName(r.trigger), r.triggerValue, actionName(r.action));
         } else {
           snprintf(buf, sizeof(buf), "%s -> %s", triggerName(r.trigger), actionName(r.action));
         }
@@ -323,16 +338,18 @@ void AutomationActivity::renderEditTrigger() const {
   const int listH = pageHeight - listTop - metrics.buttonHintsHeight;
 
   static constexpr int TRIGGER_COUNT = 3;
-  GUI.drawList(
-      renderer, Rect{0, listTop, pageWidth, listH}, TRIGGER_COUNT, editFieldIndex,
-      [](int i) -> std::string {
-        switch (i) {
-          case 0: return "WiFi Appear";
-          case 1: return "WiFi Disappear";
-          case 2: return "Timer";
-          default: return "";
-        }
-      });
+  GUI.drawList(renderer, Rect{0, listTop, pageWidth, listH}, TRIGGER_COUNT, editFieldIndex, [](int i) -> std::string {
+    switch (i) {
+      case 0:
+        return "WiFi Appear";
+      case 1:
+        return "WiFi Disappear";
+      case 2:
+        return "Timer";
+      default:
+        return "";
+    }
+  });
 
   const auto labels = mappedInput.mapLabels("Cancel", "Select", "", "");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
@@ -347,16 +364,18 @@ void AutomationActivity::renderEditAction() const {
   const int listH = pageHeight - listTop - metrics.buttonHintsHeight;
 
   static constexpr int ACTION_COUNT = 3;
-  GUI.drawList(
-      renderer, Rect{0, listTop, pageWidth, listH}, ACTION_COUNT, editFieldIndex,
-      [](int i) -> std::string {
-        switch (i) {
-          case 0: return "Log Event";
-          case 1: return "RF Silence";
-          case 2: return "Show Alert";
-          default: return "";
-        }
-      });
+  GUI.drawList(renderer, Rect{0, listTop, pageWidth, listH}, ACTION_COUNT, editFieldIndex, [](int i) -> std::string {
+    switch (i) {
+      case 0:
+        return "Log Event";
+      case 1:
+        return "RF Silence";
+      case 2:
+        return "Show Alert";
+      default:
+        return "";
+    }
+  });
 
   const auto labels = mappedInput.mapLabels("Cancel", "Select", "", "");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);

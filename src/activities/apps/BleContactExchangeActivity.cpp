@@ -47,9 +47,9 @@ void BleContactExchangeActivity::loadMyContact() {
   if (file) {
     file.read(reinterpret_cast<uint8_t*>(&data), sizeof(data));
     file.close();
-    strncpy(myName,  data.name,  sizeof(myName)  - 1);
+    strncpy(myName, data.name, sizeof(myName) - 1);
     strncpy(myPhone, data.phone, sizeof(myPhone) - 1);
-    myName[sizeof(myName)   - 1] = '\0';
+    myName[sizeof(myName) - 1] = '\0';
     myPhone[sizeof(myPhone) - 1] = '\0';
   }
 }
@@ -57,7 +57,7 @@ void BleContactExchangeActivity::loadMyContact() {
 void BleContactExchangeActivity::saveMyContact() {
   Storage.mkdir("/biscuit");
   MyContactData data = {};
-  strncpy(data.name,  myName,  sizeof(data.name)  - 1);
+  strncpy(data.name, myName, sizeof(data.name) - 1);
   strncpy(data.phone, myPhone, sizeof(data.phone) - 1);
   auto file = Storage.open(MY_CONTACT_PATH, O_WRITE | O_CREAT | O_TRUNC);
   if (file) {
@@ -90,7 +90,7 @@ void BleContactExchangeActivity::startExchange() {
   uint8_t mfgData[MFG_TOTAL] = {};
   mfgData[0] = BISCUIT_COMPANY_ID & 0xFF;
   mfgData[1] = (BISCUIT_COMPANY_ID >> 8) & 0xFF;
-  strncpy(reinterpret_cast<char*>(mfgData + MFG_NAME_OFFSET),  myName,  MFG_NAME_LEN);
+  strncpy(reinterpret_cast<char*>(mfgData + MFG_NAME_OFFSET), myName, MFG_NAME_LEN);
   strncpy(reinterpret_cast<char*>(mfgData + MFG_PHONE_OFFSET), myPhone, MFG_PHONE_LEN);
 
   BLEAdvertising* adv = BLEDevice::getAdvertising();
@@ -132,20 +132,18 @@ void BleContactExchangeActivity::pollScanResults() {
     if (static_cast<int>(mfgRaw.length()) < MFG_TOTAL) continue;
 
     const char* mfg = mfgRaw.c_str();
-    uint16_t compId = static_cast<uint8_t>(mfg[0]) |
-                      (static_cast<uint8_t>(mfg[1]) << 8);
+    uint16_t compId = static_cast<uint8_t>(mfg[0]) | (static_cast<uint8_t>(mfg[1]) << 8);
     if (compId != BISCUIT_COMPANY_ID) continue;
 
     Contact c = {};
-    memcpy(c.name,  mfg + MFG_NAME_OFFSET,  MFG_NAME_LEN);
+    memcpy(c.name, mfg + MFG_NAME_OFFSET, MFG_NAME_LEN);
     memcpy(c.phone, mfg + MFG_PHONE_OFFSET, MFG_PHONE_LEN);
-    c.name[MFG_NAME_LEN]   = '\0';
+    c.name[MFG_NAME_LEN] = '\0';
     c.phone[MFG_PHONE_LEN] = '\0';
 
     // Skip empty / own contact
     if (c.name[0] == '\0') continue;
-    if (strncmp(c.name, myName, MFG_NAME_LEN) == 0 &&
-        strncmp(c.phone, myPhone, MFG_PHONE_LEN) == 0) continue;
+    if (strncmp(c.name, myName, MFG_NAME_LEN) == 0 && strncmp(c.phone, myPhone, MFG_PHONE_LEN) == 0) continue;
 
     // Deduplicate by name
     bool found = false;
@@ -168,8 +166,7 @@ void BleContactExchangeActivity::pollScanResults() {
 
 void BleContactExchangeActivity::editName() {
   startActivityForResult(
-      std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Your Name",
-                                              myName, sizeof(myName) - 1),
+      std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Your Name", myName, sizeof(myName) - 1),
       [this](const ActivityResult& result) {
         if (!result.isCancelled) {
           const auto& text = std::get<KeyboardResult>(result.data).text;
@@ -183,8 +180,7 @@ void BleContactExchangeActivity::editName() {
 
 void BleContactExchangeActivity::editPhone() {
   startActivityForResult(
-      std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Your Phone",
-                                              myPhone, sizeof(myPhone) - 1),
+      std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Your Phone", myPhone, sizeof(myPhone) - 1),
       [this](const ActivityResult& result) {
         if (!result.isCancelled) {
           const auto& text = std::get<KeyboardResult>(result.data).text;
@@ -243,8 +239,7 @@ void BleContactExchangeActivity::loop() {
     }
 
     // Timeout or Back → end exchange
-    if (mappedInput.wasReleased(MappedInputManager::Button::Back) ||
-        (now - exchangeStart >= EXCHANGE_DURATION_MS)) {
+    if (mappedInput.wasReleased(MappedInputManager::Button::Back) || (now - exchangeStart >= EXCHANGE_DURATION_MS)) {
       stopExchange();
       if (!received.empty()) {
         contactIndex = 0;
@@ -266,13 +261,11 @@ void BleContactExchangeActivity::loop() {
     }
 
     buttonNavigator.onNext([this] {
-      contactIndex = ButtonNavigator::nextIndex(contactIndex,
-                                                static_cast<int>(received.size()));
+      contactIndex = ButtonNavigator::nextIndex(contactIndex, static_cast<int>(received.size()));
       requestUpdate();
     });
     buttonNavigator.onPrevious([this] {
-      contactIndex = ButtonNavigator::previousIndex(contactIndex,
-                                                    static_cast<int>(received.size()));
+      contactIndex = ButtonNavigator::previousIndex(contactIndex, static_cast<int>(received.size()));
       requestUpdate();
     });
 
@@ -301,21 +294,25 @@ void BleContactExchangeActivity::loop() {
 void BleContactExchangeActivity::render(RenderLock&&) {
   renderer.clearScreen();
   switch (state) {
-    case IDLE:       renderIdle();       break;
-    case EXCHANGING: renderExchanging(); break;
-    case RECEIVED:   renderReceived();   break;
+    case IDLE:
+      renderIdle();
+      break;
+    case EXCHANGING:
+      renderExchanging();
+      break;
+    case RECEIVED:
+      renderReceived();
+      break;
   }
   renderer.displayBuffer();
 }
 
 void BleContactExchangeActivity::renderIdle() const {
   const auto& metrics = UITheme::getInstance().getMetrics();
-  const auto pageWidth  = renderer.getScreenWidth();
+  const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
-  GUI.drawHeader(renderer,
-                 Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 "Contact Exchange");
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Contact Exchange");
 
   const int contentTop = metrics.topPadding + metrics.headerHeight + 12;
 
@@ -346,10 +343,8 @@ void BleContactExchangeActivity::renderIdle() const {
   const int menuCount = 2;
   const char* labels[2] = {"Edit My Info", "Start Exchange"};
 
-  GUI.drawList(renderer,
-               Rect{0, y, pageWidth, pageHeight - y - metrics.buttonHintsHeight - 8},
-               menuCount, idleMenuIndex,
-               [&labels](int i) -> std::string { return labels[i]; });
+  GUI.drawList(renderer, Rect{0, y, pageWidth, pageHeight - y - metrics.buttonHintsHeight - 8}, menuCount,
+               idleMenuIndex, [&labels](int i) -> std::string { return labels[i]; });
 
   const auto hints = mappedInput.mapLabels("Back", "Select", "^", "v");
   GUI.drawButtonHints(renderer, hints.btn1, hints.btn2, hints.btn3, hints.btn4);
@@ -357,12 +352,10 @@ void BleContactExchangeActivity::renderIdle() const {
 
 void BleContactExchangeActivity::renderExchanging() const {
   const auto& metrics = UITheme::getInstance().getMetrics();
-  const auto pageWidth  = renderer.getScreenWidth();
+  const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
-  GUI.drawHeader(renderer,
-                 Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 "Exchanging...");
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Exchanging...");
 
   const int contentTop = metrics.topPadding + metrics.headerHeight + 20;
 
@@ -406,22 +399,19 @@ void BleContactExchangeActivity::renderExchanging() const {
 
 void BleContactExchangeActivity::renderReceived() const {
   const auto& metrics = UITheme::getInstance().getMetrics();
-  const auto pageWidth  = renderer.getScreenWidth();
+  const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
-  GUI.drawHeader(renderer,
-                 Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 "Received Contacts");
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Received Contacts");
 
-  const int listTop    = metrics.topPadding + metrics.headerHeight + 4;
+  const int listTop = metrics.topPadding + metrics.headerHeight + 4;
   const int listBottom = pageHeight - metrics.buttonHintsHeight - 8;
 
   const int count = static_cast<int>(received.size());
-  GUI.drawList(renderer,
-               Rect{0, listTop, pageWidth, listBottom - listTop},
-               count, contactIndex,
-               [this](int i) -> std::string { return received[i].name; },
-               [this](int i) -> std::string { return received[i].phone; });
+  GUI.drawList(
+      renderer, Rect{0, listTop, pageWidth, listBottom - listTop}, count, contactIndex,
+      [this](int i) -> std::string { return received[i].name; },
+      [this](int i) -> std::string { return received[i].phone; });
 
   const auto hints = mappedInput.mapLabels("Back", "Save", "^", "v");
   GUI.drawButtonHints(renderer, hints.btn1, hints.btn2, hints.btn3, hints.btn4);

@@ -1,7 +1,8 @@
 #include "AppCategoryActivity.h"
 
-#include <I18n.h>
 #include <HalStorage.h>
+#include <I18n.h>
+
 #include <cstring>
 
 #include "MappedInputManager.h"
@@ -109,7 +110,7 @@ void AppCategoryActivity::loop() {
     if (heldTime >= 2500) {
       onGoHome();  // Long-press: go straight to dashboard
     } else {
-      finish();    // Short press: go back one level
+      finish();  // Short press: go back one level
     }
     return;
   }
@@ -153,21 +154,21 @@ void AppCategoryActivity::render(RenderLock&&) {
   GUI.drawList(
       renderer, Rect{0, listTop, pageWidth, listHeight}, count, selectorIndex,
       [this](int index) -> std::string {
-          if (entries[index].isSectionHeader) {
-            return std::string("\xE2\x94\x80\xE2\x94\x80 ") + entries[index].nameStrId + " \xE2\x94\x80\xE2\x94\x80";
-          }
-          return entries[index].nameStrId;
+        if (entries[index].isSectionHeader) {
+          return std::string("\xE2\x94\x80\xE2\x94\x80 ") + entries[index].nameStrId + " \xE2\x94\x80\xE2\x94\x80";
+        }
+        return entries[index].nameStrId;
       },
       [this](int index) -> std::string {
-          if (entries[index].isSectionHeader) return "";
-          return entries[index].description ? std::string(entries[index].description) : "";
+        if (entries[index].isSectionHeader) return "";
+        return entries[index].description ? std::string(entries[index].description) : "";
       },
       [this](int index) -> UIIcon { return entries[index].icon; },
       [this](int index) -> std::string {
-          if (entries[index].hasActiveState && entries[index].hasActiveState()) {
-            return "\xE2\x97\x8F";  // ● (UTF-8 black circle)
-          }
-          return "";
+        if (entries[index].hasActiveState && entries[index].hasActiveState()) {
+          return "\xE2\x97\x8F";  // ● (UTF-8 black circle)
+        }
+        return "";
       });
 
   // === Button hints ===

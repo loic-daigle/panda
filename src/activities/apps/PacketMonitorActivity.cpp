@@ -6,13 +6,12 @@
 #include <WiFi.h>
 #include <esp_wifi.h>
 
-#include "util/RadioManager.h"
-
 #include <string>
 
 #include "MappedInputManager.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
+#include "util/RadioManager.h"
 
 // Static instance pointer for C callback
 static PacketMonitorActivity* activeMonitor = nullptr;
@@ -272,8 +271,8 @@ void PacketMonitorActivity::render(RenderLock&&) {
 
   renderer.clearScreen();
 
-  std::string chInfo = std::string(tr(STR_CHANNEL)) + " " + std::to_string(currentChannel) +
-                       (autoHop ? " (auto)" : " (manual)");
+  std::string chInfo =
+      std::string(tr(STR_CHANNEL)) + " " + std::to_string(currentChannel) + (autoHop ? " (auto)" : " (manual)");
   if (pcapRecording) chInfo += " REC";
   GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, tr(STR_PACKET_MONITOR),
                  chInfo.c_str());
@@ -333,8 +332,7 @@ void PacketMonitorActivity::render(RenderLock&&) {
   // Recording info
   if (pcapRecording) {
     char recStr[48];
-    snprintf(recStr, sizeof(recStr), "REC: %lu packets, %lu KB",
-             static_cast<uint32_t>(packetsSaved),
+    snprintf(recStr, sizeof(recStr), "REC: %lu packets, %lu KB", static_cast<uint32_t>(packetsSaved),
              static_cast<uint32_t>(pcapFileSize) / 1024);
     renderer.drawText(UI_10_FONT_ID, leftPad, y, recStr, true, EpdFontFamily::BOLD);
     y += fontH + 6;

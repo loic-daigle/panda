@@ -35,7 +35,10 @@ int QrTotpActivity::base32Decode(const char* input, uint8_t* output, int outLen)
 
 uint32_t QrTotpActivity::generateTotp(const uint8_t* key, int keyLen, uint64_t counter, int digits) {
   uint8_t msg[8];
-  for (int i = 7; i >= 0; i--) { msg[i] = counter & 0xFF; counter >>= 8; }
+  for (int i = 7; i >= 0; i--) {
+    msg[i] = counter & 0xFF;
+    counter >>= 8;
+  }
   uint8_t hmac[20];
   mbedtls_md_context_t ctx;
   mbedtls_md_init(&ctx);
@@ -73,7 +76,11 @@ void QrTotpActivity::loadAccounts() {
   auto file = Storage.open(SAVE_PATH);
   if (!file) return;
   file.read(reinterpret_cast<uint8_t*>(&accountCount), sizeof(accountCount));
-  if (accountCount < 0 || accountCount > MAX_ACCOUNTS) { accountCount = 0; file.close(); return; }
+  if (accountCount < 0 || accountCount > MAX_ACCOUNTS) {
+    accountCount = 0;
+    file.close();
+    return;
+  }
   file.read(reinterpret_cast<uint8_t*>(accounts), sizeof(Account) * accountCount);
   file.close();
 }
@@ -99,7 +106,10 @@ void QrTotpActivity::onExit() { Activity::onExit(); }
 
 void QrTotpActivity::loop() {
   if (state == SELECT_ACCOUNT) {
-    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) { finish(); return; }
+    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
+      finish();
+      return;
+    }
     if (mappedInput.wasPressed(MappedInputManager::Button::Up)) {
       selectedIndex = ButtonNavigator::previousIndex(selectedIndex, accountCount);
       requestUpdate();
@@ -157,7 +167,7 @@ void QrTotpActivity::render(RenderLock&&) {
       const int listTop = metrics.topPadding + metrics.headerHeight;
       const int listH = pageHeight - listTop - metrics.buttonHintsHeight;
       GUI.drawList(renderer, Rect{0, listTop, pageWidth, listH}, accountCount, selectedIndex,
-          [this](int i) -> std::string { return accounts[i].name; });
+                   [this](int i) -> std::string { return accounts[i].name; });
     }
 
     const auto labels = mappedInput.mapLabels("Back", accountCount > 0 ? "Select" : "", "^", "v");

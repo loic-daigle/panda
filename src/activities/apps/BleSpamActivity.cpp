@@ -17,12 +17,18 @@
 
 const char* BleSpamActivity::advTypeName(AdvType type) {
   switch (type) {
-    case APPLE_PROXIMITY:   return "Apple Proximity";
-    case ANDROID_FAST_PAIR: return "Android Fast Pair";
-    case WINDOWS_SWIFT_PAIR:return "Windows Swift Pair";
-    case SAMSUNG_BUDS:      return "Samsung Buds";
-    case RANDOM_ALL:        return "Random All";
-    default:                return "Unknown";
+    case APPLE_PROXIMITY:
+      return "Apple Proximity";
+    case ANDROID_FAST_PAIR:
+      return "Android Fast Pair";
+    case WINDOWS_SWIFT_PAIR:
+      return "Windows Swift Pair";
+    case SAMSUNG_BUDS:
+      return "Samsung Buds";
+    case RANDOM_ALL:
+      return "Random All";
+    default:
+      return "Unknown";
   }
 }
 
@@ -84,11 +90,20 @@ void BleSpamActivity::sendNextAdvertisement() {
   }
 
   switch (type) {
-    case APPLE_PROXIMITY:    sendAppleProximityAdv();   break;
-    case ANDROID_FAST_PAIR:  sendAndroidFastPairAdv();  break;
-    case WINDOWS_SWIFT_PAIR: sendWindowsSwiftPairAdv(); break;
-    case SAMSUNG_BUDS:       sendSamsungBudsAdv();      break;
-    default: break;
+    case APPLE_PROXIMITY:
+      sendAppleProximityAdv();
+      break;
+    case ANDROID_FAST_PAIR:
+      sendAndroidFastPairAdv();
+      break;
+    case WINDOWS_SWIFT_PAIR:
+      sendWindowsSwiftPairAdv();
+      break;
+    case SAMSUNG_BUDS:
+      sendSamsungBudsAdv();
+      break;
+    default:
+      break;
   }
 
   sentCount++;
@@ -97,10 +112,8 @@ void BleSpamActivity::sendNextAdvertisement() {
 void BleSpamActivity::sendAppleProximityAdv() {
   // Apple proximity pairing — manufacturer data with company ID 0x004C.
   // Type 0x07 = proximity pairing. Device type byte randomised for variety.
-  static const uint8_t deviceTypes[] = {
-      0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A,
-      0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14
-  };
+  static const uint8_t deviceTypes[] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A,
+                                        0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14};
 
   uint8_t payload[27];
   payload[0] = 0x07;  // Proximity pairing type
@@ -109,7 +122,7 @@ void BleSpamActivity::sendAppleProximityAdv() {
   for (int i = 3; i < 27; i++) {
     payload[i] = static_cast<uint8_t>(esp_random() & 0xFF);
   }
-  payload[3]  = 0x01;
+  payload[3] = 0x01;
   payload[25] = 0x00;
   payload[26] = 0x00;
 
@@ -129,18 +142,16 @@ void BleSpamActivity::sendAppleProximityAdv() {
 
 void BleSpamActivity::sendAndroidFastPairAdv() {
   // Google Fast Pair — service data on UUID 0xFE2C with a 3-byte model ID.
-  static const uint32_t modelIds[] = {
-      0x0001F0, 0x000047, 0x470000, 0x00B727, 0xCD8256,
-      0x0000F0, 0x000006, 0x00000A, 0x00000B, 0x00000C
-  };
+  static const uint32_t modelIds[] = {0x0001F0, 0x000047, 0x470000, 0x00B727, 0xCD8256,
+                                      0x0000F0, 0x000006, 0x00000A, 0x00000B, 0x00000C};
   uint32_t modelId = modelIds[esp_random() % (sizeof(modelIds) / sizeof(modelIds[0]))];
 
   BLEAdvertisementData advData;
   std::string serviceData;
   serviceData.reserve(3);
   serviceData += static_cast<char>((modelId >> 16) & 0xFF);
-  serviceData += static_cast<char>((modelId >> 8)  & 0xFF);
-  serviceData += static_cast<char>( modelId        & 0xFF);
+  serviceData += static_cast<char>((modelId >> 8) & 0xFF);
+  serviceData += static_cast<char>(modelId & 0xFF);
   advData.setServiceData(BLEUUID(static_cast<uint16_t>(0xFE2C)), String(serviceData.data(), serviceData.size()));
 
   BLEAdvertising* adv = BLEDevice::getAdvertising();
@@ -181,9 +192,9 @@ void BleSpamActivity::sendSamsungBudsAdv() {
 
   std::string mfgData;
   mfgData.reserve(14);
-  mfgData += static_cast<char>(0x75);  // Samsung company ID low byte
-  mfgData += static_cast<char>(0x00);  // Samsung company ID high byte
-  mfgData += static_cast<char>(0x01);  // Type
+  mfgData += static_cast<char>(0x75);                 // Samsung company ID low byte
+  mfgData += static_cast<char>(0x00);                 // Samsung company ID high byte
+  mfgData += static_cast<char>(0x01);                 // Type
   mfgData += static_cast<char>(esp_random() & 0xFF);  // Device model byte 0
   mfgData += static_cast<char>(esp_random() & 0xFF);  // Device model byte 1
   for (int i = 0; i < 10; i++) {
@@ -254,7 +265,7 @@ void BleSpamActivity::loop() {
 void BleSpamActivity::render(RenderLock&&) {
   renderer.clearScreen();
   const auto& metrics = UITheme::getInstance().getMetrics();
-  const auto pageWidth  = renderer.getScreenWidth();
+  const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
   if (state == DISCLAIMER) {
@@ -262,17 +273,13 @@ void BleSpamActivity::render(RenderLock&&) {
                               "BLE Advertisement Research Tool", true, EpdFontFamily::BOLD);
 
     int y = metrics.topPadding + metrics.headerHeight + 100;
-    renderer.drawCenteredText(UI_10_FONT_ID, y,
-        "This tool sends BLE advertisements for wireless");
+    renderer.drawCenteredText(UI_10_FONT_ID, y, "This tool sends BLE advertisements for wireless");
     y += 30;
-    renderer.drawCenteredText(UI_10_FONT_ID, y,
-        "research and testing purposes.");
+    renderer.drawCenteredText(UI_10_FONT_ID, y, "research and testing purposes.");
     y += 50;
-    renderer.drawCenteredText(UI_10_FONT_ID, y,
-        "Use responsibly and only in environments");
+    renderer.drawCenteredText(UI_10_FONT_ID, y, "Use responsibly and only in environments");
     y += 30;
-    renderer.drawCenteredText(UI_10_FONT_ID, y,
-        "where you have permission.");
+    renderer.drawCenteredText(UI_10_FONT_ID, y, "where you have permission.");
 
     const auto labels = mappedInput.mapLabels("Back", "Proceed", "", "");
     GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
@@ -281,24 +288,19 @@ void BleSpamActivity::render(RenderLock&&) {
   }
 
   if (state == MENU) {
-    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                   "BLE Advertisements");
+    GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "BLE Advertisements");
 
     static const char* subtitles[] = {
-        "Device pairing dialogs",
-        "Google Fast Pair service",
-        "Microsoft Swift Pair service",
-        "Galaxy Buds pairing",
-        "Cycle through all types",
+        "Device pairing dialogs", "Google Fast Pair service", "Microsoft Swift Pair service",
+        "Galaxy Buds pairing",    "Cycle through all types",
     };
 
     const int headerBottom = metrics.topPadding + metrics.headerHeight;
-    GUI.drawList(renderer,
-                 Rect{0, headerBottom, pageWidth, pageHeight - headerBottom - metrics.buttonHintsHeight},
-                 ADV_TYPE_COUNT,
-                 menuIndex,
-                 [](int i) -> std::string { return BleSpamActivity::advTypeName(static_cast<AdvType>(i)); },
-                 [](int i) -> std::string { return (i >= 0 && i < ADV_TYPE_COUNT) ? subtitles[i] : ""; });
+    GUI.drawList(
+        renderer, Rect{0, headerBottom, pageWidth, pageHeight - headerBottom - metrics.buttonHintsHeight},
+        ADV_TYPE_COUNT, menuIndex,
+        [](int i) -> std::string { return BleSpamActivity::advTypeName(static_cast<AdvType>(i)); },
+        [](int i) -> std::string { return (i >= 0 && i < ADV_TYPE_COUNT) ? subtitles[i] : ""; });
 
     const auto labels = mappedInput.mapLabels("Back", "Start", "^", "v");
     GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
@@ -343,7 +345,7 @@ void BleSpamActivity::render(RenderLock&&) {
   }
 
   // Activity animation — cycling dots
-  static const char* const dotFrames[] = { ".", "..", "..." };
+  static const char* const dotFrames[] = {".", "..", "..."};
   int frame = static_cast<int>((millis() / DISPLAY_INTERVAL_MS) % 3);
   renderer.drawCenteredText(SMALL_FONT_ID, y, dotFrames[frame]);
 

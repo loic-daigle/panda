@@ -2,8 +2,8 @@
 
 #include <GfxRenderer.h>
 
-#include <cstring>
 #include <cstdlib>
+#include <cstring>
 
 #include "MappedInputManager.h"
 #include "activities/util/KeyboardEntryActivity.h"
@@ -14,16 +14,16 @@ constexpr const char* CipherActivity::CIPHER_NAMES[];
 
 // ---- Cipher implementations ----
 
-std::string CipherActivity::rot13(const std::string& s) {
-  return caesar(s, 13);
-}
+std::string CipherActivity::rot13(const std::string& s) { return caesar(s, 13); }
 
 std::string CipherActivity::caesar(const std::string& s, int shift) {
   std::string out = s;
   shift = ((shift % 26) + 26) % 26;
   for (char& c : out) {
-    if (c >= 'a' && c <= 'z') c = (char)('a' + (c - 'a' + shift) % 26);
-    else if (c >= 'A' && c <= 'Z') c = (char)('A' + (c - 'A' + shift) % 26);
+    if (c >= 'a' && c <= 'z')
+      c = (char)('a' + (c - 'a' + shift) % 26);
+    else if (c >= 'A' && c <= 'Z')
+      c = (char)('A' + (c - 'A' + shift) % 26);
   }
   return out;
 }
@@ -60,8 +60,10 @@ std::string CipherActivity::xorCipher(const std::string& s, const std::string& k
 std::string CipherActivity::atbash(const std::string& s) {
   std::string out = s;
   for (char& c : out) {
-    if (c >= 'a' && c <= 'z') c = (char)('z' - (c - 'a'));
-    else if (c >= 'A' && c <= 'Z') c = (char)('Z' - (c - 'A'));
+    if (c >= 'a' && c <= 'z')
+      c = (char)('z' - (c - 'a'));
+    else if (c >= 'A' && c <= 'Z')
+      c = (char)('Z' - (c - 'A'));
   }
   return out;
 }
@@ -74,12 +76,12 @@ std::string CipherActivity::base64Encode(const std::string& s) {
   int n = (int)s.size();
   for (int i = 0; i < n; i += 3) {
     uint32_t v = (uint32_t)d[i] << 16;
-    if (i+1 < n) v |= (uint32_t)d[i+1] << 8;
-    if (i+2 < n) v |= d[i+2];
+    if (i + 1 < n) v |= (uint32_t)d[i + 1] << 8;
+    if (i + 2 < n) v |= d[i + 2];
     out += B64[(v >> 18) & 63];
     out += B64[(v >> 12) & 63];
-    out += (i+1 < n) ? B64[(v >> 6) & 63] : '=';
-    out += (i+2 < n) ? B64[v & 63]        : '=';
+    out += (i + 1 < n) ? B64[(v >> 6) & 63] : '=';
+    out += (i + 2 < n) ? B64[v & 63] : '=';
   }
   return out;
 }
@@ -100,7 +102,10 @@ std::string CipherActivity::base64Decode(const std::string& s) {
     if (v < 0) continue;
     buf = (buf << 6) | v;
     bits += 6;
-    if (bits >= 8) { bits -= 8; out += (char)((buf >> bits) & 0xFF); }
+    if (bits >= 8) {
+      bits -= 8;
+      out += (char)((buf >> bits) & 0xFF);
+    }
   }
   return out;
 }
@@ -114,14 +119,30 @@ bool CipherActivity::needsKey() const {
 
 void CipherActivity::computeResult() {
   switch (cipherIndex) {
-    case 0: result = rot13(inputText); break;
-    case 1: result = caesar(inputText, atoi(keyText.c_str())); break;
-    case 2: result = vigenere(inputText, keyText); break;
-    case 3: result = xorCipher(inputText, keyText); break;
-    case 4: result = atbash(inputText); break;
-    case 5: result = base64Encode(inputText); break;
-    case 6: result = base64Decode(inputText); break;
-    default: result = inputText; break;
+    case 0:
+      result = rot13(inputText);
+      break;
+    case 1:
+      result = caesar(inputText, atoi(keyText.c_str()));
+      break;
+    case 2:
+      result = vigenere(inputText, keyText);
+      break;
+    case 3:
+      result = xorCipher(inputText, keyText);
+      break;
+    case 4:
+      result = atbash(inputText);
+      break;
+    case 5:
+      result = base64Encode(inputText);
+      break;
+    case 6:
+      result = base64Decode(inputText);
+      break;
+    default:
+      result = inputText;
+      break;
   }
 }
 
@@ -139,7 +160,10 @@ void CipherActivity::onExit() { Activity::onExit(); }
 
 void CipherActivity::loop() {
   if (state == SELECT_CIPHER) {
-    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) { finish(); return; }
+    if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
+      finish();
+      return;
+    }
     if (mappedInput.wasPressed(MappedInputManager::Button::Up)) {
       cipherIndex = ButtonNavigator::previousIndex(cipherIndex, CIPHER_COUNT);
       requestUpdate();
@@ -150,35 +174,41 @@ void CipherActivity::loop() {
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
       state = INPUT_TEXT;
-      startActivityForResult(
-          std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Input Text", "", 200),
-          [this](const ActivityResult& r) {
-            if (r.isCancelled) { state = SELECT_CIPHER; return; }
-            inputText = std::get<KeyboardResult>(r.data).text;
-            if (needsKey()) {
-              state = INPUT_KEY;
-              const char* prompt = (cipherIndex == 1) ? "Shift (e.g. 3)" : "Key";
-              startActivityForResult(
-                  std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, prompt, "", 64),
-                  [this](const ActivityResult& r2) {
-                    if (r2.isCancelled) { state = SELECT_CIPHER; return; }
-                    keyText = std::get<KeyboardResult>(r2.data).text;
-                    computeResult();
-                    state = RESULT;
-                  });
-            } else {
-              keyText.clear();
-              computeResult();
-              state = RESULT;
-            }
-          });
+      startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Input Text", "", 200),
+                             [this](const ActivityResult& r) {
+                               if (r.isCancelled) {
+                                 state = SELECT_CIPHER;
+                                 return;
+                               }
+                               inputText = std::get<KeyboardResult>(r.data).text;
+                               if (needsKey()) {
+                                 state = INPUT_KEY;
+                                 const char* prompt = (cipherIndex == 1) ? "Shift (e.g. 3)" : "Key";
+                                 startActivityForResult(
+                                     std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, prompt, "", 64),
+                                     [this](const ActivityResult& r2) {
+                                       if (r2.isCancelled) {
+                                         state = SELECT_CIPHER;
+                                         return;
+                                       }
+                                       keyText = std::get<KeyboardResult>(r2.data).text;
+                                       computeResult();
+                                       state = RESULT;
+                                     });
+                               } else {
+                                 keyText.clear();
+                                 computeResult();
+                                 state = RESULT;
+                               }
+                             });
     }
     return;
   }
 
   if (state == RESULT) {
     if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
-      state = SELECT_CIPHER; requestUpdate();
+      state = SELECT_CIPHER;
+      requestUpdate();
     }
     return;
   }
@@ -190,8 +220,10 @@ void CipherActivity::render(RenderLock&&) {
   const int pageWidth = renderer.getScreenWidth();
   GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Cipher Tools");
 
-  if (state == SELECT_CIPHER) renderSelect();
-  else if (state == RESULT) renderResult();
+  if (state == SELECT_CIPHER)
+    renderSelect();
+  else if (state == RESULT)
+    renderResult();
 
   renderer.displayBuffer();
 }
@@ -204,7 +236,7 @@ void CipherActivity::renderSelect() const {
   const int listH = pageHeight - listTop - metrics.buttonHintsHeight;
 
   GUI.drawList(renderer, Rect{0, listTop, pageWidth, listH}, CIPHER_COUNT, cipherIndex,
-    [](int i) -> std::string { return CipherActivity::CIPHER_NAMES[i]; });
+               [](int i) -> std::string { return CipherActivity::CIPHER_NAMES[i]; });
 
   const auto labels = mappedInput.mapLabels("Back", "Select", "^", "v");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);

@@ -16,11 +16,7 @@
 // ----------------------------------------------------------------
 
 const char* const CalculatorActivity::KEY_LABELS[GRID_ROWS][GRID_COLS] = {
-  {"C",  "+/-", "%",  "/"},
-  {"7",  "8",   "9",  "x"},
-  {"4",  "5",   "6",  "-"},
-  {"1",  "2",   "3",  "+"},
-  {"0",  ".",   "<",  "="},
+    {"C", "+/-", "%", "/"}, {"7", "8", "9", "x"}, {"4", "5", "6", "-"}, {"1", "2", "3", "+"}, {"0", ".", "<", "="},
 };
 
 // ----------------------------------------------------------------
@@ -29,8 +25,7 @@ const char* const CalculatorActivity::KEY_LABELS[GRID_ROWS][GRID_COLS] = {
 
 void CalculatorActivity::fillDithered25(GfxRenderer& r, int x, int y, int w, int h) {
   for (int dy = 0; dy < h; dy += 2)
-    for (int dx = ((dy / 2) % 2); dx < w; dx += 2)
-      r.drawPixel(x + dx, y + dy, true);
+    for (int dx = ((dy / 2) % 2); dx < w; dx += 2) r.drawPixel(x + dx, y + dy, true);
 }
 
 // ----------------------------------------------------------------
@@ -39,25 +34,23 @@ void CalculatorActivity::fillDithered25(GfxRenderer& r, int x, int y, int w, int
 
 void CalculatorActivity::onEnter() {
   Activity::onEnter();
-  accumulator    = 0.0;
-  currentValue   = 0.0;
-  pendingOp      = '\0';
-  hasDecimal     = false;
-  decimalPlaces  = 0;
-  newInput       = true;
-  showingResult  = false;
+  accumulator = 0.0;
+  currentValue = 0.0;
+  pendingOp = '\0';
+  hasDecimal = false;
+  decimalPlaces = 0;
+  newInput = true;
+  showingResult = false;
   strncpy(displayStr, "0", sizeof(displayStr));
   displayStr[sizeof(displayStr) - 1] = '\0';
   expressionStr[0] = '\0';
-  cursorRow      = 3;
-  cursorCol      = 0;
-  historyCount   = 0;
+  cursorRow = 3;
+  cursorCol = 0;
+  historyCount = 0;
   requestUpdate();
 }
 
-void CalculatorActivity::onExit() {
-  Activity::onExit();
-}
+void CalculatorActivity::onExit() { Activity::onExit(); }
 
 // ----------------------------------------------------------------
 // Input logic
@@ -99,10 +92,18 @@ void CalculatorActivity::loop() {
 void CalculatorActivity::pressKey(int row, int col) {
   if (row == 0) {
     switch (col) {
-      case 0: performClear();    return;
-      case 1: performNegate();   return;
-      case 2: performPercent();  return;
-      case 3: inputOperation('/'); return;
+      case 0:
+        performClear();
+        return;
+      case 1:
+        performNegate();
+        return;
+      case 2:
+        performPercent();
+        return;
+      case 3:
+        inputOperation('/');
+        return;
     }
   }
   if (row >= 1 && row <= 3) {
@@ -115,19 +116,30 @@ void CalculatorActivity::pressKey(int row, int col) {
     if (col == 3) {
       // row1='*', row2='-', row3='+'
       char op;
-      if (row == 1) op = '*';
-      else if (row == 2) op = '-';
-      else op = '+';
+      if (row == 1)
+        op = '*';
+      else if (row == 2)
+        op = '-';
+      else
+        op = '+';
       inputOperation(op);
       return;
     }
   }
   if (row == 4) {
     switch (col) {
-      case 0: inputDigit('0');   return;
-      case 1: inputDecimal();    return;
-      case 2: performBackspace(); return;
-      case 3: performEquals();   return;
+      case 0:
+        inputDigit('0');
+        return;
+      case 1:
+        inputDecimal();
+        return;
+      case 2:
+        performBackspace();
+        return;
+      case 3:
+        performEquals();
+        return;
     }
   }
 }
@@ -136,9 +148,9 @@ void CalculatorActivity::inputDigit(char digit) {
   if (newInput || showingResult) {
     strncpy(displayStr, "0", sizeof(displayStr));
     displayStr[1] = '\0';
-    hasDecimal    = false;
+    hasDecimal = false;
     decimalPlaces = 0;
-    newInput      = false;
+    newInput = false;
     showingResult = false;
   }
   // Replace leading "0" unless it's before decimal
@@ -148,7 +160,7 @@ void CalculatorActivity::inputDigit(char digit) {
     displayStr[0] = digit;
     displayStr[1] = '\0';
   } else {
-    displayStr[len]     = digit;
+    displayStr[len] = digit;
     displayStr[len + 1] = '\0';
   }
   if (hasDecimal) decimalPlaces++;
@@ -160,17 +172,17 @@ void CalculatorActivity::inputDecimal() {
   if (newInput || showingResult) {
     strncpy(displayStr, "0", sizeof(displayStr));
     displayStr[1] = '\0';
-    newInput      = false;
+    newInput = false;
     showingResult = false;
     decimalPlaces = 0;
   }
   int len = static_cast<int>(strlen(displayStr));
   if (len >= 14) return;
-  displayStr[len]     = '.';
+  displayStr[len] = '.';
   displayStr[len + 1] = '\0';
-  hasDecimal    = true;
+  hasDecimal = true;
   decimalPlaces = 0;
-  currentValue  = atof(displayStr);
+  currentValue = atof(displayStr);
 }
 
 void CalculatorActivity::inputOperation(char op) {
@@ -182,10 +194,10 @@ void CalculatorActivity::inputOperation(char op) {
   } else {
     accumulator = currentValue;
   }
-  pendingOp     = op;
-  newInput      = true;
+  pendingOp = op;
+  newInput = true;
   showingResult = false;
-  hasDecimal    = false;
+  hasDecimal = false;
   decimalPlaces = 0;
 
   // Build expression string: "12 +"
@@ -206,27 +218,27 @@ void CalculatorActivity::performEquals() {
 
   addHistory(histExpr, result);
 
-  accumulator   = result;
-  currentValue  = result;
-  pendingOp     = '\0';
-  hasDecimal    = false;
+  accumulator = result;
+  currentValue = result;
+  pendingOp = '\0';
+  hasDecimal = false;
   decimalPlaces = 0;
-  newInput      = true;
+  newInput = true;
   showingResult = true;
   expressionStr[0] = '\0';
   updateDisplayStr();
 }
 
 void CalculatorActivity::performClear() {
-  accumulator    = 0.0;
-  currentValue   = 0.0;
-  pendingOp      = '\0';
-  hasDecimal     = false;
-  decimalPlaces  = 0;
-  newInput       = true;
-  showingResult  = false;
+  accumulator = 0.0;
+  currentValue = 0.0;
+  pendingOp = '\0';
+  hasDecimal = false;
+  decimalPlaces = 0;
+  newInput = true;
+  showingResult = false;
   strncpy(displayStr, "0", sizeof(displayStr));
-  displayStr[1]    = '\0';
+  displayStr[1] = '\0';
   expressionStr[0] = '\0';
 }
 
@@ -236,13 +248,13 @@ void CalculatorActivity::performBackspace() {
   if (len <= 1) {
     strncpy(displayStr, "0", sizeof(displayStr));
     displayStr[1] = '\0';
-    currentValue  = 0.0;
-    hasDecimal    = false;
+    currentValue = 0.0;
+    hasDecimal = false;
     decimalPlaces = 0;
     return;
   }
   if (displayStr[len - 1] == '.') {
-    hasDecimal    = false;
+    hasDecimal = false;
     decimalPlaces = 0;
   } else if (hasDecimal) {
     if (decimalPlaces > 0) decimalPlaces--;
@@ -264,16 +276,14 @@ void CalculatorActivity::performNegate() {
 void CalculatorActivity::updateDisplayStr() {
   // Check if the value is an integer representable without fractional part
   double intPart;
-  if (modf(currentValue, &intPart) == 0.0 &&
-      currentValue >= -9999999999999.0 &&
-      currentValue <=  9999999999999.0) {
+  if (modf(currentValue, &intPart) == 0.0 && currentValue >= -9999999999999.0 && currentValue <= 9999999999999.0) {
     snprintf(displayStr, sizeof(displayStr), "%lld", static_cast<long long>(intPart));
   } else {
     snprintf(displayStr, sizeof(displayStr), "%.10g", currentValue);
   }
   // Safety truncate
   displayStr[15] = '\0';
-  hasDecimal    = (strchr(displayStr, '.') != nullptr);
+  hasDecimal = (strchr(displayStr, '.') != nullptr);
   decimalPlaces = 0;
   if (hasDecimal) {
     const char* dot = strchr(displayStr, '.');
@@ -283,11 +293,16 @@ void CalculatorActivity::updateDisplayStr() {
 
 double CalculatorActivity::executeOp(double a, double b, char op) {
   switch (op) {
-    case '+': return a + b;
-    case '-': return a - b;
-    case '*': return a * b;
-    case '/': return (b == 0.0) ? 0.0 : a / b;
-    default:  return b;
+    case '+':
+      return a + b;
+    case '-':
+      return a - b;
+    case '*':
+      return a * b;
+    case '/':
+      return (b == 0.0) ? 0.0 : a / b;
+    default:
+      return b;
   }
 }
 
@@ -313,22 +328,22 @@ void CalculatorActivity::addHistory(const char* expr, double result) {
 // ----------------------------------------------------------------
 
 // Layout constants (portrait 480x800)
-static constexpr int HISTORY_TOP        = 5;
-static constexpr int HISTORY_AREA_H     = 96;   // ~3 small-font rows @ 32px each
-static constexpr int EXPRESSION_Y       = 104;
-static constexpr int DISPLAY_TOP        = 122;
-static constexpr int DISPLAY_H          = 64;
-static constexpr int SEPARATOR_Y        = 194;
-static constexpr int KEYPAD_TOP         = 206;
-static constexpr int KEYPAD_BOTTOM      = 760;
-static constexpr int KEYPAD_MARGIN_H    = 6;
-static constexpr int KEYPAD_MARGIN_V    = 4;
-static constexpr int KEY_GAP            = 3;
+static constexpr int HISTORY_TOP = 5;
+static constexpr int HISTORY_AREA_H = 96;  // ~3 small-font rows @ 32px each
+static constexpr int EXPRESSION_Y = 104;
+static constexpr int DISPLAY_TOP = 122;
+static constexpr int DISPLAY_H = 64;
+static constexpr int SEPARATOR_Y = 194;
+static constexpr int KEYPAD_TOP = 206;
+static constexpr int KEYPAD_BOTTOM = 760;
+static constexpr int KEYPAD_MARGIN_H = 6;
+static constexpr int KEYPAD_MARGIN_V = 4;
+static constexpr int KEY_GAP = 3;
 
 void CalculatorActivity::render(RenderLock&&) {
   renderer.clearScreen();
 
-  const auto& metrics  = UITheme::getInstance().getMetrics();
+  const auto& metrics = UITheme::getInstance().getMetrics();
   const auto pageWidth = renderer.getScreenWidth();
 
   GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Calculator");
@@ -337,7 +352,7 @@ void CalculatorActivity::render(RenderLock&&) {
   drawDisplay();
 
   // Double separator line
-  renderer.drawLine(8, SEPARATOR_Y,     pageWidth - 8, SEPARATOR_Y,     true);
+  renderer.drawLine(8, SEPARATOR_Y, pageWidth - 8, SEPARATOR_Y, true);
   renderer.drawLine(8, SEPARATOR_Y + 2, pageWidth - 8, SEPARATOR_Y + 2, true);
 
   drawKeypad();
@@ -351,13 +366,13 @@ void CalculatorActivity::render(RenderLock&&) {
 void CalculatorActivity::drawHistory() {
   // Show last 3 history entries in SMALL_FONT
   const auto pageWidth = renderer.getScreenWidth();
-  const int  show      = (historyCount < 3) ? historyCount : 3;
-  const int  lineH     = 18;   // small font line height estimate
-  const int  startIdx  = historyCount - show;
+  const int show = (historyCount < 3) ? historyCount : 3;
+  const int lineH = 18;  // small font line height estimate
+  const int startIdx = historyCount - show;
 
   for (int i = 0; i < show; i++) {
-    const HistoryEntry& e    = history[startIdx + i];
-    int                 y    = HISTORY_TOP + i * (lineH * 2 + 2);
+    const HistoryEntry& e = history[startIdx + i];
+    int y = HISTORY_TOP + i * (lineH * 2 + 2);
 
     // Expression left-aligned
     renderer.drawText(SMALL_FONT_ID, 8, y, e.expression);
@@ -365,8 +380,7 @@ void CalculatorActivity::drawHistory() {
     // Result right-aligned on the next line
     char resBuf[24];
     double intPart;
-    if (modf(e.result, &intPart) == 0.0 &&
-        e.result >= -9999999999.0 && e.result <= 9999999999.0) {
+    if (modf(e.result, &intPart) == 0.0 && e.result >= -9999999999.0 && e.result <= 9999999999.0) {
       snprintf(resBuf, sizeof(resBuf), "= %lld", static_cast<long long>(intPart));
     } else {
       snprintf(resBuf, sizeof(resBuf), "= %.8g", e.result);
@@ -404,12 +418,12 @@ void CalculatorActivity::drawDisplay() {
 }
 
 void CalculatorActivity::drawKeypad() {
-  const auto pageWidth  = renderer.getScreenWidth();
-  const int  availW     = pageWidth - 2 * KEYPAD_MARGIN_H;
-  const int  availH     = KEYPAD_BOTTOM - KEYPAD_TOP - 2 * KEYPAD_MARGIN_V;
-  const int  keyW       = (availW - (GRID_COLS - 1) * KEY_GAP) / GRID_COLS;
-  const int  keyH       = (availH - (GRID_ROWS - 1) * KEY_GAP) / GRID_ROWS;
-  const int  fontH      = renderer.getTextHeight(UI_10_FONT_ID);
+  const auto pageWidth = renderer.getScreenWidth();
+  const int availW = pageWidth - 2 * KEYPAD_MARGIN_H;
+  const int availH = KEYPAD_BOTTOM - KEYPAD_TOP - 2 * KEYPAD_MARGIN_V;
+  const int keyW = (availW - (GRID_COLS - 1) * KEY_GAP) / GRID_COLS;
+  const int keyH = (availH - (GRID_ROWS - 1) * KEY_GAP) / GRID_ROWS;
+  const int fontH = renderer.getTextHeight(UI_10_FONT_ID);
 
   for (int row = 0; row < GRID_ROWS; row++) {
     for (int col = 0; col < GRID_COLS; col++) {
@@ -418,7 +432,7 @@ void CalculatorActivity::drawKeypad() {
 
       const bool selected = (row == cursorRow && col == cursorCol);
       // Operation keys: rightmost column (col==3) or top row ops (row==0, col>=1)
-      const bool isOp     = (col == 3) || (row == 0 && col >= 1);
+      const bool isOp = (col == 3) || (row == 0 && col >= 1);
 
       if (selected) {
         // Solid black fill; label will be drawn in white (false = white pixel)

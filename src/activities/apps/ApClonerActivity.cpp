@@ -1,16 +1,16 @@
 #include "ApClonerActivity.h"
 
-#include <WiFi.h>
-#include <esp_wifi.h>
 #include <I18n.h>
 #include <Logging.h>
+#include <WiFi.h>
+#include <esp_wifi.h>
 
 #include <algorithm>
 
 #include "MappedInputManager.h"
-#include "util/RadioManager.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
+#include "util/RadioManager.h"
 
 // ---------------------------------------------------------------------------
 // Lifecycle
@@ -104,14 +104,22 @@ void ApClonerActivity::stopClone() {
 
 const char* ApClonerActivity::encryptionString(uint8_t type) {
   switch (type) {
-    case WIFI_AUTH_OPEN:         return "Open";
-    case WIFI_AUTH_WEP:          return "WEP";
-    case WIFI_AUTH_WPA_PSK:      return "WPA";
-    case WIFI_AUTH_WPA2_PSK:     return "WPA2";
-    case WIFI_AUTH_WPA_WPA2_PSK: return "WPA/2";
-    case WIFI_AUTH_WPA3_PSK:     return "WPA3";
-    case WIFI_AUTH_WPA2_WPA3_PSK:return "WPA2/3";
-    default:                     return "?";
+    case WIFI_AUTH_OPEN:
+      return "Open";
+    case WIFI_AUTH_WEP:
+      return "WEP";
+    case WIFI_AUTH_WPA_PSK:
+      return "WPA";
+    case WIFI_AUTH_WPA2_PSK:
+      return "WPA2";
+    case WIFI_AUTH_WPA_WPA2_PSK:
+      return "WPA/2";
+    case WIFI_AUTH_WPA3_PSK:
+      return "WPA3";
+    case WIFI_AUTH_WPA2_WPA3_PSK:
+      return "WPA2/3";
+    default:
+      return "?";
   }
 }
 
@@ -217,10 +225,8 @@ void ApClonerActivity::render(RenderLock&&) {
           [this](int index) -> std::string { return aps[index].ssid; },
           [this](int index) -> std::string {
             char buf[40];
-            snprintf(buf, sizeof(buf), "Ch%d  %ddBm  %s",
-                     static_cast<int>(aps[index].channel),
-                     static_cast<int>(aps[index].rssi),
-                     encryptionString(aps[index].encType));
+            snprintf(buf, sizeof(buf), "Ch%d  %ddBm  %s", static_cast<int>(aps[index].channel),
+                     static_cast<int>(aps[index].rssi), encryptionString(aps[index].encType));
             return buf;
           });
     }

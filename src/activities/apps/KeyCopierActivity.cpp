@@ -2,6 +2,7 @@
 
 #include <HalStorage.h>
 #include <I18n.h>
+
 #include <cstring>
 
 #include "components/UITheme.h"
@@ -43,18 +44,30 @@ void KeyCopierActivity::loop() {
       return;
     }
     if (mappedInput.wasReleased(MappedInputManager::Button::Left)) {
-      if (cutIndex > 0) { cutIndex--; requestUpdate(); }
+      if (cutIndex > 0) {
+        cutIndex--;
+        requestUpdate();
+      }
     }
     if (mappedInput.wasReleased(MappedInputManager::Button::Right)) {
-      if (cutIndex < kt().numCuts - 1) { cutIndex++; requestUpdate(); }
+      if (cutIndex < kt().numCuts - 1) {
+        cutIndex++;
+        requestUpdate();
+      }
     }
     if (mappedInput.wasReleased(MappedInputManager::Button::Up)) {
       int& c = cuts[cutIndex];
-      if (c < kt().maxDepth) { c++; requestUpdate(); }
+      if (c < kt().maxDepth) {
+        c++;
+        requestUpdate();
+      }
     }
     if (mappedInput.wasReleased(MappedInputManager::Button::Down)) {
       int& c = cuts[cutIndex];
-      if (c > kt().minDepth) { c--; requestUpdate(); }
+      if (c > kt().minDepth) {
+        c--;
+        requestUpdate();
+      }
     }
     if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
       saveKey();
@@ -221,9 +234,9 @@ void KeyCopierActivity::drawKey() const {
     // (cx1, bladeTop) -- flat shoulder right
 
     int slopeStart = cx0 + sw;
-    int valleyLeft  = slopeStart + slopeW;
+    int valleyLeft = slopeStart + slopeW;
     int valleyRight = valleyLeft + valleyW;
-    int slopeEnd    = valleyRight + sw;
+    int slopeEnd = valleyRight + sw;
 
     // Clamp slopeEnd to cx1 to avoid overdraw
     if (slopeEnd > cx1) slopeEnd = cx1;
@@ -311,24 +324,20 @@ void KeyCopierActivity::drawTypeMenu() const {
   const auto pageWidth = renderer.getScreenWidth();
   const auto& metrics = UITheme::getInstance().getMetrics();
 
-  GUI.drawHeader(renderer,
-                 Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 "Key Type");
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Key Type");
 
   const int listTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
   const int listH = renderer.getScreenHeight() - listTop - metrics.buttonHintsHeight - 4;
 
-  GUI.drawList(renderer, Rect{0, listTop, pageWidth, listH},
-               KEY_TYPE_COUNT, typeSelectIndex,
-               [](int i) -> std::string { return KeyCopierActivity::KEY_TYPES[i].name; },
-               [](int i) -> std::string {
-                 char buf[32];
-                 snprintf(buf, sizeof(buf), "%d cuts, depth %d-%d",
-                          KeyCopierActivity::KEY_TYPES[i].numCuts,
-                          KeyCopierActivity::KEY_TYPES[i].minDepth,
-                          KeyCopierActivity::KEY_TYPES[i].maxDepth);
-                 return buf;
-               });
+  GUI.drawList(
+      renderer, Rect{0, listTop, pageWidth, listH}, KEY_TYPE_COUNT, typeSelectIndex,
+      [](int i) -> std::string { return KeyCopierActivity::KEY_TYPES[i].name; },
+      [](int i) -> std::string {
+        char buf[32];
+        snprintf(buf, sizeof(buf), "%d cuts, depth %d-%d", KeyCopierActivity::KEY_TYPES[i].numCuts,
+                 KeyCopierActivity::KEY_TYPES[i].minDepth, KeyCopierActivity::KEY_TYPES[i].maxDepth);
+        return buf;
+      });
 
   const auto labels = mappedInput.mapLabels("Back", "Select", "^", "v");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
@@ -407,9 +416,7 @@ void KeyCopierActivity::render(RenderLock&&) {
   }
 
   // EDIT or SAVED state
-  GUI.drawHeader(renderer,
-                 Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight},
-                 "Key Copier", kt().name);
+  GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "Key Copier", kt().name);
 
   drawKey();
   drawCutSelector();

@@ -388,8 +388,8 @@ void SleepActivity::renderStatusSleepScreen() const {
 
   char line1[48], line2[48], line3[48];
   snprintf(line1, sizeof(line1), "WiFi: off  |  BLE: off");
-  snprintf(line2, sizeof(line2), "Uptime: %luh %lum  |  Heap: %luK",
-           uptime / 3600, (uptime % 3600) / 60, (unsigned long)(esp_get_free_heap_size() / 1024));
+  snprintf(line2, sizeof(line2), "Uptime: %luh %lum  |  Heap: %luK", uptime / 3600, (uptime % 3600) / 60,
+           (unsigned long)(esp_get_free_heap_size() / 1024));
   snprintf(line3, sizeof(line3), "SD: available");
 
   renderer.drawCenteredText(SMALL_FONT_ID, infoY + 5, line1);

@@ -32,8 +32,8 @@ class UnitConverterActivity final : public Activity {
   struct UnitDef {
     const char* name;
     const char* abbrev;
-    double toBase;   // multiply by this to convert to base unit
-    double offset;   // for temperature: offset after multiplication
+    double toBase;  // multiply by this to convert to base unit
+    double offset;  // for temperature: offset after multiplication
   };
 
   struct Category {

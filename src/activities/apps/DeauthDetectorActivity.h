@@ -1,8 +1,8 @@
 #pragma once
-#include <cstdint>
-
 #include <freertos/FreeRTOS.h>
 #include <freertos/portmacro.h>
+
+#include <cstdint>
 
 #include "activities/Activity.h"
 #include "util/ButtonNavigator.h"
@@ -39,7 +39,7 @@ class DeauthDetectorActivity final : public Activity {
   struct DeauthEvent {
     uint8_t srcMac[6];
     uint8_t dstMac[6];
-    uint8_t type;   // 0 = deauth, 1 = disassoc
+    uint8_t type;  // 0 = deauth, 1 = disassoc
     int8_t rssi;
   };
   static constexpr int EVENT_LOG_SIZE = 20;

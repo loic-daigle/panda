@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <vector>
+
 #include "activities/Activity.h"
 #include "util/ButtonNavigator.h"
 

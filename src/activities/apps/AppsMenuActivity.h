@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+
 #include "activities/Activity.h"
 #include "util/ButtonNavigator.h"
 
@@ -35,9 +36,9 @@ class AppsMenuActivity final : public Activity {
   bool clockAvailable = false;
 
   // Badge counts (refreshed with system info)
-  int badgeRecon = 0;       // tracker alerts count
-  int badgeSecurity = -1;   // 0 = ok, -1 = PIN not set (show "!")
-  int badgeSystem = 0;      // firmware update available
+  int badgeRecon = 0;      // tracker alerts count
+  int badgeSecurity = -1;  // 0 = ok, -1 = PIN not set (show "!")
+  int badgeSystem = 0;     // firmware update available
 
   void refreshSystemInfo();
 
@@ -48,5 +49,4 @@ class AppsMenuActivity final : public Activity {
   // Tile rendering
   void drawTile(int index, int x, int y, int w, int h, bool selected) const;
   void drawStatusBar() const;
-
 };

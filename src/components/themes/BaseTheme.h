@@ -232,8 +232,8 @@ class BaseTheme {
   // label          — caption drawn above the dots (e.g. "SCANNING..."). May be nullptr to omit.
   // frame          — animation frame index. Caller advances it on a 600ms timer.
   //                  frame % 3 selects which dot is filled; the others are outlined.
-  virtual void drawSpinner(const GfxRenderer& renderer, int centerX, int centerY,
-                           const char* label, int frame) const;
+  virtual void drawSpinner(const GfxRenderer& renderer, int centerX, int centerY, const char* label, int frame) const;
 
-  static bool drawArrowIfNeeded(const GfxRenderer& renderer, const char* label, int cx, int cy, int size = 5, bool black = true);
+  static bool drawArrowIfNeeded(const GfxRenderer& renderer, const char* label, int cx, int cy, int size = 5,
+                                bool black = true);
 };
