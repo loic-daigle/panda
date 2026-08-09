@@ -1,5 +1,6 @@
 #include "CalendarActivity.h"
 
+#include <Arduino.h>
 #include <ArduinoJson.h>
 #include <GfxRenderer.h>
 #include <HalStorage.h>
@@ -8,6 +9,7 @@
 #include <algorithm>
 #include <cstring>
 
+#include "CrossPointSettings.h"
 #include "MappedInputManager.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
@@ -85,6 +87,7 @@ void CalendarActivity::handleGbJson(const std::string& jsonPart) {
   }
 
   const char* t = doc["t"] | "";
+  LOG_DBG("CAL", "GB() message type: \"%s\"", t);
 
   if (strcmp(t, "force_calendar_sync_start") == 0) {
     sendForceCalendarSync();
@@ -221,10 +224,31 @@ void CalendarActivity::loop() {
       requestUpdate();
     }
 
-    if (millis() - lastSpinnerUpdate >= 600) {
+    // SYNC_CONNECTED can sit here for minutes waiting on Gadgetbridge's own
+    // decision to send force_calendar_sync_start -- a full e-ink refresh
+    // every 600ms for that whole wait is both hard on the display and (per a
+    // real-device capture where free heap dropped from tens of KB to ~1.5KB
+    // over ~14 minutes of continuous re-rendering, eventually failing to
+    // parse the very message we were waiting for with a NoMemory error) a
+    // prime suspect for whatever is slowly eating heap during the wait.
+    // Advertising is normally short, so keep it snappy; slow the connected
+    // wait down substantially as a mitigation while the real source is
+    // narrowed down (see the heap log below).
+    const unsigned long spinnerIntervalMs = (state == SYNC_CONNECTED) ? 3000 : 600;
+    if (millis() - lastSpinnerUpdate >= spinnerIntervalMs) {
       lastSpinnerUpdate = millis();
       spinnerFrame = (spinnerFrame + 1) % 3;
       requestUpdate();
+    }
+
+    // Targeted, higher-frequency heap sample (main.cpp already logs this
+    // every 10s system-wide) so a future capture can correlate the decline
+    // precisely against render-tick count / BLE traffic during this specific
+    // screen, rather than just elapsed time.
+    if (millis() - lastHeapLogMs >= 5000) {
+      lastHeapLogMs = millis();
+      LOG_DBG("CAL", "heap during sync: free=%u maxAlloc=%u", (unsigned)ESP.getFreeHeap(),
+              (unsigned)ESP.getMaxAllocHeap());
     }
 
     if (bleServer.consumePendingDisconnect()) {
@@ -241,8 +265,16 @@ void CalendarActivity::loop() {
       return;
     }
 
-    if (state == SYNC_ADVERTISING && millis() - syncStartMs > SYNC_TIMEOUT_MS) {
-      syncResultMessage = "No connection - check Gadgetbridge and try again";
+    // Applies in both ADVERTISING and CONNECTED: Gadgetbridge only requests
+    // calendar sync (force_calendar_sync_start) from its own onSetTime()
+    // callback, not automatically on every connect, and only replies to our
+    // response if "Sync calendar" is enabled for this device in Gadgetbridge
+    // -- so a connected-but-idle session (0 events, no further traffic) is a
+    // real possibility, not just a slow advertise. Time out either way rather
+    // than waiting indefinitely for Gadgetbridge to decide to disconnect.
+    if (millis() - syncStartMs > SYNC_TIMEOUT_MS) {
+      syncResultMessage = (state == SYNC_ADVERTISING) ? "No connection - check Gadgetbridge and try again"
+                                                        : "Timed out - no calendar sync request from phone";
       stopSync();
       state = SYNC_DONE;
       requestUpdate();
@@ -272,12 +304,18 @@ void CalendarActivity::loop() {
 
 // ---- Rendering ----
 
+void CalendarActivity::localBrokenDownTime(time_t utcTimestamp, struct tm& out) {
+  const int offsetQuarterHours = static_cast<int>(SETTINGS.clockUtcOffsetQ) - 48;
+  const time_t shifted = utcTimestamp + static_cast<time_t>(offsetQuarterHours) * 15 * 60;
+  gmtime_r(&shifted, &out);
+}
+
 std::string CalendarActivity::relativeDayLabel(time_t dayStart) {
   time_t now = time(nullptr);
   struct tm nowTm;
   struct tm dayTm;
-  localtime_r(&now, &nowTm);
-  localtime_r(&dayStart, &dayTm);
+  localBrokenDownTime(now, nowTm);
+  localBrokenDownTime(dayStart, dayTm);
 
   const int nowDay = nowTm.tm_year * 1000 + nowTm.tm_yday;
   const int thatDay = dayTm.tm_year * 1000 + dayTm.tm_yday;
@@ -328,120 +366,48 @@ void CalendarActivity::render(RenderLock&&) {
   renderer.displayBuffer();
 }
 
-// Agenda-style list: a "Sync with Phone" pill at the top, then events
-// grouped under a small-caps day header ("TODAY", "TOMORROW", "WED 14 JAN"),
-// closer to a real calendar app than a flat row list. Row heights differ
-// between the pill/header/event rows, so scroll position is recomputed each
-// frame from the selected row's cumulative offset rather than tracked as a
-// persisted `int scrollOffset` -- simpler, and always correct even if the
-// event list changes underneath the current selection.
+// Uses the same GUI.drawList component every other list screen in this app
+// is built on (settings, EventLogger, HabitTracker, WifiScanner, ...) rather
+// than a bespoke agenda layout -- consistent look-and-feel for free, and
+// row-height/subtitle spacing that's already correct and battle-tested
+// instead of hand-computed here (a previous hand-rolled version had a real
+// row-height bug: fixed-height rows overlapped the next row whenever an
+// event's location line needed extra space). "Sync with Phone" is just the
+// first row, matching how HabitTrackerActivity's own edit list puts
+// "+ Add Habit" as a plain row rather than a separate special control.
 void CalendarActivity::renderListState() const {
   const auto& metrics = UITheme::getInstance().getMetrics();
   const int pageWidth = renderer.getScreenWidth();
   const int pageHeight = renderer.getScreenHeight();
-  const int pad = metrics.contentSidePadding;
-  const int listTop = metrics.topPadding + metrics.headerHeight + 6;
-  const int listBottom = pageHeight - metrics.buttonHintsHeight;
-  const int listH = listBottom - listTop;
+  const int listTop = metrics.topPadding + metrics.headerHeight;
+  const int listH = pageHeight - listTop - metrics.buttonHintsHeight;
 
-  const int pillH = 40;
-  const int headerH = 22;
-  const int eventH = 40;
-
-  struct Row {
-    enum Kind { Pill, DayHeader, Event } kind;
-    int selectableIndex = -1;  // matches `selectedIndex` for Pill/Event rows
-    int eventIdx = -1;         // index into data.events, for Event rows
-    std::string label;         // day label, for DayHeader rows
-    int height = 0;
-    int top = 0;  // filled in below once every row's height is known
-  };
-
-  std::vector<Row> rows;
-  rows.push_back({Row::Pill, 0, -1, "", pillH, 0});
-
-  int prevDayKey = INT32_MIN;
-  for (size_t i = 0; i < sortedOrder.size(); i++) {
-    const CalendarEvent& ev = data.events[sortedOrder[i]];
-    struct tm t;
-    localtime_r(&ev.timestamp, &t);
-    const int dayKey = t.tm_year * 1000 + t.tm_yday;
-    if (dayKey != prevDayKey) {
-      rows.push_back({Row::DayHeader, -1, -1, relativeDayLabel(ev.timestamp), headerH, 0});
-      prevDayKey = dayKey;
-    }
-    rows.push_back({Row::Event, 1 + static_cast<int>(i), static_cast<int>(sortedOrder[i]), "", eventH, 0});
-  }
-
-  int cumulative = 0;
-  int selectedTop = 0, selectedHeight = pillH;
-  for (auto& row : rows) {
-    row.top = cumulative;
-    if (row.selectableIndex == selectedIndex) {
-      selectedTop = row.top;
-      selectedHeight = row.height;
-    }
-    cumulative += row.height;
-  }
-  const int totalHeight = cumulative;
-
-  // Center the selected row in the viewport when the agenda is taller than
-  // the screen; otherwise just start at the top.
-  int scrollTop = 0;
-  if (totalHeight > listH) {
-    scrollTop = selectedTop + selectedHeight / 2 - listH / 2;
-    scrollTop = std::max(0, std::min(scrollTop, totalHeight - listH));
-  }
-
-  for (const auto& row : rows) {
-    const int y = listTop + row.top - scrollTop;
-    if (y + row.height < listTop || y > listBottom) continue;  // off-screen, skip drawing
-
-    const bool selected = row.selectableIndex >= 0 && row.selectableIndex == selectedIndex;
-
-    if (row.kind == Row::Pill) {
-      const int pillY = y + 4;
-      const int pillHeight = row.height - 8;
-      if (selected) {
-        renderer.fillRoundedRect(pad, pillY, pageWidth - pad * 2, pillHeight, 10, Color::Black);
-      } else {
-        renderer.drawRoundedRect(pad, pillY, pageWidth - pad * 2, pillHeight, 2, 10, true);
-      }
-      renderer.drawText(UI_10_FONT_ID, pad + 14, pillY + 8, "Sync with Phone", !selected, EpdFontFamily::BOLD);
-      renderer.drawText(SMALL_FONT_ID, pad + 14, pillY + 8 + renderer.getLineHeight(UI_10_FONT_ID),
-                        "Pulls events from Gadgetbridge", !selected);
-    } else if (row.kind == Row::DayHeader) {
-      const int textY = y + row.height - renderer.getLineHeight(SMALL_FONT_ID) - 2;
-      renderer.drawText(SMALL_FONT_ID, pad, textY, row.label.c_str(), true, EpdFontFamily::BOLD);
-      const int lineY = y + row.height - 2;
-      const int labelW = renderer.getTextWidth(SMALL_FONT_ID, row.label.c_str());
-      renderer.drawLine(pad + labelW + 10, lineY - 4, pageWidth - pad, lineY - 4, true);
-    } else {
-      const CalendarEvent& ev = data.events[row.eventIdx];
-      if (selected) renderer.fillRect(0, y, pageWidth, row.height, true);
-
-      char timeBuf[8];
-      if (ev.allDay) {
-        snprintf(timeBuf, sizeof(timeBuf), "ALL");
-      } else {
+  const int itemCount = 1 + static_cast<int>(sortedOrder.size());
+  GUI.drawList(
+      renderer, Rect{0, listTop, pageWidth, listH}, itemCount, selectedIndex,
+      [this](int i) -> std::string {
+        if (i == 0) return "Sync with Phone";
+        return data.events[sortedOrder[i - 1]].title;
+      },
+      [this](int i) -> std::string {
+        if (i == 0) return "Pulls events from Gadgetbridge";
+        const CalendarEvent& ev = data.events[sortedOrder[i - 1]];
+        if (ev.allDay) return ev.location[0] != '\0' ? std::string("All day - ") + ev.location : "All day";
         struct tm t;
-        localtime_r(&ev.timestamp, &t);
-        snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d", t.tm_hour, t.tm_min);
-      }
-      constexpr int timeColW = 46;
-      renderer.drawText(SMALL_FONT_ID, pad, y + 6, timeBuf, !selected);
-
-      const int titleX = pad + timeColW;
-      const int titleMaxW = pageWidth - titleX - pad;
-      std::string title = renderer.truncatedText(UI_10_FONT_ID, ev.title, titleMaxW);
-      renderer.drawText(UI_10_FONT_ID, titleX, y + 4, title.c_str(), !selected);
-      if (ev.location[0] != '\0') {
-        std::string loc = renderer.truncatedText(SMALL_FONT_ID, ev.location, titleMaxW);
-        renderer.drawText(SMALL_FONT_ID, titleX, y + 4 + renderer.getLineHeight(UI_10_FONT_ID), loc.c_str(),
-                          !selected);
-      }
-    }
-  }
+        localBrokenDownTime(ev.timestamp, t);
+        char buf[48];
+        if (ev.location[0] != '\0') {
+          snprintf(buf, sizeof(buf), "%02d:%02d - %s", t.tm_hour, t.tm_min, ev.location);
+        } else {
+          snprintf(buf, sizeof(buf), "%02d:%02d", t.tm_hour, t.tm_min);
+        }
+        return buf;
+      },
+      nullptr,  // rowIcon
+      [this](int i) -> std::string {
+        if (i == 0) return "";
+        return relativeDayLabel(data.events[sortedOrder[i - 1]].timestamp);
+      });
 
   const auto labels = mappedInput.mapLabels("Back", "Select", "^", "v");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
@@ -470,27 +436,27 @@ void CalendarActivity::renderDetailState() const {
   renderer.drawLine(pad, y, pageWidth - pad, y, true);
   y += 12;
 
+  // Start-end range rather than a separate start time + duration-in-minutes
+  // field: a glance at "09:00 - 10:30" answers "when does this end" directly,
+  // where "45 min" needs the reader to do the arithmetic themselves.
   char timeBuf[24];
   if (ev.allDay) {
-    struct tm t;
-    localtime_r(&ev.timestamp, &t);
     snprintf(timeBuf, sizeof(timeBuf), "All day");
   } else {
-    struct tm t;
-    localtime_r(&ev.timestamp, &t);
-    snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d", t.tm_hour, t.tm_min);
+    struct tm startTm;
+    localBrokenDownTime(ev.timestamp, startTm);
+    if (ev.durationSec > 0) {
+      struct tm endTm;
+      localBrokenDownTime(ev.timestamp + static_cast<time_t>(ev.durationSec), endTm);
+      snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d - %02d:%02d", startTm.tm_hour, startTm.tm_min, endTm.tm_hour,
+                endTm.tm_min);
+    } else {
+      snprintf(timeBuf, sizeof(timeBuf), "%02d:%02d", startTm.tm_hour, startTm.tm_min);
+    }
   }
   renderer.drawText(SMALL_FONT_ID, pad, y, "TIME", true, EpdFontFamily::BOLD);
   renderer.drawText(UI_10_FONT_ID, pad + 90, y - 2, timeBuf);
   y += renderer.getLineHeight(UI_10_FONT_ID) + 8;
-
-  if (!ev.allDay && ev.durationSec > 0) {
-    char durBuf[24];
-    snprintf(durBuf, sizeof(durBuf), "%lu min", static_cast<unsigned long>(ev.durationSec / 60));
-    renderer.drawText(SMALL_FONT_ID, pad, y, "DURATION", true, EpdFontFamily::BOLD);
-    renderer.drawText(UI_10_FONT_ID, pad + 90, y - 2, durBuf);
-    y += renderer.getLineHeight(UI_10_FONT_ID) + 8;
-  }
 
   if (ev.location[0] != '\0') {
     renderer.drawText(SMALL_FONT_ID, pad, y, "WHERE", true, EpdFontFamily::BOLD);

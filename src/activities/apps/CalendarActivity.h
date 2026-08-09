@@ -92,12 +92,21 @@ class CalendarActivity final : public Activity {
   // "TODAY" / "TOMORROW" / "WED" / "WED 14 JAN" depending on how far `dayStart`
   // (any timestamp within the target day) is from the device's current date.
   static std::string relativeDayLabel(time_t dayStart);
+  // Breaks down a UTC epoch (all stored event timestamps, and time(nullptr),
+  // are UTC -- the system TZ is pinned to "UTC0", see HalClock.cpp) into the
+  // user's local wall-clock time per SETTINGS.clockUtcOffsetQ, the same
+  // biased-quarter-hour offset the rest of the app's clock displays use.
+  // Deliberately not localtime_r(): with no TZ env var ever set away from
+  // UTC0, that would just silently return UTC.
+  static void localBrokenDownTime(time_t utcTimestamp, struct tm& out);
 
-  // Sync-screen spinner (BaseTheme::drawSpinner), advanced on a 600ms timer
-  // -- same pattern as SweepActivity/ProbeSnifferActivity elsewhere in this
-  // codebase.
+  // Sync-screen spinner (BaseTheme::drawSpinner), advanced on a timer -- same
+  // pattern as SweepActivity/ProbeSnifferActivity elsewhere in this codebase,
+  // though SYNC_CONNECTED slows the interval down (see loop()).
   int spinnerFrame = 0;
   unsigned long lastSpinnerUpdate = 0;
+  // Diagnostic: periodic heap sample while a sync is in progress, see loop().
+  unsigned long lastHeapLogMs = 0;
 
   // ---- BLE sync ----
   BangleGadgetbridgeServer bleServer;

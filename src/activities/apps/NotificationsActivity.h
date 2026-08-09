@@ -67,6 +67,10 @@ class NotificationsActivity final : public Activity {
   void renderDetailState() const;
   void renderSyncState() const;
   static std::string relativeTimeLabel(time_t receivedAt);
+  // Breaks down a UTC epoch into the user's local wall-clock time per
+  // SETTINGS.clockUtcOffsetQ -- see CalendarActivity::localBrokenDownTime for
+  // why this can't just be localtime_r() (system TZ is pinned to UTC0).
+  static void localBrokenDownTime(time_t utcTimestamp, struct tm& out);
 
   // ---- BLE sync ----
   BangleGadgetbridgeServer bleServer;
@@ -83,4 +87,6 @@ class NotificationsActivity final : public Activity {
 
   int spinnerFrame = 0;
   unsigned long lastSpinnerUpdate = 0;
+  // Diagnostic: periodic heap sample while a sync is in progress, see loop().
+  unsigned long lastHeapLogMs = 0;
 };

@@ -1,13 +1,14 @@
 #include "NotificationsActivity.h"
 
+#include <Arduino.h>
 #include <ArduinoJson.h>
 #include <GfxRenderer.h>
 #include <HalStorage.h>
 #include <Logging.h>
 
-#include <algorithm>
 #include <cstring>
 
+#include "CrossPointSettings.h"
 #include "MappedInputManager.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
@@ -75,6 +76,7 @@ void NotificationsActivity::handleGbJson(const std::string& jsonPart) {
   }
 
   const char* t = doc["t"] | "";
+  LOG_DBG("NOTIF", "GB() message type: \"%s\"", t);
   if (strcmp(t, "notify") != 0) return;  // calendar/weather/etc. -- out of scope for this app
 
   uint32_t id = doc["id"].as<uint32_t>();
@@ -161,10 +163,20 @@ void NotificationsActivity::loop() {
       requestUpdate();
     }
 
-    if (millis() - lastSpinnerUpdate >= 600) {
+    // See CalendarActivity::loop() for why SYNC_CONNECTED slows this down --
+    // a real-device capture of that screen showed free heap dropping from
+    // tens of KB to ~1.5KB over ~14 minutes of continuous 600ms re-rendering.
+    const unsigned long spinnerIntervalMs = (state == SYNC_CONNECTED) ? 3000 : 600;
+    if (millis() - lastSpinnerUpdate >= spinnerIntervalMs) {
       lastSpinnerUpdate = millis();
       spinnerFrame = (spinnerFrame + 1) % 3;
       requestUpdate();
+    }
+
+    if (millis() - lastHeapLogMs >= 5000) {
+      lastHeapLogMs = millis();
+      LOG_DBG("NOTIF", "heap during sync: free=%u maxAlloc=%u", (unsigned)ESP.getFreeHeap(),
+              (unsigned)ESP.getMaxAllocHeap());
     }
 
     if (bleServer.consumePendingDisconnect()) {
@@ -181,8 +193,13 @@ void NotificationsActivity::loop() {
       return;
     }
 
-    if (state == SYNC_ADVERTISING && millis() - syncStartMs > SYNC_TIMEOUT_MS) {
-      syncResultMessage = "No connection - check Gadgetbridge and try again";
+    // Applies in both ADVERTISING and CONNECTED -- once connected this is
+    // just "no notification happened to fire during the sync window", which
+    // is normal, but the session should still time out on its own rather
+    // than wait indefinitely with no way out but a phone-side disconnect.
+    if (millis() - syncStartMs > SYNC_TIMEOUT_MS) {
+      syncResultMessage = (state == SYNC_ADVERTISING) ? "No connection - check Gadgetbridge and try again"
+                                                        : "Timed out - no notifications received";
       stopSync();
       state = SYNC_DONE;
       requestUpdate();
@@ -212,8 +229,17 @@ void NotificationsActivity::loop() {
 
 // ---- Rendering ----
 
+void NotificationsActivity::localBrokenDownTime(time_t utcTimestamp, struct tm& out) {
+  const int offsetQuarterHours = static_cast<int>(SETTINGS.clockUtcOffsetQ) - 48;
+  const time_t shifted = utcTimestamp + static_cast<time_t>(offsetQuarterHours) * 15 * 60;
+  gmtime_r(&shifted, &out);
+}
+
 std::string NotificationsActivity::relativeTimeLabel(time_t receivedAt) {
   time_t now = time(nullptr);
+  // Both sides are UTC epoch values, so their difference is a correct
+  // elapsed duration regardless of timezone -- only the >24h fallback below
+  // (an absolute clock time) needs the local-time conversion.
   long diffSec = static_cast<long>(now - receivedAt);
   if (diffSec < 0) diffSec = 0;
 
@@ -226,7 +252,7 @@ std::string NotificationsActivity::relativeTimeLabel(time_t receivedAt) {
     snprintf(buf, sizeof(buf), "%ld hr ago", diffSec / 3600);
   } else {
     struct tm t;
-    localtime_r(&receivedAt, &t);
+    localBrokenDownTime(receivedAt, t);
     snprintf(buf, sizeof(buf), "%02d:%02d %02d/%02d", t.tm_hour, t.tm_min, t.tm_mon + 1, t.tm_mday);
   }
   return buf;
@@ -260,70 +286,38 @@ void NotificationsActivity::render(RenderLock&&) {
   renderer.displayBuffer();
 }
 
-// Rounded "Sync with Phone" pill above a flat, newest-first list of received
-// notifications -- same visual language as CalendarActivity/WikipediaActivity/
-// DuckDuckGoActivity.
+// Uses the same GUI.drawList component every other list screen in this app
+// is built on, including the just-modernized CalendarActivity (see there for
+// the fuller rationale), rather than a bespoke fixed-row-height list.
 void NotificationsActivity::renderListState() const {
   const auto& metrics = UITheme::getInstance().getMetrics();
   const int pageWidth = renderer.getScreenWidth();
   const int pageHeight = renderer.getScreenHeight();
-  const int pad = metrics.contentSidePadding;
-  const int listTop = metrics.topPadding + metrics.headerHeight + 6;
-  const int listBottom = pageHeight - metrics.buttonHintsHeight;
-  const int listH = listBottom - listTop;
+  const int listTop = metrics.topPadding + metrics.headerHeight;
+  const int listH = pageHeight - listTop - metrics.buttonHintsHeight;
 
-  const int pillH = 40;
-  const int rowH = 44;
+  // Newest first: row i (1..N) maps to entries[entryCount - i] (entries are
+  // stored oldest-first, see addNotification).
+  auto entryFor = [this](int i) -> const NotificationEntry& { return data.entries[data.entryCount - i]; };
 
-  const int totalHeight = pillH + data.entryCount * rowH;
-  const int selectedTop = selectedIndex == 0 ? 0 : pillH + (selectedIndex - 1) * rowH;
-  const int selectedHeight = selectedIndex == 0 ? pillH : rowH;
-
-  int scrollTop = 0;
-  if (totalHeight > listH) {
-    scrollTop = selectedTop + selectedHeight / 2 - listH / 2;
-    scrollTop = std::max(0, std::min(scrollTop, totalHeight - listH));
-  }
-
-  {
-    const int y = listTop - scrollTop;
-    if (y + pillH >= listTop && y <= listBottom) {
-      const bool selected = selectedIndex == 0;
-      const int pillY = y + 4;
-      const int pillHeight = pillH - 8;
-      if (selected) {
-        renderer.fillRoundedRect(pad, pillY, pageWidth - pad * 2, pillHeight, 10, Color::Black);
-      } else {
-        renderer.drawRoundedRect(pad, pillY, pageWidth - pad * 2, pillHeight, 2, 10, true);
-      }
-      renderer.drawText(UI_10_FONT_ID, pad + 14, pillY + 9, "Sync with Phone", !selected, EpdFontFamily::BOLD);
-    }
-  }
-
-  // Newest first: walk data.entries back-to-front (entries are stored
-  // oldest-first, see addNotification).
-  for (int i = 0; i < data.entryCount; i++) {
-    const int entryIdx = data.entryCount - 1 - i;
-    const NotificationEntry& n = data.entries[entryIdx];
-    const int y = listTop + pillH + i * rowH - scrollTop;
-    if (y + rowH < listTop || y > listBottom) continue;
-
-    const bool selected = (i + 1) == selectedIndex;
-    if (selected) renderer.fillRect(0, y, pageWidth, rowH, true);
-
-    const int maxW = pageWidth - pad * 2;
-    char titleLine[80];
-    if (n.source[0] != '\0') {
-      snprintf(titleLine, sizeof(titleLine), "%s - %s", n.source, n.title);
-    } else {
-      snprintf(titleLine, sizeof(titleLine), "%s", n.title);
-    }
-    std::string title = renderer.truncatedText(UI_10_FONT_ID, titleLine, maxW);
-    renderer.drawText(UI_10_FONT_ID, pad, y + 4, title.c_str(), !selected);
-
-    std::string subtitle = renderer.truncatedText(SMALL_FONT_ID, n.body[0] ? n.body : relativeTimeLabel(n.receivedAt).c_str(), maxW);
-    renderer.drawText(SMALL_FONT_ID, pad, y + 4 + renderer.getLineHeight(UI_10_FONT_ID), subtitle.c_str(), !selected);
-  }
+  const int itemCount = 1 + data.entryCount;
+  GUI.drawList(
+      renderer, Rect{0, listTop, pageWidth, listH}, itemCount, selectedIndex,
+      [this, entryFor](int i) -> std::string {
+        if (i == 0) return "Sync with Phone";
+        const NotificationEntry& n = entryFor(i);
+        if (n.source[0] != '\0') return std::string(n.source) + " - " + n.title;
+        return n.title;
+      },
+      [entryFor](int i) -> std::string {
+        if (i == 0) return "Pulls notifications from Gadgetbridge";
+        return entryFor(i).body;
+      },
+      nullptr,  // rowIcon
+      [this, entryFor](int i) -> std::string {
+        if (i == 0) return "";
+        return relativeTimeLabel(entryFor(i).receivedAt);
+      });
 
   const auto labels = mappedInput.mapLabels("Back", "Select", "^", "v");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
