@@ -157,7 +157,15 @@ void BleKeyboardActivity::loadScriptContent(const std::string& path) {
   file.close();
 }
 
-void BleKeyboardActivity::startAdvertising() {
+bool BleKeyboardActivity::startAdvertising() {
+  // BLE HID device initialization may fail if heap is too fragmented.
+  // Empirically requires ~20KB contiguous heap to succeed; check before attempting.
+  if (ESP.getFreeHeap() < 24576) {
+    LOG_ERR("BadBLE", "Insufficient heap for BLE HID device");
+    RADIO.shutdown();
+    return false;
+  }
+
   pServer = BLEDevice::createServer();
   pServer->setCallbacks(new ServerCallbacks(*this));
 
@@ -175,10 +183,16 @@ void BleKeyboardActivity::startAdvertising() {
   pAdv->start();
 
   LOG_DBG("BadBLE", "Advertising as '%s'", BLE_DEVICE_NAME);
+  return true;
 }
 
 void BleKeyboardActivity::stopAdvertising() {
-  if (pServer) pServer->getAdvertising()->stop();
+  if (pServer) {
+    pServer->getAdvertising()->stop();
+    pServer = nullptr;
+  }
+  pHid = nullptr;
+  pInputChar = nullptr;
   deviceConnected = false;
 }
 
@@ -448,8 +462,11 @@ void BleKeyboardActivity::loop() {
       return;
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
-      state = ADVERTISING;
-      startAdvertising();
+      if (startAdvertising()) {
+        state = ADVERTISING;
+      } else {
+        state = SELECT_SCRIPT;
+      }
       requestUpdate();
       return;
     }

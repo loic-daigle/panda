@@ -53,7 +53,7 @@ class BleKeyboardActivity final : public Activity {
 
   void loadScriptList();
   void loadScriptContent(const std::string& path);
-  void startAdvertising();
+  bool startAdvertising();
   void stopAdvertising();
   void executeCurrentLine();
   void executeLine(const std::string& line);
