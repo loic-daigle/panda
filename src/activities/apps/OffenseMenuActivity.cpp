@@ -51,7 +51,7 @@ void OffenseMenuActivity::onEnter() {
 }
 
 // ---------------------------------------------------------------------------
-// Loop — 2D grid navigation
+// Loop — 2D grid navigation (matches AppsMenuActivity's home-screen grid)
 // ---------------------------------------------------------------------------
 
 void OffenseMenuActivity::loop() {
@@ -223,7 +223,8 @@ void OffenseMenuActivity::openSubTile(int index) {
 }
 
 // ---------------------------------------------------------------------------
-// Render — header + 2×2 tile grid + button hints
+// Render — header + 2×2 rounded-card grid + button hints
+// (mirrors AppsMenuActivity's home-screen tile grid exactly)
 // ---------------------------------------------------------------------------
 
 void OffenseMenuActivity::render(RenderLock&&) {
@@ -246,9 +247,9 @@ void OffenseMenuActivity::render(RenderLock&&) {
   // --- Header ---
   GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, "OFFENSE");
 
-  // --- 2×2 tile grid ---
+  // --- 2×2 rounded-card grid ---
   constexpr int sidePad = 14;
-  constexpr int tileGap = 8;
+  constexpr int tileGap = 12;
   const int gridTop = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing;
   const int gridBottom = pageHeight - metrics.buttonHintsHeight - metrics.verticalSpacing;
   const int gridHeight = gridBottom - gridTop;
@@ -265,25 +266,32 @@ void OffenseMenuActivity::render(RenderLock&&) {
   }
 
   // --- Button hints ---
-  const auto labels = mappedInput.mapLabels(tr(STR_BACK), tr(STR_SELECT), "<", ">");  // ◀ ▶
+  const auto labels = mappedInput.mapLabels(tr(STR_BACK), tr(STR_SELECT), "<", ">");
   GUI.drawButtonHints(renderer, labels.btn1, labels.btn2, labels.btn3, labels.btn4);
-  GUI.drawSideButtonHints(renderer, "^", "v");  // ▲ ▼
 
   renderer.displayBuffer();
 }
 
 // ---------------------------------------------------------------------------
-// drawTile — individual tile within the 2×2 grid
+// drawTile — individual rounded card within the 2×2 grid
+// (same visual language as AppsMenuActivity::drawTile)
 // ---------------------------------------------------------------------------
 
 void OffenseMenuActivity::drawTile(int index, int x, int y, int w, int h, bool selected) const {
+  // Rounded tile corners for a softer, more modern grid; radius is clamped
+  // so it never overwhelms a narrow/short tile.
+  int radius = 10;
+  if (h / 3 < radius) radius = h / 3;
+  if (w / 3 < radius) radius = w / 3;
+
   if (selected) {
-    renderer.fillRect(x, y, w, h, true);
+    renderer.fillRoundedRect(x, y, w, h, radius, Color::LightGray);
+    renderer.drawRoundedRect(x, y, w, h, 2, radius, true);
   } else {
-    renderer.drawRect(x, y, w, h, true);
+    renderer.drawRoundedRect(x, y, w, h, 1, radius, true);
   }
 
-  constexpr int pad = 10;
+  constexpr int pad = 12;
   int nameY = y + pad;
 
   const char* name = "";
@@ -313,9 +321,9 @@ void OffenseMenuActivity::drawTile(int index, int x, int y, int w, int h, bool s
       break;
   }
 
-  renderer.drawText(UI_12_FONT_ID, x + pad, nameY, name, !selected, EpdFontFamily::BOLD);
+  renderer.drawText(UI_12_FONT_ID, x + pad, nameY, name, true, EpdFontFamily::BOLD);
   nameY += renderer.getLineHeight(UI_12_FONT_ID) + 2;
-  renderer.drawText(SMALL_FONT_ID, x + pad, nameY, subtitle, !selected);
+  renderer.drawText(SMALL_FONT_ID, x + pad, nameY, subtitle, true);
 
   // Item count — bottom-right
   if (itemCount > 0) {
@@ -323,6 +331,6 @@ void OffenseMenuActivity::drawTile(int index, int x, int y, int w, int h, bool s
     snprintf(countStr, sizeof(countStr), "%d items", itemCount);
     int countW = renderer.getTextWidth(SMALL_FONT_ID, countStr);
     int countY = y + h - pad - renderer.getLineHeight(SMALL_FONT_ID);
-    renderer.drawText(SMALL_FONT_ID, x + w - pad - countW, countY, countStr, !selected);
+    renderer.drawText(SMALL_FONT_ID, x + w - pad - countW, countY, countStr, true);
   }
 }
