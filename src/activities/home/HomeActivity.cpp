@@ -304,6 +304,29 @@ void HomeActivity::render(RenderLock&&) {
   GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.homeTopPadding},
                  metrics.homeContinueReadingInMenu && !recentBooks.empty() ? recentBooks[0].title.c_str() : nullptr);
 
+  // Small-caps section labels tying Home's layout to the same "bold caps
+  // category name" hierarchy used by the Apps grid tiles. Drawn into space
+  // the theme already leaves empty, so no existing Rect is resized:
+  //  - "Continue Reading" sits in the header band below the battery icon.
+  //    Skipped on themes whose header fills solid black regardless of title
+  //    (Military/Noir/Radar), where black-on-black text would be invisible.
+  //  - "Quick Access" sits in the homeMenuTopOffset gap above the menu.
+  //    Skipped when that gap is too short to hold a line of text (0px on
+  //    Military/Noir/Radar, 10px on Classic).
+  const bool headerIsLight = SETTINGS.uiTheme != CrossPointSettings::UI_THEME::MILITARY &&
+                             SETTINGS.uiTheme != CrossPointSettings::UI_THEME::NOIR &&
+                             SETTINGS.uiTheme != CrossPointSettings::UI_THEME::RADAR;
+  if (headerIsLight && !recentBooks.empty()) {
+    const int labelY = metrics.homeTopPadding - renderer.getLineHeight(SMALL_FONT_ID) - 4;
+    if (labelY > metrics.topPadding + 14) {
+      renderer.drawText(SMALL_FONT_ID, 20, labelY, tr(STR_CONTINUE_READING), true);
+    }
+  }
+  if (metrics.homeMenuTopOffset >= renderer.getLineHeight(SMALL_FONT_ID) + 3) {
+    renderer.drawText(SMALL_FONT_ID, 20, metrics.homeTopPadding + metrics.homeCoverTileHeight + 1,
+                      tr(STR_QUICK_ACCESS), true);
+  }
+
   // Record the tile rect so storeCoverBuffer (called from the theme) knows
   // which sub-region of the framebuffer to snapshot. ~16 KB in Portrait
   // instead of the 48 KB full framebuffer the previous bind captured.

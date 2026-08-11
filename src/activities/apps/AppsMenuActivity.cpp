@@ -103,6 +103,14 @@
 #include "activities/settings/OpdsServerListActivity.h"
 #include "activities/settings/SettingsActivity.h"
 #include "components/UITheme.h"
+#include "components/icons/book.h"
+#include "components/icons/crosshair.h"
+#include "components/icons/gamepad2.h"
+#include "components/icons/radar.h"
+#include "components/icons/radio.h"
+#include "components/icons/settings2.h"
+#include "components/icons/shield.h"
+#include "components/icons/wrench.h"
 #include "components/themes/radar/RadarHomeRenderer.h"
 #include "fontIds.h"
 
@@ -874,59 +882,75 @@ void AppsMenuActivity::drawTile(int index, int x, int y, int w, int h, bool sele
   }
 
   constexpr int pad = 12;
+  // Icon width (32px) + spacing before the name/subtitle text column, matching
+  // the icon-left convention LyraTheme::drawButtonMenu uses for Home's menu rows.
+  constexpr int iconSize = 32;
+  constexpr int textX = 42;  // = iconSize + hPaddingInSelection(8) + 2
 
-  // --- Zone 1: Top — category name + subtitle ---
+  // --- Zone 1: Top — icon + category name + subtitle ---
   int nameY = y + pad;
   const char* name = "";
   const char* subtitle = "";
   int appCount = 0;
+  const uint8_t* icon = nullptr;
 
   switch (index) {
     case 0:
       name = "RECON";
       subtitle = "Scan & monitor";
       appCount = 14;
+      icon = RadarIcon;
       break;
     case 1:
       name = "OFFENSE";
       subtitle = "Scan/profile/test";
       appCount = 21;
+      icon = CrosshairIcon;
       break;
     case 2:
       name = "DEFENSE";
       subtitle = "Ghost & protect";
       appCount = 12;
+      icon = ShieldIcon;
       break;
     case 3:
       name = "COMMS";
       subtitle = "Chat & share";
       appCount = 5;
+      icon = RadioIcon;
       break;
     case 4:
       name = "TOOLS";
       subtitle = "Utilities";
       appCount = 37;
+      icon = WrenchIcon;
       break;
     case 5:
       name = "GAMES";
       subtitle = "Entertainment";
       appCount = 11;
+      icon = Gamepad2Icon;
       break;
     case 6:
       name = "READER";
       subtitle = "Books & OPDS";
       appCount = 5;
+      icon = BookIcon;
       break;
     case 7:
       name = "SETTINGS";
       subtitle = "System & config";
       appCount = 7;
+      icon = Settings2Icon;
       break;
   }
 
-  renderer.drawText(UI_12_FONT_ID, x + pad, nameY, name, true, EpdFontFamily::BOLD);
+  if (icon != nullptr) {
+    renderer.drawIcon(icon, x + pad, y + pad + 2, iconSize);
+  }
+  renderer.drawText(UI_12_FONT_ID, x + pad + textX, nameY, name, true, EpdFontFamily::BOLD);
   nameY += renderer.getLineHeight(UI_12_FONT_ID) + 2;
-  renderer.drawText(SMALL_FONT_ID, x + pad, nameY, subtitle, true);
+  renderer.drawText(SMALL_FONT_ID, x + pad + textX, nameY, subtitle, true);
 
   // --- Zone 2: Bottom-right — app count (skip for modules with 0) ---
   int countY = y + h - pad - renderer.getLineHeight(SMALL_FONT_ID);

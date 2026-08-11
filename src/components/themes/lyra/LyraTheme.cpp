@@ -569,7 +569,10 @@ void LyraTheme::drawButtonMenu(GfxRenderer& renderer, Rect rect, int buttonCount
     const bool selected = selectedIndex == i;
 
     if (selected) {
-      renderer.fillRoundedRect(tileRect.x, tileRect.y, tileRect.width, tileRect.height, cornerRadius, Color::LightGray);
+      // Radius matches AppsMenuActivity's tile rounding (10px) rather than the
+      // shared cornerRadius constant, so Home's rows and the Apps grid read as
+      // the same visual language.
+      renderer.fillRoundedRect(tileRect.x, tileRect.y, tileRect.width, tileRect.height, 10, Color::LightGray);
     }
 
     std::string labelStr = buttonLabel(i);
@@ -587,6 +590,7 @@ void LyraTheme::drawButtonMenu(GfxRenderer& renderer, Rect rect, int buttonCount
       }
     }
 
-    renderer.drawText(UI_12_FONT_ID, textX, textY, label, true);
+    // Bold to match the bold category names on the Apps grid tiles.
+    renderer.drawText(UI_12_FONT_ID, textX, textY, label, true, EpdFontFamily::BOLD);
   }
 }
