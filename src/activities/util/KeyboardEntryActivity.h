@@ -18,14 +18,23 @@ enum class InputType { Text, Password, Url };
 // editing, and the URL snippet layouts.
 class KeyboardEntryActivity : public Activity {
  public:
+  // allowBleKeyboard opts this instance into claiming the BLE radio (via
+  // RadioManager::ensureBleHidHost()) for a paired physical keyboard, for the
+  // activity's lifetime. Defaults to false: most call sites (WiFi password/
+  // SSID entry, OPDS/KOReader credentials, anything network-adjacent) must
+  // NOT enable this, since claiming BLE tears down an in-progress WiFi
+  // connection via RadioManager's radio mutual-exclusion. Only offline, local
+  // data-entry call sites should pass true.
   explicit KeyboardEntryActivity(GfxRenderer& renderer, MappedInputManager& mappedInput,
                                  std::string title = "Enter Text", std::string initialText = "",
-                                 const size_t maxLength = 0, InputType inputType = InputType::Text)
+                                 const size_t maxLength = 0, InputType inputType = InputType::Text,
+                                 bool allowBleKeyboard = false)
       : Activity("KeyboardEntry", renderer, mappedInput),
         title(std::move(title)),
         text(std::move(initialText)),
         maxLength(maxLength),
-        inputType(inputType) {}
+        inputType(inputType),
+        allowBleKeyboard(allowBleKeyboard) {}
 
   void onEnter() override;
   void onExit() override;
@@ -38,6 +47,7 @@ class KeyboardEntryActivity : public Activity {
   size_t maxLength;
   InputType inputType;
   bool passwordVisible = false;
+  bool allowBleKeyboard;
 
   ButtonNavigator buttonNavigator;
 
@@ -90,6 +100,10 @@ class KeyboardEntryActivity : public Activity {
 
   void onComplete(std::string text);
   void onCancel();
+  // Drains BleKeyboardHost::popKey() and routes each event into the same
+  // text-editing primitives the on-screen keyboard uses. No-op unless
+  // allowBleKeyboard is set. Returns true if a repaint is needed.
+  bool handleBleKeyEvents();
   bool cursorPositionFromPoint(int x, int y, size_t& position) const;
   std::string displayTextForCurrentState() const;
   // Advance of s[start, end) measured in place by temporarily null-terminating

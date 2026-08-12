@@ -112,7 +112,9 @@ void HabitTrackerActivity::loop() {
       if (selectedIndex == data.habitCount) {
         // Add habit
         if (data.habitCount >= MAX_HABITS) return;
-        startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Habit Name", "", 31),
+        startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Habit Name", "", 31,
+                                                                        InputType::Text,
+                                                                        /*allowBleKeyboard=*/true),
                                [this](const ActivityResult& r) {
                                  if (!r.isCancelled && data.habitCount < MAX_HABITS) {
                                    const auto& text = std::get<KeyboardResult>(r.data).text;

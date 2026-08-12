@@ -164,7 +164,8 @@ void MedicalCardActivity::loop() {
       const size_t maxLen = fieldMaxLen(idx);
 
       startActivityForResult(
-          std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, label, current ? current : "", maxLen),
+          std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, label, current ? current : "", maxLen,
+                                                   InputType::Text, /*allowBleKeyboard=*/true),
           [this, idx](const ActivityResult& result) {
             if (!result.isCancelled) {
               const auto& text = std::get<KeyboardResult>(result.data).text;

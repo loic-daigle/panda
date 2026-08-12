@@ -8,7 +8,7 @@
  */
 class RadioManager {
  public:
-  enum class RadioState { OFF, WIFI, BLE };
+  enum class RadioState { OFF, WIFI, BLE, BLE_HID_HOST };
 
   static RadioManager& getInstance() {
     static RadioManager instance;
@@ -23,6 +23,16 @@ class RadioManager {
   // here — a no-op call (state is already BLE) keeps whatever name is
   // already advertising.
   bool ensureBle(const char* deviceName = "panda");
+
+  // Ensure the BLE HID host (central role — pairs with an external keyboard
+  // via freeink::BleKeyboardHost, backed by NimBLE-Arduino, independent of
+  // ESP-IDF's own BT host selection used by ensureBle()) is available
+  // (deinits WiFi/BLE peripheral mode if active). Owns only the state
+  // transition; the actual NimBLE init/deinit is delegated to
+  // BleKeyboardHost::begin()/end() so there is a single owner of that
+  // lifecycle instead of RadioManager also touching the radio directly, the
+  // way it does for ensureBle()'s raw BLEDevice calls.
+  bool ensureBleHidHost(const char* hostName = "panda");
 
   // Shut down all radios
   void shutdown();
@@ -39,6 +49,7 @@ class RadioManager {
 
   void deinitWifi();
   void deinitBle();
+  void deinitBleHidHost();
 };
 
 #define RADIO RadioManager::getInstance()

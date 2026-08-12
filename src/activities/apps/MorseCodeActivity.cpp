@@ -90,7 +90,9 @@ void MorseCodeActivity::loop() {
     if (mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
       if (modeIndex == 0) {
         // Encode: get text input
-        startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Text to Morse"),
+        startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Text to Morse", "", 0,
+                                                                        InputType::Text,
+                                                                        /*allowBleKeyboard=*/true),
                                [this](const ActivityResult& result) {
                                  if (result.isCancelled) {
                                    state = MODE_SELECT;

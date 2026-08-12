@@ -1,5 +1,6 @@
 #include "RadioManager.h"
 
+#include <BleKeyboardHost.h>
 #include <Logging.h>
 #include <NimBLEDevice.h>
 #include <Preferences.h>
@@ -10,6 +11,8 @@ bool RadioManager::ensureWifi() {
 
   if (state == RadioState::BLE) {
     deinitBle();
+  } else if (state == RadioState::BLE_HID_HOST) {
+    deinitBleHidHost();
   }
 
   WiFi.mode(WIFI_STA);
@@ -23,6 +26,8 @@ bool RadioManager::ensureBle(const char* deviceName) {
 
   if (state == RadioState::WIFI) {
     deinitWifi();
+  } else if (state == RadioState::BLE_HID_HOST) {
+    deinitBleHidHost();
   }
 
   NimBLEDevice::init(deviceName);
@@ -31,9 +36,28 @@ bool RadioManager::ensureBle(const char* deviceName) {
   return true;
 }
 
+bool RadioManager::ensureBleHidHost(const char* hostName) {
+  if (state == RadioState::BLE_HID_HOST) return true;
+
+  if (state == RadioState::WIFI) {
+    deinitWifi();
+  } else if (state == RadioState::BLE) {
+    deinitBle();
+  }
+
+  if (!BleHid.begin(hostName)) {
+    LOG_ERR("RADIO", "BleKeyboardHost begin() failed, heap: %d", ESP.getFreeHeap());
+    return false;
+  }
+  state = RadioState::BLE_HID_HOST;
+  LOG_DBG("RADIO", "Switched to BLE HID host mode, heap: %d", ESP.getFreeHeap());
+  return true;
+}
+
 void RadioManager::shutdown() {
   if (state == RadioState::WIFI) deinitWifi();
   if (state == RadioState::BLE) deinitBle();
+  if (state == RadioState::BLE_HID_HOST) deinitBleHidHost();
   state = RadioState::OFF;
 }
 
@@ -62,6 +86,12 @@ void RadioManager::deinitBle() {
   NimBLEDevice::deinit(true);
   delay(50);
   LOG_DBG("RADIO", "BLE deinitialized");
+}
+
+void RadioManager::deinitBleHidHost() {
+  BleHid.end();
+  delay(50);
+  LOG_DBG("RADIO", "BLE HID host deinitialized");
 }
 
 bool RadioManager::isDisclaimerAcknowledged() const {

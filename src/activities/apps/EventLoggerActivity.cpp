@@ -94,7 +94,9 @@ void EventLoggerActivity::loop() {
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Right)) {
       state = COMPOSE;
-      startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "New Note", "", 127),
+      startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "New Note", "", 127,
+                                                                      InputType::Text,
+                                                                      /*allowBleKeyboard=*/true),
                              [this](const ActivityResult& r) {
                                state = LOG_LIST;
                                if (!r.isCancelled) {

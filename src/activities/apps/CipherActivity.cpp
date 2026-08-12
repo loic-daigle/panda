@@ -174,7 +174,9 @@ void CipherActivity::loop() {
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
       state = INPUT_TEXT;
-      startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Input Text", "", 200),
+      startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Input Text", "", 200,
+                                                                      InputType::Text,
+                                                                      /*allowBleKeyboard=*/true),
                              [this](const ActivityResult& r) {
                                if (r.isCancelled) {
                                  state = SELECT_CIPHER;
@@ -185,7 +187,9 @@ void CipherActivity::loop() {
                                  state = INPUT_KEY;
                                  const char* prompt = (cipherIndex == 1) ? "Shift (e.g. 3)" : "Key";
                                  startActivityForResult(
-                                     std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, prompt, "", 64),
+                                     std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, prompt, "", 64,
+                                                                             InputType::Text,
+                                                                             /*allowBleKeyboard=*/true),
                                      [this](const ActivityResult& r2) {
                                        if (r2.isCancelled) {
                                          state = SELECT_CIPHER;

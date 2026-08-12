@@ -1,5 +1,6 @@
 #include "KeyboardEntryActivity.h"
 
+#include <BleKeyboardHost.h>
 #include <HalGPIO.h>
 #include <I18n.h>
 
@@ -9,6 +10,7 @@
 #include "MappedInputManager.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
+#include "util/RadioManager.h"
 
 namespace fui = freeink::ui;
 
@@ -149,10 +151,18 @@ void KeyboardEntryActivity::onEnter() {
   touchRouter.holdMs = TOUCH_LONG_PRESS_MS;
   touchRouter.overrideHoldMs = TOUCH_DEL_LONG_PRESS_MS;
   interactionsReady = false;
+  if (allowBleKeyboard) {
+    RADIO.ensureBleHidHost();
+  }
   requestUpdate();
 }
 
-void KeyboardEntryActivity::onExit() { Activity::onExit(); }
+void KeyboardEntryActivity::onExit() {
+  if (allowBleKeyboard) {
+    RADIO.shutdown();
+  }
+  Activity::onExit();
+}
 
 const fui::KeyboardLayout& KeyboardEntryActivity::currentLayout() const {
   if (symbols) return fui::builtinKeyboardLayout(layoutId, shifted, true);
@@ -259,6 +269,60 @@ bool KeyboardEntryActivity::backspaceUtf8() {
   text.erase(prev, cursorPos - prev);
   cursorPos = prev;
   return true;
+}
+
+bool KeyboardEntryActivity::handleBleKeyEvents() {
+  if (!allowBleKeyboard) return false;
+  BleHid.poll();
+  if (!BleHid.isConnected()) return false;
+
+  bool changed = false;
+  freeink::KeyEvent ev;
+  while (BleHid.popKey(ev)) {
+    switch (ev.special) {
+      case freeink::SpecialKey::Enter:
+        onComplete(text);
+        return true;
+      case freeink::SpecialKey::Escape:
+        onCancel();
+        return true;
+      case freeink::SpecialKey::Backspace:
+        changed = backspaceUtf8() || changed;
+        break;
+      case freeink::SpecialKey::Left:
+        if (cursorPos > 0) {
+          cursorPos = utf8Prev(text, cursorPos);
+          changed = true;
+        }
+        break;
+      case freeink::SpecialKey::Right:
+        if (cursorPos < text.length()) {
+          cursorPos = utf8Next(text, cursorPos);
+          changed = true;
+        }
+        break;
+      case freeink::SpecialKey::Home:
+        if (cursorPos != 0) {
+          cursorPos = 0;
+          changed = true;
+        }
+        break;
+      case freeink::SpecialKey::End:
+        if (cursorPos != text.length()) {
+          cursorPos = text.length();
+          changed = true;
+        }
+        break;
+      default:
+        if (ev.ch) {
+          const char buf[2] = {ev.ch, '\0'};
+          insertUtf8(buf);
+          changed = true;
+        }
+        break;
+    }
+  }
+  return changed;
 }
 
 bool KeyboardEntryActivity::activateValue(const int16_t value, const bool longPress) {
@@ -491,6 +555,11 @@ fui::Rect KeyboardEntryActivity::keyboardRect() const {
 }
 
 void KeyboardEntryActivity::loop() {
+  if (handleBleKeyEvents()) {
+    requestUpdate();
+    return;
+  }
+
   int tx = 0;
   int ty = 0;
 

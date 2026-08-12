@@ -14,7 +14,8 @@ void QrGeneratorActivity::onEnter() {
   state = TEXT_INPUT;
   textPayload.clear();
 
-  startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "QR Code Text", "", 0),
+  startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "QR Code Text", "", 0,
+                                                                  InputType::Text, /*allowBleKeyboard=*/true),
                          [this](const ActivityResult& result) {
                            if (result.isCancelled) {
                              finish();
@@ -42,7 +43,8 @@ void QrGeneratorActivity::loop() {
       // Generate new QR code
       state = TEXT_INPUT;
       startActivityForResult(
-          std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "QR Code Text", textPayload, 0),
+          std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "QR Code Text", textPayload, 0,
+                                                   InputType::Text, /*allowBleKeyboard=*/true),
           [this](const ActivityResult& result) {
             if (result.isCancelled) {
               state = QR_DISPLAY;
