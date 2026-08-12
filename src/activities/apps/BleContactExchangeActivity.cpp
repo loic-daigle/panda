@@ -1,11 +1,8 @@
 #include "BleContactExchangeActivity.h"
 
-#include <BLEAdvertisedDevice.h>
-#include <BLEDevice.h>
-#include <BLEScan.h>
-#include <BLEUtils.h>
 #include <GfxRenderer.h>
 #include <HalStorage.h>
+#include <NimBLEDevice.h>
 
 #include <cstring>
 
@@ -93,21 +90,20 @@ void BleContactExchangeActivity::startExchange() {
   strncpy(reinterpret_cast<char*>(mfgData + MFG_NAME_OFFSET), myName, MFG_NAME_LEN);
   strncpy(reinterpret_cast<char*>(mfgData + MFG_PHONE_OFFSET), myPhone, MFG_PHONE_LEN);
 
-  BLEAdvertising* adv = BLEDevice::getAdvertising();
-  BLEAdvertisementData advData;
-  // Arduino BLE API expects String, not std::string
-  String mfgStr;
+  NimBLEAdvertising* adv = NimBLEDevice::getAdvertising();
+  NimBLEAdvertisementData advData;
+  std::string mfgStr;
   mfgStr.reserve(MFG_TOTAL);
   for (int i = 0; i < MFG_TOTAL; i++) mfgStr += static_cast<char>(mfgData[i]);
   advData.setManufacturerData(mfgStr);
   adv->setAdvertisementData(advData);
   adv->start();
 
-  BLEScan* scan = BLEDevice::getScan();
+  NimBLEScan* scan = NimBLEDevice::getScan();
   scan->setActiveScan(false);
   scan->setInterval(100);
   scan->setWindow(99);
-  scan->start(0, nullptr, true);  // non-blocking continuous scan
+  scan->start(0, false, true);  // non-blocking continuous scan
 
   exchangeStart = millis();
   lastScanMs = millis();
@@ -115,20 +111,19 @@ void BleContactExchangeActivity::startExchange() {
 }
 
 void BleContactExchangeActivity::stopExchange() {
-  BLEDevice::getAdvertising()->stop();
-  BLEDevice::getScan()->stop();
+  NimBLEDevice::getAdvertising()->stop();
+  NimBLEDevice::getScan()->stop();
   RADIO.shutdown();
   bleInitialized = false;
 }
 
 void BleContactExchangeActivity::pollScanResults() {
-  BLEScanResults* pResults = BLEDevice::getScan()->getResults();
-  if (!pResults) return;
-  for (int i = 0; i < pResults->getCount(); i++) {
-    BLEAdvertisedDevice dev = pResults->getDevice(i);
-    if (!dev.haveManufacturerData()) continue;
+  NimBLEScanResults results = NimBLEDevice::getScan()->getResults();
+  for (int i = 0; i < results.getCount(); i++) {
+    const NimBLEAdvertisedDevice* dev = results.getDevice(i);
+    if (!dev->haveManufacturerData()) continue;
 
-    String mfgRaw = dev.getManufacturerData();
+    std::string mfgRaw = dev->getManufacturerData();
     if (static_cast<int>(mfgRaw.length()) < MFG_TOTAL) continue;
 
     const char* mfg = mfgRaw.c_str();

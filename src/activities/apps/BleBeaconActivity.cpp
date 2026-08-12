@@ -1,8 +1,8 @@
 #include "BleBeaconActivity.h"
 
-#include <BLEDevice.h>
 #include <GfxRenderer.h>
 #include <Logging.h>
+#include <NimBLEDevice.h>
 #include <esp_random.h>
 
 #include "MappedInputManager.h"
@@ -62,7 +62,7 @@ void BleBeaconActivity::startSpam(SpamMode mode) {
   deviceTypeIndex = 0;
   platformIndex = 0;
 
-  pAdvertising = BLEDevice::getAdvertising();
+  pAdvertising = NimBLEDevice::getAdvertising();
   pAdvertising->stop();
 
   requestUpdate();
@@ -92,7 +92,7 @@ void BleBeaconActivity::sendAppleJuicePacket() {
 
   pAdvertising->stop();
 
-  BLEAdvertisementData advData;
+  NimBLEAdvertisementData advData;
   // Apple manufacturer data: company ID 0x004C + proximity pairing prefix + device type
   uint8_t data[] = {0x07, 0x19, 0x07, 0x02, 0x20, 0x75, 0xAA, 0x30, 0x01, 0x00, 0x00, 0x45, 0x12,
                     0x12, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
@@ -106,7 +106,7 @@ void BleBeaconActivity::sendAppleJuicePacket() {
   mfData += (char)0x00;
   mfData.append(reinterpret_cast<char*>(data), sizeof(data));
 
-  advData.setManufacturerData(String(mfData.data(), mfData.size()));
+  advData.setManufacturerData(mfData);
   pAdvertising->setAdvertisementData(advData);
   pAdvertising->start();
 
@@ -120,7 +120,7 @@ void BleBeaconActivity::sendSourApplePacket() {
   pAdvertising->stop();
   randomizeBleAddress();
 
-  BLEAdvertisementData advData;
+  NimBLEAdvertisementData advData;
   uint8_t data[] = {0x07, 0x19, 0x07, 0x02, 0x20, 0x75, 0xAA, 0x30, 0x01, 0x00, 0x00, 0x45, 0x12,
                     0x12, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
   data[3] = APPLE_DEVICE_TYPES[deviceTypeIndex][0];
@@ -135,7 +135,7 @@ void BleBeaconActivity::sendSourApplePacket() {
   mfData += (char)0x00;
   mfData.append(reinterpret_cast<char*>(data), sizeof(data));
 
-  advData.setManufacturerData(String(mfData.data(), mfData.size()));
+  advData.setManufacturerData(mfData);
   pAdvertising->setAdvertisementData(advData);
   pAdvertising->start();
 
@@ -148,7 +148,7 @@ void BleBeaconActivity::sendSamsungPacket() {
 
   pAdvertising->stop();
 
-  BLEAdvertisementData advData;
+  NimBLEAdvertisementData advData;
   // Samsung company ID 0x0075, Galaxy Buds format
   uint8_t data[] = {0x42, 0x09, 0x01, 0x02, 0x05, 0x01, 0x00, 0x05, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
   // Randomize some payload bytes
@@ -161,7 +161,7 @@ void BleBeaconActivity::sendSamsungPacket() {
   mfData += (char)0x00;
   mfData.append(reinterpret_cast<char*>(data), sizeof(data));
 
-  advData.setManufacturerData(String(mfData.data(), mfData.size()));
+  advData.setManufacturerData(mfData);
   pAdvertising->setAdvertisementData(advData);
   pAdvertising->start();
 
@@ -173,7 +173,7 @@ void BleBeaconActivity::sendGoogleFastPairPacket() {
 
   pAdvertising->stop();
 
-  BLEAdvertisementData advData;
+  NimBLEAdvertisementData advData;
   // Google Fast Pair service data with UUID 0xFE2C
   uint32_t modelId = GOOGLE_MODEL_IDS[deviceTypeIndex % GOOGLE_MODEL_COUNT];
   uint8_t svcData[] = {
@@ -181,7 +181,7 @@ void BleBeaconActivity::sendGoogleFastPairPacket() {
 
   std::string serviceData;
   serviceData.append(reinterpret_cast<char*>(svcData), sizeof(svcData));
-  advData.setServiceData(BLEUUID((uint16_t)0xFE2C), String(serviceData.data(), serviceData.size()));
+  advData.setServiceData(NimBLEUUID((uint16_t)0xFE2C), serviceData);
 
   pAdvertising->setAdvertisementData(advData);
   pAdvertising->start();
@@ -195,7 +195,7 @@ void BleBeaconActivity::sendWindowsSwiftPairPacket() {
 
   pAdvertising->stop();
 
-  BLEAdvertisementData advData;
+  NimBLEAdvertisementData advData;
   // Microsoft company ID 0x0006, SwiftPair beacon
   uint8_t data[] = {0x03, 0x01, 0x06, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
   // Randomize some bytes for variation
@@ -208,7 +208,7 @@ void BleBeaconActivity::sendWindowsSwiftPairPacket() {
   mfData += (char)0x00;
   mfData.append(reinterpret_cast<char*>(data), sizeof(data));
 
-  advData.setManufacturerData(String(mfData.data(), mfData.size()));
+  advData.setManufacturerData(mfData);
   pAdvertising->setAdvertisementData(advData);
   pAdvertising->start();
 

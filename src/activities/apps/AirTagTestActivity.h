@@ -1,12 +1,12 @@
 #pragma once
 
-#include <BLEDevice.h>
-
 #include <cstdint>
 #include <string>
 
 #include "activities/Activity.h"
 #include "util/ButtonNavigator.h"
+
+class NimBLEAdvertising;
 
 class AirTagTestActivity final : public Activity {
  public:
@@ -40,7 +40,7 @@ class AirTagTestActivity final : public Activity {
   static constexpr unsigned long ROTATE_INTERVAL_MS = 30000;
   static constexpr unsigned long ADV_INTERVAL_MS = 1000;
 
-  BLEAdvertising* pAdvertising = nullptr;
+  NimBLEAdvertising* pAdvertising = nullptr;
 
   void startSpoofing(MacMode mode);
   void stopSpoofing();

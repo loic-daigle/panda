@@ -1,11 +1,9 @@
 #include "BleScannerActivity.h"
 
-#include <BLEAdvertisedDevice.h>
-#include <BLEDevice.h>
-#include <BLEScan.h>
 #include <HalStorage.h>
 #include <I18n.h>
 #include <Logging.h>
+#include <NimBLEDevice.h>
 
 #include <algorithm>
 #include <string>
@@ -14,16 +12,6 @@
 #include "components/UITheme.h"
 #include "fontIds.h"
 #include "util/RadioManager.h"
-
-// Static pointer for callback context
-static BleScannerActivity* activeScanner = nullptr;
-
-class BleScanCallback : public BLEAdvertisedDeviceCallbacks {
-  void onResult(BLEAdvertisedDevice advertisedDevice) override {
-    if (!activeScanner) return;
-    // Handled in main loop via BLEScan results
-  }
-};
 
 // ---- lifecycle ----
 
@@ -49,7 +37,6 @@ void BleScannerActivity::onExit() {
   Activity::onExit();
   disconnect();
   stopBleScan();
-  activeScanner = nullptr;
   if (scanInitialized) {
     RADIO.shutdown();
     scanInitialized = false;
@@ -63,17 +50,17 @@ void BleScannerActivity::startBleScan() {
   scanning = true;
   lastScanTime = millis();
 
-  BLEScan* scan = BLEDevice::getScan();
+  NimBLEScan* scan = NimBLEDevice::getScan();
   scan->setActiveScan(true);
   scan->setInterval(100);
   scan->setWindow(99);
   scan->clearResults();
-  scan->start(0, nullptr, true);  // non-blocking: scan once, return immediately
+  scan->start(0, false, true);  // non-blocking: scan once, return immediately
 }
 
 void BleScannerActivity::stopBleScan() {
   if (!scanInitialized) return;
-  BLEDevice::getScan()->stop();
+  NimBLEDevice::getScan()->stop();
   scanning = false;
 }
 
@@ -101,15 +88,16 @@ void BleScannerActivity::connectToDevice(int index) {
 
   stopBleScan();
 
-  pClient = BLEDevice::createClient();
-  connected = pClient->connect(devices[index].address, 0xFF, 5000);  // 5 second timeout instead of default 30
+  pClient = NimBLEDevice::createClient();
+  pClient->setConnectTimeout(5000);  // 5 second timeout instead of the library default
+  connected = pClient->connect(devices[index].address);
 
   if (connected) {
     enumerateServices();
     state = SERVICES;
     selectorIndex = 0;
   } else {
-    delete pClient;
+    NimBLEDevice::deleteClient(pClient);
     pClient = nullptr;
     state = SCANNING_VIEW;
   }
@@ -119,7 +107,7 @@ void BleScannerActivity::connectToDevice(int index) {
 void BleScannerActivity::disconnect() {
   if (pClient) {
     if (connected) pClient->disconnect();
-    delete pClient;
+    NimBLEDevice::deleteClient(pClient);
     pClient = nullptr;
   }
   connected = false;
@@ -133,22 +121,21 @@ void BleScannerActivity::enumerateServices() {
   services.clear();
   if (!pClient || !connected) return;
 
-  auto* svcMap = pClient->getServices();
-  if (!svcMap) return;
+  const auto& svcVec = pClient->getServices();
 
   int count = 0;
-  for (auto& pair : *svcMap) {
+  for (auto* svc : svcVec) {
     if (count >= 20) break;
+    std::string uuid = svc->getUUID().toString();
     ServiceInfo info;
-    info.uuid = pair.first;
-    const char* resolved = resolveServiceName(pair.first);
+    info.uuid = uuid;
+    const char* resolved = resolveServiceName(uuid);
     if (resolved) {
       info.name = resolved;
     } else {
-      info.name = (pair.first.size() >= 8) ? pair.first.substr(4, 4) : pair.first;
+      info.name = (uuid.size() >= 8) ? uuid.substr(4, 4) : uuid;
     }
-    auto* charMap = pair.second->getCharacteristics();
-    info.charCount = charMap ? static_cast<int>(charMap->size()) : 0;
+    info.charCount = static_cast<int>(svc->getCharacteristics().size());
     services.push_back(std::move(info));
     count++;
   }
@@ -158,39 +145,32 @@ void BleScannerActivity::enumerateCharacteristics(int serviceIndex) {
   characteristics.clear();
   if (!pClient || !connected || serviceIndex < 0) return;
 
-  auto* svcMap = pClient->getServices();
-  if (!svcMap) return;
+  const auto& svcVec = pClient->getServices();
+  if (serviceIndex >= static_cast<int>(svcVec.size())) return;
 
-  int si = 0;
-  for (auto& spair : *svcMap) {
-    if (si == serviceIndex) {
-      auto* charMap = spair.second->getCharacteristics();
-      if (!charMap) return;
-      int ci = 0;
-      for (auto& cpair : *charMap) {
-        if (ci >= 30) break;
-        CharInfo info;
-        info.uuid = cpair.first;
-        const char* resolved = resolveCharName(cpair.first);
-        info.name = resolved ? resolved : cpair.first;
-        info.canRead = cpair.second->canRead();
-        info.canWrite = cpair.second->canWrite() || cpair.second->canWriteNoResponse();
-        info.canNotify = cpair.second->canNotify();
-        info.properties = 0;
-        if (info.canRead) info.properties |= 0x02;
-        if (info.canWrite) info.properties |= 0x08;
-        if (info.canNotify) info.properties |= 0x10;
-        if (info.canRead) {
-          info.value = "(press OK to read)";  // deferred: avoids blocking loop on enumerate
-        } else {
-          info.value = "(not readable)";
-        }
-        characteristics.push_back(std::move(info));
-        ci++;
-      }
-      return;
+  const auto& charVec = svcVec[serviceIndex]->getCharacteristics();
+  int ci = 0;
+  for (auto* ch : charVec) {
+    if (ci >= 30) break;
+    std::string uuid = ch->getUUID().toString();
+    CharInfo info;
+    info.uuid = uuid;
+    const char* resolved = resolveCharName(uuid);
+    info.name = resolved ? resolved : uuid;
+    info.canRead = ch->canRead();
+    info.canWrite = ch->canWrite() || ch->canWriteNoResponse();
+    info.canNotify = ch->canNotify();
+    info.properties = 0;
+    if (info.canRead) info.properties |= 0x02;
+    if (info.canWrite) info.properties |= 0x08;
+    if (info.canNotify) info.properties |= 0x10;
+    if (info.canRead) {
+      info.value = "(press OK to read)";  // deferred: avoids blocking loop on enumerate
+    } else {
+      info.value = "(not readable)";
     }
-    si++;
+    characteristics.push_back(std::move(info));
+    ci++;
   }
 }
 
@@ -198,42 +178,27 @@ void BleScannerActivity::readCharacteristic(int charIndex) {
   if (!pClient || !connected || selectedService < 0) return;
   if (charIndex < 0 || charIndex >= static_cast<int>(characteristics.size())) return;
 
-  auto* svcMap = pClient->getServices();
-  if (!svcMap) return;
+  const auto& svcVec = pClient->getServices();
+  if (selectedService >= static_cast<int>(svcVec.size())) return;
 
-  // Walk to the selected service
-  int si = 0;
-  for (auto& spair : *svcMap) {
-    if (si == selectedService) {
-      auto* charMap = spair.second->getCharacteristics();
-      if (!charMap) return;
-      // Walk to the selected characteristic by index
-      int ci = 0;
-      for (auto& cpair : *charMap) {
-        if (ci == charIndex) {
-          if (!cpair.second->canRead()) return;
-          String val = cpair.second->readValue();  // blocking read for this one char only
-          CharInfo& info = characteristics[charIndex];
-          if (val.length() > 0) {
-            std::string hex = bytesToHex(reinterpret_cast<const uint8_t*>(val.c_str()), static_cast<int>(val.length()));
-            std::string ascii =
-                bytesToAsciiSafe(reinterpret_cast<const uint8_t*>(val.c_str()), static_cast<int>(val.length()));
-            info.value = hex;
-            if (!ascii.empty()) {
-              info.value += " (";
-              info.value += ascii;
-              info.value += ")";
-            }
-          } else {
-            info.value = "(empty)";
-          }
-          return;
-        }
-        ci++;
-      }
-      return;
+  const auto& charVec = svcVec[selectedService]->getCharacteristics();
+  if (charIndex >= static_cast<int>(charVec.size())) return;
+
+  auto* ch = charVec[charIndex];
+  if (!ch->canRead()) return;
+  NimBLEAttValue val = ch->readValue();  // blocking read for this one char only
+  CharInfo& info = characteristics[charIndex];
+  if (val.length() > 0) {
+    std::string hex = bytesToHex(reinterpret_cast<const uint8_t*>(val.c_str()), static_cast<int>(val.length()));
+    std::string ascii = bytesToAsciiSafe(reinterpret_cast<const uint8_t*>(val.c_str()), static_cast<int>(val.length()));
+    info.value = hex;
+    if (!ascii.empty()) {
+      info.value += " (";
+      info.value += ascii;
+      info.value += ")";
     }
-    si++;
+  } else {
+    info.value = "(empty)";
   }
 }
 
@@ -318,7 +283,6 @@ void BleScannerActivity::loop() {
     needsInit = false;
     RADIO.ensureBle();
     scanInitialized = true;
-    activeScanner = this;
     startBleScan();
     requestUpdate();
     return;
@@ -443,28 +407,28 @@ void BleScannerActivity::loop() {
 
   // Check if scan completed and collect results
   if (scanning && scanInitialized) {
-    BLEScan* scan = BLEDevice::getScan();
-    BLEScanResults* results = scan->getResults();
-    int count = results ? results->getCount() : 0;
+    NimBLEScan* scan = NimBLEDevice::getScan();
+    NimBLEScanResults results = scan->getResults();
+    int count = results.getCount();
 
     if (count > 0 || (millis() - lastScanTime > 4000)) {
       // Merge new results
       for (int i = 0; i < count; i++) {
-        BLEAdvertisedDevice dev = results->getDevice(i);
-        std::string mac = dev.getAddress().toString().c_str();
+        const NimBLEAdvertisedDevice* dev = results.getDevice(i);
+        std::string mac = dev->getAddress().toString().c_str();
 
         auto it = std::find_if(devices.begin(), devices.end(), [&mac](const BleDevice& d) { return d.mac == mac; });
         if (it != devices.end()) {
-          it->rssi = dev.getRSSI();
-          if (dev.haveName() && it->name == "Unknown") {
-            it->name = dev.getName().c_str();
+          it->rssi = dev->getRSSI();
+          if (dev->haveName() && it->name == "Unknown") {
+            it->name = dev->getName().c_str();
           }
         } else if (static_cast<int>(devices.size()) < MAX_DEVICES) {
           BleDevice newDev;
-          newDev.name = dev.haveName() ? dev.getName().c_str() : "Unknown";
+          newDev.name = dev->haveName() ? dev->getName().c_str() : "Unknown";
           newDev.mac = mac;
-          newDev.rssi = dev.getRSSI();
-          newDev.address = dev.getAddress();
+          newDev.rssi = dev->getRSSI();
+          newDev.address = dev->getAddress();
           devices.push_back(std::move(newDev));
         }
       }
@@ -477,7 +441,7 @@ void BleScannerActivity::loop() {
 
       // Restart scan (non-blocking)
       lastScanTime = millis();
-      scan->start(0, nullptr, true);
+      scan->start(0, false, true);
     }
   }
 

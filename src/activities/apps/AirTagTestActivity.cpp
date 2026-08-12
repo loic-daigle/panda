@@ -1,8 +1,8 @@
 #include "AirTagTestActivity.h"
 
-#include <BLEDevice.h>
 #include <GfxRenderer.h>
 #include <Logging.h>
+#include <NimBLEDevice.h>
 #include <esp_random.h>
 
 #include "MappedInputManager.h"
@@ -58,7 +58,7 @@ void AirTagTestActivity::startSpoofing(MacMode mode) {
   lastRotateTime = millis();
   lastAdvTime = 0;
 
-  pAdvertising = BLEDevice::getAdvertising();
+  pAdvertising = NimBLEDevice::getAdvertising();
   pAdvertising->stop();
 
   generateRandomMac();
@@ -78,7 +78,7 @@ void AirTagTestActivity::sendAirTagAdvertisement() {
 
   pAdvertising->stop();
 
-  BLEAdvertisementData advData;
+  NimBLEAdvertisementData advData;
 
   // Apple Find My network payload
   // Company ID 0x004C (Apple) + Find My type/length + public key payload
@@ -102,7 +102,7 @@ void AirTagTestActivity::sendAirTagAdvertisement() {
   mfData += (char)0x00;
   mfData.append(reinterpret_cast<char*>(findMyPayload), sizeof(findMyPayload));
 
-  advData.setManufacturerData(String(mfData.data(), mfData.size()));
+  advData.setManufacturerData(mfData);
   pAdvertising->setAdvertisementData(advData);
   pAdvertising->start();
 

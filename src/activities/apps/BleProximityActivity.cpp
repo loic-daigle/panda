@@ -1,11 +1,9 @@
 #include "BleProximityActivity.h"
 
-#include <BLEAdvertisedDevice.h>
-#include <BLEDevice.h>
-#include <BLEScan.h>
 #include <HalStorage.h>
 #include <I18n.h>
 #include <Logging.h>
+#include <NimBLEDevice.h>
 
 #include <algorithm>
 #include <string>
@@ -14,16 +12,6 @@
 #include "components/UITheme.h"
 #include "fontIds.h"
 #include "util/RadioManager.h"
-
-// Static pointer for callback context
-static BleProximityActivity* activeProximity = nullptr;
-
-class BleProximityCallback : public BLEAdvertisedDeviceCallbacks {
-  void onResult(BLEAdvertisedDevice advertisedDevice) override {
-    if (!activeProximity) return;
-    // Results are handled in the main loop via BLEScan results
-  }
-};
 
 void BleProximityActivity::onEnter() {
   Activity::onEnter();
@@ -38,12 +26,9 @@ void BleProximityActivity::onEnter() {
 void BleProximityActivity::onExit() {
   Activity::onExit();
   if (scanInitialized) {
-    BLEScan* scan = BLEDevice::getScan();
+    NimBLEScan* scan = NimBLEDevice::getScan();
     scan->stop();
     scanning = false;
-  }
-  activeProximity = nullptr;
-  if (scanInitialized) {
     RADIO.shutdown();
     scanInitialized = false;
   }
@@ -54,12 +39,12 @@ void BleProximityActivity::startBleScan() {
   scanning = true;
   lastScanTime = millis();
 
-  BLEScan* scan = BLEDevice::getScan();
+  NimBLEScan* scan = NimBLEDevice::getScan();
   scan->setActiveScan(true);
   scan->setInterval(100);
   scan->setWindow(99);
   scan->clearResults();
-  scan->start(0, nullptr, true);  // non-blocking
+  scan->start(0, false, true);  // non-blocking, indefinite until stop()
 }
 
 void BleProximityActivity::pruneStale() {
@@ -78,16 +63,15 @@ void BleProximityActivity::loop() {
     needsInit = false;
     RADIO.ensureBle();
     scanInitialized = true;
-    activeProximity = this;
     startBleScan();
     requestUpdate();
     return;
   }
 
   if (scanning && scanInitialized) {
-    BLEScan* scan = BLEDevice::getScan();
-    BLEScanResults* results = scan->getResults();
-    const int count = results ? results->getCount() : 0;
+    NimBLEScan* scan = NimBLEDevice::getScan();
+    NimBLEScanResults results = scan->getResults();
+    const int count = results.getCount();
 
     if (count > 0 || (millis() - lastScanTime > 4000)) {
       const unsigned long now = millis();
@@ -99,22 +83,22 @@ void BleProximityActivity::loop() {
 
       // Merge results: update existing or add new
       for (int i = 0; i < count; i++) {
-        BLEAdvertisedDevice dev = results->getDevice(i);
-        std::string mac = dev.getAddress().toString().c_str();
+        const NimBLEAdvertisedDevice* dev = results.getDevice(i);
+        std::string mac = dev->getAddress().toString().c_str();
 
         auto it = std::find_if(devices.begin(), devices.end(), [&mac](const BleTarget& d) { return d.mac == mac; });
         if (it != devices.end()) {
-          it->rssi = dev.getRSSI();
+          it->rssi = dev->getRSSI();
           it->lastSeen = now;
           it->active = true;
-          if (dev.haveName() && it->name == "Unknown") {
-            it->name = dev.getName().c_str();
+          if (dev->haveName() && it->name == "Unknown") {
+            it->name = dev->getName().c_str();
           }
         } else if (static_cast<int>(devices.size()) < MAX_DEVICES) {
           BleTarget newDev;
-          newDev.name = dev.haveName() ? dev.getName().c_str() : "Unknown";
+          newDev.name = dev->haveName() ? dev->getName().c_str() : "Unknown";
           newDev.mac = mac;
-          newDev.rssi = dev.getRSSI();
+          newDev.rssi = dev->getRSSI();
           newDev.lastSeen = now;
           newDev.active = true;
           devices.push_back(std::move(newDev));
@@ -138,7 +122,7 @@ void BleProximityActivity::loop() {
 
       // Restart scan (non-blocking)
       lastScanTime = millis();
-      scan->start(0, nullptr, true);
+      scan->start(0, false, true);
     }
   }
 

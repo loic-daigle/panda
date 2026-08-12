@@ -10,8 +10,8 @@
 #include <string>
 
 class Activity;
-class BLEServer;
-class BLECharacteristic;
+class NimBLEServer;
+class NimBLECharacteristic;
 
 // Shared BLE peripheral plumbing for any activity that emulates a Bangle.js
 // smartwatch so Gadgetbridge (the Android app) talks to it: advertises the
@@ -83,17 +83,17 @@ class BangleGadgetbridgeServer {
  private:
   Activity& owner;
 
-  BLEServer* pServer = nullptr;
-  BLECharacteristic* pRxChar = nullptr;
-  BLECharacteristic* pTxChar = nullptr;
+  NimBLEServer* pServer = nullptr;
+  NimBLECharacteristic* pRxChar = nullptr;
+  NimBLECharacteristic* pTxChar = nullptr;
 
   volatile bool deviceConnected = false;
   volatile bool pendingConnect = false;
   volatile bool pendingDisconnect = false;
 
-  // Set by ServerCallbacks::onConnect(BLEServer*, ble_gap_conn_desc*) (BLE
+  // Set by ServerCallbacks::onConnect(NimBLEServer*, NimBLEConnInfo&) (BLE
   // host task) with the just-connected conn_handle; poll() (main task) picks
-  // this up and calls BLESecurity::startSecurity() there. Must not call it
+  // this up and calls NimBLEDevice::startSecurity() there. Must not call it
   // directly from the host-task callback: it was doing so previously and
   // that's the prime suspect for a heap-corruption crash (multi_heap_free
   // assert, triggered later on an unrelated disconnect) -- see class-level
@@ -123,18 +123,20 @@ class BangleGadgetbridgeServer {
 
   class ServerCallbacks;
   class RxCallbacks;
-  class SecurityCallbacks;
 
   // Allocated once (lazily, in start()) and reused across every subsequent
   // start()/stop() cycle -- these used to be `new`'d fresh on every start()
   // with no matching delete anywhere, leaking a handful of small objects per
   // "Sync with Phone" attempt. Harmless on any one attempt, but real-device
   // testing showed free heap trending down across repeated attempts within
-  // the same app session. BLESecurity itself needs no such member: every
-  // method this class calls on it (setAuthenticationMode, setCapability,
-  // startSecurity, ...) is static, so start() calls BLESecurity:: directly
-  // rather than allocating an instance at all.
+  // the same app session. Security config itself needs no such member: every
+  // method this class calls (setSecurityAuth, setSecurityIOCap,
+  // startSecurity, ...) is a static NimBLEDevice method, so start() calls
+  // NimBLEDevice:: directly rather than allocating an instance at all.
+  // (Authentication-complete handling now lives on ServerCallbacks itself --
+  // NimBLEServerCallbacks carries an onAuthenticationComplete() hook,
+  // unlike the classic split BLEServerCallbacks/BLESecurityCallbacks API --
+  // so there's no separate security-callbacks object to hold either.)
   std::unique_ptr<ServerCallbacks> serverCallbacks;
   std::unique_ptr<RxCallbacks> rxCallbacks;
-  std::unique_ptr<SecurityCallbacks> securityCallbacks;
 };

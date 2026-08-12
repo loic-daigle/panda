@@ -6,13 +6,10 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
-#if !defined(CONFIG_NIMBLE_ENABLED)
-#include <BLE2902.h>
-#endif
-#include <BLEDevice.h>
-#include <BLEServer.h>
+
 #include <HalClock.h>
 #include <Logging.h>
+#include <NimBLEDevice.h>
 
 #include "CrossPointSettings.h"
 #include "activities/Activity.h"
@@ -30,43 +27,43 @@ constexpr const char* kRxCharUuid = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
 constexpr const char* kTxCharUuid = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
 }  // namespace
 
-class BangleGadgetbridgeServer::ServerCallbacks : public BLEServerCallbacks {
+// NimBLE-Arduino's NimBLEServerCallbacks unifies what the classic split
+// BLEServerCallbacks/BLESecurityCallbacks API needed two separate classes
+// for -- connect/disconnect AND onAuthenticationComplete all live here now,
+// each handed a NimBLEConnInfo with the conn_handle and security state
+// directly, no ble_gap_conn_desc pointer juggling or dual onConnect
+// overloads required.
+class BangleGadgetbridgeServer::ServerCallbacks : public NimBLEServerCallbacks {
   BangleGadgetbridgeServer& server;
 
  public:
   explicit ServerCallbacks(BangleGadgetbridgeServer& s) : server(s) {}
 
-  void onConnect(BLEServer*) override {
+  // Carries the conn_handle we need to proactively start pairing. Relying on
+  // Android to trigger pairing itself the first time Gadgetbridge writes to
+  // an *_ENC characteristic was an unverified assumption (see start()); on
+  // real hardware that write is simply rejected and nothing happens, so the
+  // phone never gets prompted to pair. NimBLEDevice::startSecurity() is the
+  // NimBLE equivalent of the flowe-os-proven "peripheral kicks off its own
+  // pairing" pattern this app's plan called out as needed.
+  //
+  // Flag only, like every other BLE callback here -- an earlier version
+  // called the security-start call directly from this callback (BLE host
+  // task), which re-enters the NimBLE host stack from inside its own event
+  // dispatch. That's the prime suspect for a heap-corruption crash
+  // (multi_heap_free assert) seen on real hardware, surfacing later on an
+  // unrelated free(). poll() (main task) does the actual call.
+  void onConnect(NimBLEServer*, NimBLEConnInfo& connInfo) override {
     server.deviceConnected = true;
     server.pendingConnect = true;
+    server.pendingSecurityConnHandle = connInfo.getConnHandle();
+    server.currentConnHandle = connInfo.getConnHandle();
+    server.pendingSecurityStart = true;
     server.owner.requestUpdate();
     LOG_DBG("BGB", "Gadgetbridge connected");
   }
 
-  // NimBLE-specific overload (see BLEServer.cpp: both onConnect overloads
-  // are invoked on connect) -- carries the conn_handle we need to proactively
-  // start pairing. Relying on Android to trigger pairing itself the first
-  // time Gadgetbridge writes to an *_ENC characteristic was an unverified
-  // assumption (see start()); on real hardware that write is simply rejected
-  // and nothing happens, so the phone never gets prompted to pair.
-  // ble_gap_security_initiate() (wrapped here as BLESecurity::startSecurity())
-  // is the NimBLE equivalent of the flowe-os-proven "peripheral kicks off its
-  // own pairing" pattern this app's plan called out as needed.
-  //
-  // Flag only, like every other BLE callback here -- an earlier version
-  // called BLESecurity::startSecurity() directly from this callback (BLE
-  // host task), which re-enters the NimBLE host stack from inside its own
-  // event dispatch. That's the prime suspect for a heap-corruption crash
-  // (multi_heap_free assert) seen on real hardware, surfacing later on an
-  // unrelated free(). poll() (main task) does the actual call.
-  void onConnect(BLEServer*, ble_gap_conn_desc* desc) override {
-    if (!desc) return;
-    server.pendingSecurityConnHandle = desc->conn_handle;
-    server.currentConnHandle = desc->conn_handle;
-    server.pendingSecurityStart = true;
-  }
-
-  void onDisconnect(BLEServer*) override {
+  void onDisconnect(NimBLEServer*, NimBLEConnInfo&, int) override {
     // Flag only -- stop() (BLE teardown) must run on the main task, not
     // here. poll() picks this up on its next tick.
     server.deviceConnected = false;
@@ -74,16 +71,24 @@ class BangleGadgetbridgeServer::ServerCallbacks : public BLEServerCallbacks {
     server.owner.requestUpdate();
     LOG_DBG("BGB", "Gadgetbridge disconnected");
   }
+
+  // No PIN/passkey UI on this device (IO_CAP_NONE => "Just Works" pairing),
+  // so the NimBLEServerCallbacks base class defaults for onPassKeyDisplay /
+  // onPassKeyEntry / onConfirmPassKey are fine as-is.
+  void onAuthenticationComplete(NimBLEConnInfo& connInfo) override {
+    LOG_DBG("BGB", "BLE authentication complete: encrypted=%d bonded=%d", connInfo.isEncrypted(),
+            connInfo.isBonded());
+  }
 };
 
-class BangleGadgetbridgeServer::RxCallbacks : public BLECharacteristicCallbacks {
+class BangleGadgetbridgeServer::RxCallbacks : public NimBLECharacteristicCallbacks {
   BangleGadgetbridgeServer& server;
 
  public:
   explicit RxCallbacks(BangleGadgetbridgeServer& s) : server(s) {}
 
-  void onWrite(BLECharacteristic* characteristic) override {
-    String value = characteristic->getValue();
+  void onWrite(NimBLECharacteristic* characteristic, NimBLEConnInfo&) override {
+    NimBLEAttValue value = characteristic->getValue();
     if (value.length() == 0) return;
     LOG_DBG("BGB", "RX write: %u bytes", (unsigned)value.length());
 
@@ -99,29 +104,11 @@ class BangleGadgetbridgeServer::RxCallbacks : public BLECharacteristicCallbacks 
   }
 };
 
-class BangleGadgetbridgeServer::SecurityCallbacks : public BLESecurityCallbacks {
- public:
-  // This board's sdkconfig builds the BLE stack on NimBLE, not Bluedroid
-  // (confirmed via framework-arduinoespressif32-libs/esp32c3/sdkconfig:
-  // CONFIG_NIMBLE_ENABLED=y) -- despite the "BLEDevice"/"BLEServer" class
-  // names, which are a compatibility facade over either backend depending
-  // on that build-time config. NimBLE's callback carries a ble_gap_conn_desc,
-  // not Bluedroid's esp_ble_auth_cmpl_t.
-  void onAuthenticationComplete(ble_gap_conn_desc* desc) override {
-    if (!desc) return;
-    LOG_DBG("BGB", "BLE authentication complete: encrypted=%d bonded=%d", desc->sec_state.encrypted,
-            desc->sec_state.bonded);
-  }
-  // No PIN/passkey UI on this device (IO_CAP_NONE => "Just Works" pairing),
-  // so the BLESecurityCallbacks base class defaults for onPassKeyRequest /
-  // onSecurityRequest / onConfirmPIN / onAuthorizationRequest are fine as-is.
-};
-
 BangleGadgetbridgeServer::BangleGadgetbridgeServer(Activity& owner) : owner(owner) {}
 
 // Out-of-line so the unique_ptr members can destroy ServerCallbacks/
-// RxCallbacks/SecurityCallbacks, which are only forward-declared in the
-// header (see BangleGadgetbridgeServer.h).
+// RxCallbacks, which are only forward-declared in the header (see
+// BangleGadgetbridgeServer.h).
 BangleGadgetbridgeServer::~BangleGadgetbridgeServer() = default;
 
 void BangleGadgetbridgeServer::start(const char* deviceName) {
@@ -134,11 +121,10 @@ void BangleGadgetbridgeServer::start(const char* deviceName) {
 
   RADIO.ensureBle(deviceName);
 
-  // Every method used below (setAuthenticationMode, setCapability, ...) is
-  // static -- BLESecurity carries no per-instance state, so there's no
-  // reason to `new` an instance just to call through it (the earlier code
-  // did, and leaked it: never deleted, and a fresh one was allocated again
-  // on every subsequent "Sync with Phone" attempt).
+  // Every method used below is a static NimBLEDevice method -- no
+  // per-instance security object to allocate/leak (the earlier classic-API
+  // code `new`'d a BLESecurity-adjacent callbacks object per start() with
+  // nothing ever freeing the previous one).
   //
   // Bonding on, MITM off, secure connections off (legacy Just Works, not
   // SC-only): IO_CAP_NONE => "Just Works" pairing since this device has no
@@ -146,56 +132,52 @@ void BangleGadgetbridgeServer::start(const char* deviceName) {
   // but never reached encrypted=1 against a real Gadgetbridge/Android peer
   // (onAuthenticationComplete fired with encrypted=0 bonded=0, immediate
   // disconnect) -- legacy pairing is the broadly-compatible fallback.
-  BLESecurity::setAuthenticationMode(true, false, false);
-  BLESecurity::setCapability(ESP_IO_CAP_NONE);
-  BLESecurity::setInitEncryptionKey(ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK);
-  BLESecurity::setRespEncryptionKey(ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK);
-  // Callback objects are allocated once and reused across every start()
-  // (see the member comments in the header) rather than `new`'d fresh each
-  // time with nothing ever freeing the previous one.
-  if (!securityCallbacks) securityCallbacks = std::make_unique<SecurityCallbacks>();
-  BLEDevice::setSecurityCallbacks(securityCallbacks.get());
+  NimBLEDevice::setSecurityAuth(true, false, false);
+  NimBLEDevice::setSecurityIOCap(BLE_HS_IO_NO_INPUT_OUTPUT);
+  NimBLEDevice::setSecurityInitKey(BLE_SM_PAIR_KEY_DIST_ENC | BLE_SM_PAIR_KEY_DIST_ID);
+  NimBLEDevice::setSecurityRespKey(BLE_SM_PAIR_KEY_DIST_ENC | BLE_SM_PAIR_KEY_DIST_ID);
 
-  pServer = BLEDevice::createServer();
+  pServer = NimBLEDevice::createServer();
+  // Callback object is allocated once and reused across every start() (see
+  // the member comment in the header) rather than `new`'d fresh each time
+  // with nothing ever freeing the previous one. Also now the single place
+  // authentication-complete is handled -- see the ServerCallbacks comment
+  // above for why the classic split security-callbacks class is gone.
   if (!serverCallbacks) serverCallbacks = std::make_unique<ServerCallbacks>(*this);
   pServer->setCallbacks(serverCallbacks.get());
 
-  BLEService* service = pServer->createService(kServiceUuid);
+  NimBLEService* service = pServer->createService(kServiceUuid);
 
-  // PROPERTY_*_ENC (not setAccessPermissions(ESP_GATT_PERM_*_ENCRYPTED),
-  // which is Bluedroid's mechanism -- this board's sdkconfig builds on
-  // NimBLE, see the SecurityCallbacks comment above) requiring encryption
-  // makes Android's own BLE stack auto-trigger the system pairing dialog on
-  // Gadgetbridge's first write attempt, rather than needing this device to
-  // proactively initiate security itself (the latter is what flowe-os
-  // needed for iOS -- Android's stack handles this differently, so that
-  // extra pump isn't ported here; verify this assumption on a real
-  // Gadgetbridge sync).
-  pRxChar = service->createCharacteristic(kRxCharUuid, BLECharacteristic::PROPERTY_WRITE |
-                                                           BLECharacteristic::PROPERTY_WRITE_NR |
-                                                           BLECharacteristic::PROPERTY_WRITE_ENC);
+  // *_ENC properties (not setAccessPermissions(ESP_GATT_PERM_*_ENCRYPTED),
+  // which is Bluedroid's mechanism) requiring encryption makes Android's own
+  // BLE stack auto-trigger the system pairing dialog on Gadgetbridge's first
+  // write attempt, rather than needing this device to proactively initiate
+  // security itself (the latter is what flowe-os needed for iOS -- Android's
+  // stack handles this differently, so that extra pump isn't ported here;
+  // verify this assumption on a real Gadgetbridge sync).
+  pRxChar = service->createCharacteristic(
+      kRxCharUuid, NIMBLE_PROPERTY::WRITE | NIMBLE_PROPERTY::WRITE_NR | NIMBLE_PROPERTY::WRITE_ENC);
   if (!rxCallbacks) rxCallbacks = std::make_unique<RxCallbacks>(*this);
   pRxChar->setCallbacks(rxCallbacks.get());
 
-  pTxChar =
-      service->createCharacteristic(kTxCharUuid, BLECharacteristic::PROPERTY_NOTIFY | BLECharacteristic::PROPERTY_READ |
-                                                     BLECharacteristic::PROPERTY_READ_ENC);
-#if !defined(CONFIG_NIMBLE_ENABLED)
-  pTxChar->addDescriptor(new BLE2902());
-#endif
+  pTxChar = service->createCharacteristic(
+      kTxCharUuid, NIMBLE_PROPERTY::NOTIFY | NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::READ_ENC);
+  // No BLE2902 descriptor needed -- NimBLE manages the CCCD automatically
+  // for NOTIFY/INDICATE characteristics.
 
   service->start();
 
-  BLEAdvertising* advertising = BLEDevice::getAdvertising();
+  NimBLEAdvertising* advertising = NimBLEDevice::getAdvertising();
   advertising->addServiceUUID(kServiceUuid);
-  advertising->setScanResponse(true);
+  advertising->enableScanResponse(true);
   advertising->start();
 }
 
 void BangleGadgetbridgeServer::stop() {
-  // BLEDevice::deinit() (inside RADIO.shutdown() below) immediately deletes
-  // the BLEServer/BLEService/BLECharacteristic objects and stops the NimBLE
-  // host, with no regard for whether a peer is still connected. That's fine
+  // NimBLEDevice::deinit() (inside RADIO.shutdown() below) immediately
+  // deletes the NimBLEServer/NimBLEService/NimBLECharacteristic objects and
+  // stops the NimBLE host, with no regard for whether a peer is still
+  // connected. That's fine
   // when we get here via a real disconnect (deviceConnected is already
   // false by then), but calling it while still connected -- e.g. the user
   // hits Back/Cancel mid-SYNC_CONNECTED -- races deinit against whatever the
@@ -304,7 +286,7 @@ void BangleGadgetbridgeServer::poll() {
   if (pendingSecurityStart) {
     pendingSecurityStart = false;
     int rc = 0;
-    bool ok = BLESecurity::startSecurity(pendingSecurityConnHandle, &rc);
+    bool ok = NimBLEDevice::startSecurity(pendingSecurityConnHandle, &rc);
     LOG_DBG("BGB", "startSecurity(connHandle=%d) -> %d (rc=%d)", pendingSecurityConnHandle, ok, rc);
   }
 

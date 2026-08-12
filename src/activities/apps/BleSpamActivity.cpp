@@ -1,11 +1,9 @@
 #include "BleSpamActivity.h"
 
-#include <BLEAdvertising.h>
-#include <BLEDevice.h>
-#include <BLEUtils.h>
 #include <GfxRenderer.h>
 #include <I18n.h>
 #include <Logging.h>
+#include <NimBLEDevice.h>
 #include <esp_random.h>
 
 #include "MappedInputManager.h"
@@ -49,7 +47,7 @@ void BleSpamActivity::onEnter() {
 
 void BleSpamActivity::onExit() {
   if (state == BROADCASTING) {
-    BLEAdvertising* adv = BLEDevice::getAdvertising();
+    NimBLEAdvertising* adv = NimBLEDevice::getAdvertising();
     if (adv) adv->stop();
     RADIO.shutdown();
   }
@@ -61,8 +59,8 @@ void BleSpamActivity::onExit() {
 void BleSpamActivity::startBroadcasting() {
   RADIO.ensureBle();
 
-  if (!BLEDevice::getInitialized()) {
-    BLEDevice::init("");
+  if (!NimBLEDevice::isInitialized()) {
+    NimBLEDevice::init("");
   }
 
   sentCount = 0;
@@ -75,7 +73,7 @@ void BleSpamActivity::startBroadcasting() {
 }
 
 void BleSpamActivity::stopBroadcasting() {
-  BLEAdvertising* adv = BLEDevice::getAdvertising();
+  NimBLEAdvertising* adv = NimBLEDevice::getAdvertising();
   if (adv) adv->stop();
   RADIO.shutdown();
   state = MENU;
@@ -126,15 +124,15 @@ void BleSpamActivity::sendAppleProximityAdv() {
   payload[25] = 0x00;
   payload[26] = 0x00;
 
-  BLEAdvertisementData advData;
+  NimBLEAdvertisementData advData;
   std::string mfgData;
   mfgData.reserve(2 + sizeof(payload));
   mfgData += static_cast<char>(0x4C);  // Apple company ID (little-endian low byte)
   mfgData += static_cast<char>(0x00);  // Apple company ID high byte
   mfgData.append(reinterpret_cast<const char*>(payload), sizeof(payload));
-  advData.setManufacturerData(String(mfgData.data(), mfgData.size()));
+  advData.setManufacturerData(mfgData);
 
-  BLEAdvertising* adv = BLEDevice::getAdvertising();
+  NimBLEAdvertising* adv = NimBLEDevice::getAdvertising();
   adv->stop();
   adv->setAdvertisementData(advData);
   adv->start();
@@ -146,15 +144,15 @@ void BleSpamActivity::sendAndroidFastPairAdv() {
                                       0x0000F0, 0x000006, 0x00000A, 0x00000B, 0x00000C};
   uint32_t modelId = modelIds[esp_random() % (sizeof(modelIds) / sizeof(modelIds[0]))];
 
-  BLEAdvertisementData advData;
+  NimBLEAdvertisementData advData;
   std::string serviceData;
   serviceData.reserve(3);
   serviceData += static_cast<char>((modelId >> 16) & 0xFF);
   serviceData += static_cast<char>((modelId >> 8) & 0xFF);
   serviceData += static_cast<char>(modelId & 0xFF);
-  advData.setServiceData(BLEUUID(static_cast<uint16_t>(0xFE2C)), String(serviceData.data(), serviceData.size()));
+  advData.setServiceData(NimBLEUUID(static_cast<uint16_t>(0xFE2C)), serviceData);
 
-  BLEAdvertising* adv = BLEDevice::getAdvertising();
+  NimBLEAdvertising* adv = NimBLEDevice::getAdvertising();
   adv->stop();
   adv->setAdvertisementData(advData);
   adv->start();
@@ -162,7 +160,7 @@ void BleSpamActivity::sendAndroidFastPairAdv() {
 
 void BleSpamActivity::sendWindowsSwiftPairAdv() {
   // Microsoft Swift Pair — manufacturer data with company ID 0x0006.
-  BLEAdvertisementData advData;
+  NimBLEAdvertisementData advData;
 
   std::string mfgData;
   mfgData.reserve(10);
@@ -173,14 +171,18 @@ void BleSpamActivity::sendWindowsSwiftPairAdv() {
   for (int i = 0; i < 6; i++) {
     mfgData += static_cast<char>(esp_random() & 0xFF);
   }
-  advData.setManufacturerData(String(mfgData.data(), mfgData.size()));
+  advData.setManufacturerData(mfgData);
 
   char name[16];
   snprintf(name, sizeof(name), "Device_%04X", static_cast<uint16_t>(esp_random()));
   advData.setName(name);
-  advData.setFlags(ESP_BLE_ADV_FLAG_GEN_DISC | ESP_BLE_ADV_FLAG_BREDR_NOT_SPT);
+  // GAP flags: General Discoverable Mode (0x02) | BR/EDR Not Supported (0x04) —
+  // standard Bluetooth Core Spec Assigned Numbers bits, not backend-specific;
+  // hardcoded since the Bluedroid-only ESP_BLE_ADV_FLAG_* constants aren't
+  // available under a NimBLE-only build.
+  advData.setFlags(0x02 | 0x04);
 
-  BLEAdvertising* adv = BLEDevice::getAdvertising();
+  NimBLEAdvertising* adv = NimBLEDevice::getAdvertising();
   adv->stop();
   adv->setAdvertisementData(advData);
   adv->start();
@@ -188,7 +190,7 @@ void BleSpamActivity::sendWindowsSwiftPairAdv() {
 
 void BleSpamActivity::sendSamsungBudsAdv() {
   // Samsung Galaxy Buds — manufacturer data with company ID 0x0075 (Samsung).
-  BLEAdvertisementData advData;
+  NimBLEAdvertisementData advData;
 
   std::string mfgData;
   mfgData.reserve(14);
@@ -200,9 +202,9 @@ void BleSpamActivity::sendSamsungBudsAdv() {
   for (int i = 0; i < 10; i++) {
     mfgData += static_cast<char>(esp_random() & 0xFF);
   }
-  advData.setManufacturerData(String(mfgData.data(), mfgData.size()));
+  advData.setManufacturerData(mfgData);
 
-  BLEAdvertising* adv = BLEDevice::getAdvertising();
+  NimBLEAdvertising* adv = NimBLEDevice::getAdvertising();
   adv->stop();
   adv->setAdvertisementData(advData);
   adv->start();

@@ -1,9 +1,7 @@
 #include "SweepActivity.h"
 
-#include <BLEAdvertisedDevice.h>
-#include <BLEDevice.h>
-#include <BLEScan.h>
 #include <Logging.h>
+#include <NimBLEDevice.h>
 #include <WiFi.h>
 
 #include <cctype>
@@ -137,85 +135,84 @@ void SweepActivity::scanWifiKarma() {
 void SweepActivity::scanBleThreats() {
   RADIO.ensureBle();  // shuts down WiFi first, then starts BLE
 
-  BLEScan* scan = BLEDevice::getScan();
+  NimBLEScan* scan = NimBLEDevice::getScan();
   scan->setActiveScan(true);
-  scan->start(1);  // 1-second blocking scan (shorter to reduce UI freeze)
+  // Blocking scan for 1 second (shorter to reduce UI freeze) — getResults(duration)
+  // performs the scan and returns the collected results in one call.
+  NimBLEScanResults results = scan->getResults(1);
 
-  BLEScanResults* results = scan->getResults();
-  if (results) {
-    int count = results->getCount();
-    for (int i = 0; i < count; i++) {
-      BLEAdvertisedDevice dev = results->getDevice(i);
-      std::string mac = dev.getAddress().toString().c_str();
-      int8_t rssi = static_cast<int8_t>(dev.getRSSI());
+  int count = results.getCount();
+  for (int i = 0; i < count; i++) {
+    const NimBLEAdvertisedDevice* dev = results.getDevice(i);
+    std::string mac = dev->getAddress().toString().c_str();
+    int8_t rssi = static_cast<int8_t>(dev->getRSSI());
 
-      bool isTracker = false;
-      bool isSkimmer = false;
-      const char* trackerLabel = nullptr;
+    bool isTracker = false;
+    bool isSkimmer = false;
+    const char* trackerLabel = nullptr;
 
-      // --- Tracker detection ---
-      if (dev.haveManufacturerData()) {
-        String mfRaw = dev.getManufacturerData();
-        const uint8_t* mf = reinterpret_cast<const uint8_t*>(mfRaw.c_str());
-        size_t mfLen = static_cast<size_t>(mfRaw.length());
+    // --- Tracker detection ---
+    if (dev->haveManufacturerData()) {
+      std::string mfRaw = dev->getManufacturerData();
+      const uint8_t* mf = reinterpret_cast<const uint8_t*>(mfRaw.c_str());
+      size_t mfLen = mfRaw.length();
 
-        if (mfLen >= 2) {
-          uint16_t companyId = mf[0] | (static_cast<uint16_t>(mf[1]) << 8);
+      if (mfLen >= 2) {
+        uint16_t companyId = mf[0] | (static_cast<uint16_t>(mf[1]) << 8);
 
-          // Apple Find My / AirTag: company 0x004C, length > 4
-          if (companyId == 0x004C && mfLen > 4) {
-            isTracker = true;
-            trackerLabel = (mfLen >= 5 && mf[2] == 0x12 && mf[3] == 0x19) ? "AirTag" : "Apple FindMy";
-          }
-
-          // Samsung SmartTag: company 0x0075
-          if (companyId == 0x0075) {
-            isTracker = true;
-            trackerLabel = "SmartTag";
-          }
-        }
-      }
-
-      // Tile: service UUID contains "feed"
-      if (!isTracker && dev.haveServiceUUID()) {
-        std::string svc = dev.getServiceUUID().toString().c_str();
-        if (svc.find("feed") != std::string::npos || svc.find("FEED") != std::string::npos) {
+        // Apple Find My / AirTag: company 0x004C, length > 4
+        if (companyId == 0x004C && mfLen > 4) {
           isTracker = true;
-          trackerLabel = "Tile";
+          trackerLabel = (mfLen >= 5 && mf[2] == 0x12 && mf[3] == 0x19) ? "AirTag" : "Apple FindMy";
+        }
+
+        // Samsung SmartTag: company 0x0075
+        if (companyId == 0x0075) {
+          isTracker = true;
+          trackerLabel = "SmartTag";
         }
       }
+    }
 
-      // --- Skimmer OUI check ---
-      // BLE address: parse first 3 bytes from "XX:XX:XX:XX:XX:XX"
-      uint8_t addrBytes[6] = {};
-      if (mac.length() >= 17) {
-        unsigned int v[6];
-        if (sscanf(mac.c_str(), "%02x:%02x:%02x:%02x:%02x:%02x", &v[0], &v[1], &v[2], &v[3], &v[4], &v[5]) == 6) {
-          for (int b = 0; b < 6; b++) addrBytes[b] = static_cast<uint8_t>(v[b]);
-        }
+    // Tile: service UUID contains "feed"
+    if (!isTracker && dev->haveServiceUUID()) {
+      std::string svc = dev->getServiceUUID().toString();
+      if (svc.find("feed") != std::string::npos || svc.find("FEED") != std::string::npos) {
+        isTracker = true;
+        trackerLabel = "Tile";
       }
-      for (int o = 0; o < SKIMMER_OUI_COUNT; o++) {
-        if (addrBytes[0] == SKIMMER_OUIS[o].b0 && addrBytes[1] == SKIMMER_OUIS[o].b1 &&
-            addrBytes[2] == SKIMMER_OUIS[o].b2) {
-          isSkimmer = true;
-          break;
-        }
-      }
+    }
 
-      if (isTracker) {
-        char buf[80];
-        snprintf(buf, sizeof(buf), "Tracker: %s [%s] %ddBm", trackerLabel ? trackerLabel : "Unknown", mac.c_str(),
-                 static_cast<int>(rssi));
-        addFinding(buf, 2);
-        trackersFound++;
+    // --- Skimmer OUI check ---
+    // BLE address: parse first 3 bytes from "XX:XX:XX:XX:XX:XX"
+    uint8_t addrBytes[6] = {};
+    if (mac.length() >= 17) {
+      unsigned int v[6];
+      if (sscanf(mac.c_str(), "%02x:%02x:%02x:%02x:%02x:%02x", &v[0], &v[1], &v[2], &v[3], &v[4], &v[5]) == 6) {
+        for (int b = 0; b < 6; b++) addrBytes[b] = static_cast<uint8_t>(v[b]);
       }
+    }
+    for (int o = 0; o < SKIMMER_OUI_COUNT; o++) {
+      if (addrBytes[0] == SKIMMER_OUIS[o].b0 && addrBytes[1] == SKIMMER_OUIS[o].b1 &&
+          addrBytes[2] == SKIMMER_OUIS[o].b2) {
+        isSkimmer = true;
+        break;
+      }
+    }
 
-      if (isSkimmer) {
-        char buf[80];
-        snprintf(buf, sizeof(buf), "Suspicious BLE: %s (skimmer OUI) %ddBm", mac.c_str(), static_cast<int>(rssi));
-        addFinding(buf, 2);
-        skimmers++;
-      }
+    if (isTracker) {
+      char buf[80];
+      snprintf(buf, sizeof(buf), "Tracker: %s [%s] %ddBm", trackerLabel ? trackerLabel : "Unknown", mac.c_str(),
+               static_cast<int>(rssi));
+      addFinding(buf, 2);
+      trackersFound++;
+    }
+
+    if (isSkimmer) {
+      char buf[80];
+      snprintf(buf, sizeof(buf), "Suspicious BLE: %s (skimmer OUI) %ddBm", mac.c_str(), static_cast<int>(rssi));
+      addFinding(buf, 2);
+      skimmers++;
     }
   }
 

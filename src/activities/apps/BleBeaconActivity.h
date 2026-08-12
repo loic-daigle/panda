@@ -1,12 +1,12 @@
 #pragma once
 
-#include <BLEDevice.h>
-
 #include <cstdint>
 #include <string>
 
 #include "activities/Activity.h"
 #include "util/ButtonNavigator.h"
+
+class NimBLEAdvertising;
 
 class BleBeaconActivity final : public Activity {
  public:
@@ -38,7 +38,7 @@ class BleBeaconActivity final : public Activity {
   int deviceTypeIndex = 0;
   int platformIndex = 0;
 
-  BLEAdvertising* pAdvertising = nullptr;
+  NimBLEAdvertising* pAdvertising = nullptr;
 
   void startSpam(SpamMode mode);
   void stopSpam();

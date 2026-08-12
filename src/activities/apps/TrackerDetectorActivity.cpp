@@ -1,10 +1,8 @@
 #include "TrackerDetectorActivity.h"
 
-#include <BLEAdvertisedDevice.h>
-#include <BLEDevice.h>
-#include <BLEScan.h>
 #include <I18n.h>
 #include <Logging.h>
+#include <NimBLEDevice.h>
 
 #include <algorithm>
 
@@ -28,7 +26,7 @@ void TrackerDetectorActivity::onEnter() {
 void TrackerDetectorActivity::onExit() {
   Activity::onExit();
   if (scanInitialized) {
-    BLEScan* scan = BLEDevice::getScan();
+    NimBLEScan* scan = NimBLEDevice::getScan();
     scan->stop();
     RADIO.shutdown();
     scanInitialized = false;
@@ -49,7 +47,7 @@ void TrackerDetectorActivity::startMonitoring() {
 
 void TrackerDetectorActivity::stopMonitoring() {
   if (scanInitialized) {
-    BLEScan* scan = BLEDevice::getScan();
+    NimBLEScan* scan = NimBLEDevice::getScan();
     scan->stop();
     RADIO.shutdown();
     scanInitialized = false;
@@ -61,32 +59,31 @@ void TrackerDetectorActivity::stopMonitoring() {
 
 void TrackerDetectorActivity::runScan() {
   if (!scanInitialized) return;
-  BLEScan* scan = BLEDevice::getScan();
+  NimBLEScan* scan = NimBLEDevice::getScan();
   scan->setActiveScan(true);
   scan->setInterval(100);
   scan->setWindow(99);
   scan->clearResults();
-  scan->start(0, nullptr, true);  // non-blocking
+  scan->start(0, false, true);  // non-blocking
   lastScanTime = millis();
 }
 
 void TrackerDetectorActivity::processScanResults() {
-  BLEScan* scan = BLEDevice::getScan();
-  BLEScanResults* results = scan->getResults();
-  if (!results) return;
+  NimBLEScan* scan = NimBLEDevice::getScan();
+  NimBLEScanResults results = scan->getResults();
 
-  for (int i = 0; i < results->getCount(); i++) {
-    BLEAdvertisedDevice dev = results->getDevice(i);
-    std::string mac = dev.getAddress().toString().c_str();
+  for (int i = 0; i < results.getCount(); i++) {
+    const NimBLEAdvertisedDevice* dev = results.getDevice(i);
+    std::string mac = dev->getAddress().toString().c_str();
 
     TrackerType type = UNKNOWN_TRACKER;
-    if (dev.haveManufacturerData()) {
-      String mfRaw = dev.getManufacturerData();
-      std::string svcStr = dev.haveServiceUUID() ? std::string(dev.getServiceUUID().toString().c_str()) : "";
+    if (dev->haveManufacturerData()) {
+      std::string mfRaw = dev->getManufacturerData();
+      std::string svcStr = dev->haveServiceUUID() ? dev->getServiceUUID().toString() : "";
       type = identifyTracker(reinterpret_cast<const uint8_t*>(mfRaw.c_str()), mfRaw.length(), svcStr);
-    } else if (dev.haveServiceUUID()) {
+    } else if (dev->haveServiceUUID()) {
       // Some trackers only advertise via service UUID
-      type = identifyTracker(nullptr, 0, std::string(dev.getServiceUUID().toString().c_str()));
+      type = identifyTracker(nullptr, 0, dev->getServiceUUID().toString());
     }
 
     if (type == UNKNOWN_TRACKER) continue;
@@ -94,11 +91,11 @@ void TrackerDetectorActivity::processScanResults() {
     auto it = std::find_if(devices.begin(), devices.end(), [&mac](const TrackedDevice& d) { return d.mac == mac; });
 
     if (it != devices.end()) {
-      it->rssi = dev.getRSSI();
+      it->rssi = dev->getRSSI();
       it->lastSeen = millis();
       it->seenCount++;
     } else if (static_cast<int>(devices.size()) < MAX_TRACKED) {
-      devices.push_back({mac, type, static_cast<int8_t>(dev.getRSSI()), 1, millis(), millis(), false});
+      devices.push_back({mac, type, static_cast<int8_t>(dev->getRSSI()), 1, millis(), millis(), false});
     }
   }
 

@@ -1,12 +1,11 @@
 #include "BleKeyboardActivity.h"
 
-#include <BLEDevice.h>
-#include <BLEHIDDevice.h>
-#include <BLEServer.h>
 #include <GfxRenderer.h>
 #include <HIDKeyboardTypes.h>
 #include <HalStorage.h>
 #include <Logging.h>
+#include <NimBLEDevice.h>
+#include <NimBLEHIDDevice.h>
 
 #include <algorithm>
 #include <cstring>
@@ -41,24 +40,30 @@ static const char* BUILTIN_DEMO_LINES[] = {
     nullptr  // sentinel
 };
 
-class BleKeyboardActivity::ServerCallbacks : public BLEServerCallbacks {
+class BleKeyboardActivity::ServerCallbacks : public NimBLEServerCallbacks {
   BleKeyboardActivity& activity;
 
  public:
   explicit ServerCallbacks(BleKeyboardActivity& act) : activity(act) {}
-  void onConnect(BLEServer*) override {
+  void onConnect(NimBLEServer*, NimBLEConnInfo&) override {
     activity.deviceConnected = true;
     activity.state = PAIRED;
     activity.requestUpdate();
     LOG_DBG("BadBLE", "Device connected");
   }
-  void onDisconnect(BLEServer*) override {
+  void onDisconnect(NimBLEServer*, NimBLEConnInfo&, int) override {
     activity.deviceConnected = false;
     if (activity.state == EXECUTING) activity.state = DONE;
     activity.requestUpdate();
     LOG_DBG("BadBLE", "Device disconnected");
   }
 };
+
+// Out-of-line (see header) so unique_ptr<ServerCallbacks> can be constructed
+// and destroyed, which is only forward-declared in BleKeyboardActivity.h.
+BleKeyboardActivity::BleKeyboardActivity(GfxRenderer& renderer, MappedInputManager& mappedInput)
+    : Activity("BleKeyboard", renderer, mappedInput) {}
+BleKeyboardActivity::~BleKeyboardActivity() = default;
 
 void BleKeyboardActivity::onEnter() {
   Activity::onEnter();
@@ -166,20 +171,23 @@ bool BleKeyboardActivity::startAdvertising() {
     return false;
   }
 
-  pServer = BLEDevice::createServer();
-  pServer->setCallbacks(new ServerCallbacks(*this));
+  pServer = NimBLEDevice::createServer();
+  if (!serverCallbacks) serverCallbacks = std::make_unique<ServerCallbacks>(*this);
+  pServer->setCallbacks(serverCallbacks.get());
 
-  pHid = new BLEHIDDevice(pServer);
-  pHid->manufacturer()->setValue("biscuit");
-  pHid->pnp(0x02, 0x05AC, 0x820A, 0x0210);
-  pHid->hidInfo(0x00, 0x01);
-  pHid->reportMap(const_cast<uint8_t*>(HID_REPORT_DESCRIPTOR), sizeof(HID_REPORT_DESCRIPTOR));
-  pInputChar = pHid->inputReport(1);
-  pHid->startServices();
+  pHid = new NimBLEHIDDevice(pServer);
+  pHid->setManufacturer("panda");
+  pHid->setPnp(0x02, 0x05AC, 0x820A, 0x0210);
+  pHid->setHidInfo(0x00, 0x01);
+  pHid->setReportMap(const_cast<uint8_t*>(HID_REPORT_DESCRIPTOR), sizeof(HID_REPORT_DESCRIPTOR));
+  pInputChar = pHid->getInputReport(1);
 
-  BLEAdvertising* pAdv = pServer->getAdvertising();
+  NimBLEAdvertising* pAdv = pServer->getAdvertising();
   pAdv->setAppearance(0x03C1);
-  pAdv->addServiceUUID(pHid->hidService()->getUUID());
+  pAdv->addServiceUUID(pHid->getHidService()->getUUID());
+  // startServices() is deprecated in NimBLE-Arduino 2.x — services now start
+  // automatically when the server starts.
+  pServer->start();
   pAdv->start();
 
   LOG_DBG("BadBLE", "Advertising as '%s'", BLE_DEVICE_NAME);

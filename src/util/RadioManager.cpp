@@ -1,7 +1,7 @@
 #include "RadioManager.h"
 
-#include <BLEDevice.h>
 #include <Logging.h>
+#include <NimBLEDevice.h>
 #include <Preferences.h>
 #include <WiFi.h>
 
@@ -25,7 +25,7 @@ bool RadioManager::ensureBle(const char* deviceName) {
     deinitWifi();
   }
 
-  BLEDevice::init(deviceName);
+  NimBLEDevice::init(deviceName);
   state = RadioState::BLE;
   LOG_DBG("RADIO", "Switched to BLE mode, heap: %d", ESP.getFreeHeap());
   return true;
@@ -45,7 +45,21 @@ void RadioManager::deinitWifi() {
 }
 
 void RadioManager::deinitBle() {
-  BLEDevice::deinit(false);
+  // clearAll=true: deinit(false) stops the NimBLE host but leaves the
+  // NimBLEServer/NimBLEService/NimBLECharacteristic C++ objects allocated and
+  // still registered. The next ensureBle() + createServer() call then reuses
+  // that same stale NimBLEServer (createServer() only allocates a new one
+  // when NimBLEDevice's singleton is null) while createService()/
+  // createCharacteristic() unconditionally append brand-new duplicate
+  // objects rather than replacing -- leaving the OLD ones (whose callbacks
+  // point back into whatever Activity registered them, since destroyed)
+  // still live in the GATT table. An already-bonded phone reconnecting can
+  // then have a write routed to that stale characteristic, invoking a
+  // virtual call through freed memory. Seen on real hardware as a Guru
+  // Meditation Load access fault inside NimBLECharacteristic::writeEvent
+  // (m_pCallbacks->onWrite on a destroyed callbacks object) right after a
+  // second-in-the-same-boot Gadgetbridge BLE sync connected.
+  NimBLEDevice::deinit(true);
   delay(50);
   LOG_DBG("RADIO", "BLE deinitialized");
 }

