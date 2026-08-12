@@ -322,7 +322,7 @@ void CasinoActivity::renderLobby() {
   const auto pageWidth = renderer.getScreenWidth();
   const auto pageHeight = renderer.getScreenHeight();
 
-  renderer.drawCenteredText(UI_12_FONT_ID, 12, "biscuit. Casino", true, EpdFontFamily::BOLD);
+  renderer.drawCenteredText(UI_12_FONT_ID, 12, "panda. Casino", true, EpdFontFamily::BOLD);
   renderer.drawLine(15, 42, pageWidth - 15, 42);
 
   renderCreditsBar();
@@ -2241,7 +2241,7 @@ const CasinoActivity::LbItem CasinoActivity::LB_ITEMS[50] = {
     {"Root Shell", LB_LEGENDARY, 46},
     {"Packet Ghost", LB_LEGENDARY, 47},
     {"E-Ink Dragon", LB_LEGENDARY, 48},
-    {"biscuit. Logo", LB_LEGENDARY, 49},
+    {"panda. Logo", LB_LEGENDARY, 49},
 };
 
 // ================================================================
@@ -3555,7 +3555,7 @@ void CasinoActivity::lbDrawItemIcon(int x, int y, int size, int iconId, bool loc
       renderer.drawLine(cx - s, cy + s / 2, cx - s + s / 3, cy + s);
       break;
     }
-    case 49: {  // biscuit. Logo
+    case 49: {  // panda. Logo
       for (int a = 0; a < 360; a += 5) {
         float rad = a * 3.14159f / 180.0f;
         renderer.drawPixel(cx + (int)(s * cosf(rad)), cy + (int)(s * sinf(rad)), true);

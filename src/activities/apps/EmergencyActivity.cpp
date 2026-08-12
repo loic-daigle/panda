@@ -119,7 +119,7 @@ void EmergencyActivity::triggerEmergency() {
       }
       snprintf(ssid, sizeof(ssid), "SOS-%s", safeName);
     } else {
-      snprintf(ssid, sizeof(ssid), "SOS-BISCUIT");
+      snprintf(ssid, sizeof(ssid), "SOS-PANDA");
     }
 
     if (broadcastMesh) {
@@ -597,7 +597,7 @@ void EmergencyActivity::renderTriggered() const {
         }
         snprintf(ssid, sizeof(ssid), "WiFi AP: SOS-%s", safeName);
       } else {
-        snprintf(ssid, sizeof(ssid), "WiFi AP: SOS-BISCUIT");
+        snprintf(ssid, sizeof(ssid), "WiFi AP: SOS-PANDA");
       }
       renderer.drawText(SMALL_FONT_ID, PAD, y, ssid);
       y += lineHSm + 3;

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    biscuit. e-ink screen preview — hot reload
+    panda. e-ink screen preview — hot reload
     
 .DESCRIPTION
     Watches test_preview.cpp for changes, auto-builds, auto-opens BMP.
@@ -92,7 +92,7 @@ if (-not (Test-Path $previewFile)) {
 Write-Host @"
 
   ╔══════════════════════════════════════════════╗
-  ║  biscuit. preview — hot reload active        ║
+  ║  panda. preview — hot reload active          ║
   ║                                              ║
   ║  Edit: test\test_preview\test_preview.cpp    ║
   ║  Save → auto-build → BMP opens              ║

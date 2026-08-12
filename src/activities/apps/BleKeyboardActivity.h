@@ -55,7 +55,7 @@ class BleKeyboardActivity final : public Activity {
   int repeatCount = 0;
 
   static constexpr const char* DUCKY_DIR = "/biscuit/ducky/";
-  static constexpr const char* BLE_DEVICE_NAME = "biscuit. keyboard";
+  static constexpr const char* BLE_DEVICE_NAME = "panda. keyboard";
 
   void loadScriptList();
   void loadScriptContent(const std::string& path);

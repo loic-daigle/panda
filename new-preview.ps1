@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Generate a preview stub for a biscuit. activity
+    Generate a preview stub for a panda. activity
     
 .USAGE
     .\new-preview.ps1 MyNewActivity

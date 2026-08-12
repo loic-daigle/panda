@@ -141,7 +141,7 @@ void MdnsBrowserActivity::startDiscovery(int serviceIdx) {
   scanServiceIdx = serviceIdx;
 
   if (!mdnsStarted) {
-    MDNS.begin("biscuit");
+    MDNS.begin("panda");
     mdnsStarted = true;
   }
 
@@ -158,7 +158,7 @@ void MdnsBrowserActivity::startDiscoveryAll() {
   scanAllServices = true;
 
   if (!mdnsStarted) {
-    MDNS.begin("biscuit");
+    MDNS.begin("panda");
     mdnsStarted = true;
   }
 

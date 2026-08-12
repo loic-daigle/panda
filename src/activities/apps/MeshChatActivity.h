@@ -58,7 +58,7 @@ class MeshChatActivity final : public Activity {
   SemaphoreHandle_t peersMux = nullptr;
 
   // Identity
-  char localName[16] = "biscuit";
+  char localName[16] = "panda";
   uint8_t localMac[6] = {};
 
   // Relay mode: rebroadcast received CHAT frames from other nodes

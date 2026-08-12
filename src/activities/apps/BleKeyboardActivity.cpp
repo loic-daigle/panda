@@ -23,7 +23,7 @@ static const uint8_t HID_REPORT_DESCRIPTOR[] = {0x05, 0x01, 0x09, 0x06, 0xA1, 0x
 // Built-in demo scripts (no SD card needed)
 static constexpr const char* BUILTIN_DEMO_NAME = "(Demo) Hello World";
 static const char* BUILTIN_DEMO_LINES[] = {
-    "REM biscuit. BadBLE demo script",
+    "REM panda. BadBLE demo script",
     "REM Opens notepad and types a message",
     "DELAY 1000",
     "GUI r",
@@ -31,7 +31,7 @@ static const char* BUILTIN_DEMO_LINES[] = {
     "STRING notepad",
     "ENTER",
     "DELAY 1000",
-    "STRING Hello from biscuit. BadBLE!",
+    "STRING Hello from panda. BadBLE!",
     "ENTER",
     "STRING This is a DuckyScript demo.",
     "ENTER",

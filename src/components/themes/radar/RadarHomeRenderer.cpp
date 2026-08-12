@@ -102,7 +102,7 @@ void RadarHomeRenderer::draw(GfxRenderer& renderer, const RadarNode* nodes, int 
   const int pageWidth = renderer.getScreenWidth();  // 480
 
   // -----------------------------------------------------------------------
-  // A. Top bar: "BISCUIT." brand left, battery right, then separator line
+  // A. Top bar: "panda" brand left, battery right, then separator line
   // -----------------------------------------------------------------------
   renderer.drawText(UI_12_FONT_ID, 14, 8, "panda", true, EpdFontFamily::BOLD);
 

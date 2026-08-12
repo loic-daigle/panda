@@ -212,7 +212,7 @@ void AppsMenuActivity::loop() {
               {"Phone Tether", "BLE proximity disconnect alert", UIIcon::Hotspot,
                [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<PhoneTetherActivity>(r, m); }},
               AppCategoryActivity::SectionHeader("DEVICE SECURITY"),
-              {"Quick Wipe", "Erase all biscuit data from SD", UIIcon::Folder,
+              {"Quick Wipe", "Erase all panda data from SD", UIIcon::Folder,
                [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<QuickWipeActivity>(r, m); }},
               {"Captured Data", "Review captured creds/handshakes/PCAPs", UIIcon::File,
                [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<LootActivity>(r, m); }},
@@ -220,7 +220,7 @@ void AppsMenuActivity::loop() {
                [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<SecurityPinActivity>(r, m); }},
               {"Screen Decoy", "Fake screen to hide activity", UIIcon::File,
                [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<ScreenDecoyActivity>(r, m); }},
-              {"SD Encryption", "Encrypt biscuit data with PIN", UIIcon::Settings,
+              {"SD Encryption", "Encrypt panda data with PIN", UIIcon::Settings,
                [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<SdEncryptionActivity>(r, m); }},
           };
           app = std::make_unique<AppCategoryActivity>(renderer, mappedInput, "Defense", std::move(e), false, 2);
@@ -532,7 +532,7 @@ void AppsMenuActivity::loop() {
             {"Phone Tether", "BLE proximity disconnect alert", UIIcon::Hotspot,
              [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<PhoneTetherActivity>(r, m); }},
             AppCategoryActivity::SectionHeader("DEVICE SECURITY"),
-            {"Quick Wipe", "Erase all biscuit data from SD", UIIcon::Folder,
+            {"Quick Wipe", "Erase all panda data from SD", UIIcon::Folder,
              [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<QuickWipeActivity>(r, m); }},
             {"Captured Data", "Review captured creds/handshakes/PCAPs", UIIcon::File,
              [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<LootActivity>(r, m); }},
@@ -540,7 +540,7 @@ void AppsMenuActivity::loop() {
              [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<SecurityPinActivity>(r, m); }},
             {"Screen Decoy", "Fake screen to hide activity", UIIcon::File,
              [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<ScreenDecoyActivity>(r, m); }},
-            {"SD Encryption", "Encrypt biscuit data with PIN", UIIcon::Settings,
+            {"SD Encryption", "Encrypt panda data with PIN", UIIcon::Settings,
              [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<SdEncryptionActivity>(r, m); }},
         };
         app = std::make_unique<AppCategoryActivity>(renderer, mappedInput, "Defense", std::move(e), false, 2);
