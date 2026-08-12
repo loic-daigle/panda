@@ -94,18 +94,18 @@ void EventLoggerActivity::loop() {
     }
     if (mappedInput.wasPressed(MappedInputManager::Button::Right)) {
       state = COMPOSE;
-      startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "New Note", "", 127,
-                                                                      InputType::Text,
-                                                                      /*allowBleKeyboard=*/true),
-                             [this](const ActivityResult& r) {
-                               state = LOG_LIST;
-                               if (!r.isCancelled) {
-                                 const auto& text = std::get<KeyboardResult>(r.data).text;
-                                 saveEntry(text.c_str());
-                                 loadEntries();
-                                 selectedIndex = 0;
-                               }
-                             });
+      startActivityForResult(
+          std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "New Note", "", 127, InputType::Text,
+                                                  /*allowBleKeyboard=*/true),
+          [this](const ActivityResult& r) {
+            state = LOG_LIST;
+            if (!r.isCancelled) {
+              const auto& text = std::get<KeyboardResult>(r.data).text;
+              saveEntry(text.c_str());
+              loadEntries();
+              selectedIndex = 0;
+            }
+          });
     }
     return;
   }

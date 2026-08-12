@@ -123,33 +123,33 @@ void TotpActivity::loop() {
         // "Add Account"
         state = ADD_ACCOUNT;
         memset(pendingName, 0, sizeof(pendingName));
-        startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Account Name", "", 31,
-                                                                        InputType::Text,
-                                                                        /*allowBleKeyboard=*/true),
-                               [this](const ActivityResult& r) {
-                                 if (r.isCancelled) {
-                                   state = ACCOUNT_LIST;
-                                   return;
-                                 }
-                                 const auto& text = std::get<KeyboardResult>(r.data).text;
-                                 strncpy(pendingName, text.c_str(), sizeof(pendingName) - 1);
-                                 startActivityForResult(std::make_unique<KeyboardEntryActivity>(
-                                                            renderer, mappedInput, "Base32 Secret", "", 64,
-                                                            InputType::Text, /*allowBleKeyboard=*/true),
-                                                        [this](const ActivityResult& r2) {
-                                                          state = ACCOUNT_LIST;
-                                                          if (r2.isCancelled) return;
-                                                          if (accountCount >= MAX_ACCOUNTS) return;
-                                                          const auto& sec = std::get<KeyboardResult>(r2.data).text;
-                                                          Account& acc = accounts[accountCount++];
-                                                          memset(&acc, 0, sizeof(acc));
-                                                          strncpy(acc.name, pendingName, sizeof(acc.name) - 1);
-                                                          strncpy(acc.secret, sec.c_str(), sizeof(acc.secret) - 1);
-                                                          acc.digits = 6;
-                                                          acc.period = 30;
-                                                          saveAccounts();
-                                                        });
-                               });
+        startActivityForResult(
+            std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Account Name", "", 31, InputType::Text,
+                                                    /*allowBleKeyboard=*/true),
+            [this](const ActivityResult& r) {
+              if (r.isCancelled) {
+                state = ACCOUNT_LIST;
+                return;
+              }
+              const auto& text = std::get<KeyboardResult>(r.data).text;
+              strncpy(pendingName, text.c_str(), sizeof(pendingName) - 1);
+              startActivityForResult(
+                  std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Base32 Secret", "", 64,
+                                                          InputType::Text, /*allowBleKeyboard=*/true),
+                  [this](const ActivityResult& r2) {
+                    state = ACCOUNT_LIST;
+                    if (r2.isCancelled) return;
+                    if (accountCount >= MAX_ACCOUNTS) return;
+                    const auto& sec = std::get<KeyboardResult>(r2.data).text;
+                    Account& acc = accounts[accountCount++];
+                    memset(&acc, 0, sizeof(acc));
+                    strncpy(acc.name, pendingName, sizeof(acc.name) - 1);
+                    strncpy(acc.secret, sec.c_str(), sizeof(acc.secret) - 1);
+                    acc.digits = 6;
+                    acc.period = 30;
+                    saveAccounts();
+                  });
+            });
       } else {
         state = SHOW_CODE;
         requestUpdate();

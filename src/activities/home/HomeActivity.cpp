@@ -323,8 +323,8 @@ void HomeActivity::render(RenderLock&&) {
     }
   }
   if (metrics.homeMenuTopOffset >= renderer.getLineHeight(SMALL_FONT_ID) + 3) {
-    renderer.drawText(SMALL_FONT_ID, 20, metrics.homeTopPadding + metrics.homeCoverTileHeight + 1,
-                      tr(STR_QUICK_ACCESS), true);
+    renderer.drawText(SMALL_FONT_ID, 20, metrics.homeTopPadding + metrics.homeCoverTileHeight + 1, tr(STR_QUICK_ACCESS),
+                      true);
   }
 
   // Record the tile rect so storeCoverBuffer (called from the theme) knows

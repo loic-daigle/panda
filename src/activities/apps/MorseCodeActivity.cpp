@@ -90,20 +90,20 @@ void MorseCodeActivity::loop() {
     if (mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
       if (modeIndex == 0) {
         // Encode: get text input
-        startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Text to Morse", "", 0,
-                                                                        InputType::Text,
-                                                                        /*allowBleKeyboard=*/true),
-                               [this](const ActivityResult& result) {
-                                 if (result.isCancelled) {
-                                   state = MODE_SELECT;
-                                   requestUpdate();
-                                 } else {
-                                   inputText = std::get<KeyboardResult>(result.data).text;
-                                   morseOutput = textToMorse(inputText);
-                                   state = MORSE_ENCODE;
-                                   requestUpdate();
-                                 }
-                               });
+        startActivityForResult(
+            std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Text to Morse", "", 0, InputType::Text,
+                                                    /*allowBleKeyboard=*/true),
+            [this](const ActivityResult& result) {
+              if (result.isCancelled) {
+                state = MODE_SELECT;
+                requestUpdate();
+              } else {
+                inputText = std::get<KeyboardResult>(result.data).text;
+                morseOutput = textToMorse(inputText);
+                state = MORSE_ENCODE;
+                requestUpdate();
+              }
+            });
       } else if (modeIndex == 1) {
         state = MORSE_DECODE;
         decodedText.clear();

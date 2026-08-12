@@ -526,7 +526,7 @@ void SdEncryptionActivity::showMessage(const char* msg, unsigned long durationMs
 void SdEncryptionActivity::launchChangePinPhase2() {
   startActivityForResult(
       std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Enter new PIN", "", 32, InputType::Password,
-                                               /*allowBleKeyboard=*/true),
+                                              /*allowBleKeyboard=*/true),
       [this](const ActivityResult& result) {
         changePinPhase2 = false;
 
@@ -652,7 +652,7 @@ void SdEncryptionActivity::loop() {
       // Encrypt (0) or Decrypt (1)
       startActivityForResult(
           std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "Enter PIN", "", 32, InputType::Password,
-                                                   /*allowBleKeyboard=*/true),
+                                                  /*allowBleKeyboard=*/true),
           [this, captured](const ActivityResult& result) {
             if (result.isCancelled) return;
             const auto& pin = std::get<KeyboardResult>(result.data).text;

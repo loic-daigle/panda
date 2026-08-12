@@ -1,15 +1,14 @@
 #include "BangleGadgetbridgeServer.h"
 
 #include <Arduino.h>
+#include <HalClock.h>
+#include <Logging.h>
+#include <NimBLEDevice.h>
 #include <sys/time.h>
 
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
-
-#include <HalClock.h>
-#include <Logging.h>
-#include <NimBLEDevice.h>
 
 #include "CrossPointSettings.h"
 #include "activities/Activity.h"
@@ -76,8 +75,7 @@ class BangleGadgetbridgeServer::ServerCallbacks : public NimBLEServerCallbacks {
   // so the NimBLEServerCallbacks base class defaults for onPassKeyDisplay /
   // onPassKeyEntry / onConfirmPassKey are fine as-is.
   void onAuthenticationComplete(NimBLEConnInfo& connInfo) override {
-    LOG_DBG("BGB", "BLE authentication complete: encrypted=%d bonded=%d", connInfo.isEncrypted(),
-            connInfo.isBonded());
+    LOG_DBG("BGB", "BLE authentication complete: encrypted=%d bonded=%d", connInfo.isEncrypted(), connInfo.isBonded());
   }
 };
 
@@ -160,8 +158,8 @@ void BangleGadgetbridgeServer::start(const char* deviceName) {
   if (!rxCallbacks) rxCallbacks = std::make_unique<RxCallbacks>(*this);
   pRxChar->setCallbacks(rxCallbacks.get());
 
-  pTxChar = service->createCharacteristic(
-      kTxCharUuid, NIMBLE_PROPERTY::NOTIFY | NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::READ_ENC);
+  pTxChar = service->createCharacteristic(kTxCharUuid,
+                                          NIMBLE_PROPERTY::NOTIFY | NIMBLE_PROPERTY::READ | NIMBLE_PROPERTY::READ_ENC);
   // No BLE2902 descriptor needed -- NimBLE manages the CCCD automatically
   // for NOTIFY/INDICATE characteristics.
 

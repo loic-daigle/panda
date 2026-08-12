@@ -64,7 +64,7 @@ void PasswordGeneratorActivity::loop() {
       state = ENTER_SITE;
       startActivityForResult(
           std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, std::string(tr(STR_SITE)), "", 64,
-                                                   InputType::Text, /*allowBleKeyboard=*/true),
+                                                  InputType::Text, /*allowBleKeyboard=*/true),
           [this](const ActivityResult& result) {
             if (result.isCancelled) {
               state = GENERATING;
@@ -75,7 +75,7 @@ void PasswordGeneratorActivity::loop() {
             state = ENTER_USERNAME;
             startActivityForResult(
                 std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, std::string(tr(STR_USERNAME)), "", 64,
-                                                         InputType::Text, /*allowBleKeyboard=*/true),
+                                                        InputType::Text, /*allowBleKeyboard=*/true),
                 [this](const ActivityResult& result2) {
                   if (result2.isCancelled) {
                     state = GENERATING;

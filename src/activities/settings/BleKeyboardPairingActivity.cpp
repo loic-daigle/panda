@@ -244,7 +244,8 @@ void BleKeyboardPairingActivity::loop() {
         screen.y + metrics.topPadding + metrics.headerHeight + metrics.tabBarHeight + metrics.verticalSpacing;
     const int contentHeight = screen.height - contentTop - metrics.verticalSpacing * 2;
     int touchSel = static_cast<int>(selectedIndex);
-    const auto listTouch = handleListTouch(touchSel, static_cast<int>(entries.size()), contentTop, contentHeight, false);
+    const auto listTouch =
+        handleListTouch(touchSel, static_cast<int>(entries.size()), contentTop, contentHeight, false);
     if (listTouch != ListTouchResult::None) {
       selectedIndex = static_cast<size_t>(touchSel);
       if (listTouch == ListTouchResult::Activated) connectToSelected();
@@ -348,8 +349,8 @@ void BleKeyboardPairingActivity::renderConnecting(const Rect* screen, const Them
     UITheme::drawCenteredWrappedText(renderer, statusBounds, UI_10_FONT_ID, tr(STR_SCANNING), MAX_STATUS_LINES);
   } else {
     const Rect statusBounds{statusX, screen->y, statusWidth, top - metrics->verticalSpacing - screen->y};
-    UITheme::drawCenteredWrappedText(renderer, statusBounds, UI_12_FONT_ID, tr(STR_CONNECTING), MAX_STATUS_LINES,
-                                     true, EpdFontFamily::BOLD, UITheme::TextVerticalAlignment::BOTTOM);
+    UITheme::drawCenteredWrappedText(renderer, statusBounds, UI_12_FONT_ID, tr(STR_CONNECTING), MAX_STATUS_LINES, true,
+                                     EpdFontFamily::BOLD, UITheme::TextVerticalAlignment::BOTTOM);
     std::string nameInfo = std::string(tr(STR_TO_PREFIX)) + connectingName;
     UITheme::drawCenteredText(renderer, *screen, UI_10_FONT_ID, top, nameInfo.c_str());
   }

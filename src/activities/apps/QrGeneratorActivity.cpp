@@ -15,7 +15,7 @@ void QrGeneratorActivity::onEnter() {
   textPayload.clear();
 
   startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "QR Code Text", "", 0,
-                                                                  InputType::Text, /*allowBleKeyboard=*/true),
+                                                                 InputType::Text, /*allowBleKeyboard=*/true),
                          [this](const ActivityResult& result) {
                            if (result.isCancelled) {
                              finish();
@@ -42,23 +42,22 @@ void QrGeneratorActivity::loop() {
     if (mappedInput.wasPressed(MappedInputManager::Button::Confirm)) {
       // Generate new QR code
       state = TEXT_INPUT;
-      startActivityForResult(
-          std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "QR Code Text", textPayload, 0,
-                                                   InputType::Text, /*allowBleKeyboard=*/true),
-          [this](const ActivityResult& result) {
-            if (result.isCancelled) {
-              state = QR_DISPLAY;
-              requestUpdate();
-            } else {
-              textPayload = std::get<KeyboardResult>(result.data).text;
-              if (textPayload.empty()) {
-                finish();
-              } else {
-                state = QR_DISPLAY;
-                requestUpdate();
-              }
-            }
-          });
+      startActivityForResult(std::make_unique<KeyboardEntryActivity>(renderer, mappedInput, "QR Code Text", textPayload,
+                                                                     0, InputType::Text, /*allowBleKeyboard=*/true),
+                             [this](const ActivityResult& result) {
+                               if (result.isCancelled) {
+                                 state = QR_DISPLAY;
+                                 requestUpdate();
+                               } else {
+                                 textPayload = std::get<KeyboardResult>(result.data).text;
+                                 if (textPayload.empty()) {
+                                   finish();
+                                 } else {
+                                   state = QR_DISPLAY;
+                                   requestUpdate();
+                                 }
+                               }
+                             });
     }
   }
 }

@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
 # Check if clang-format is available and pick the preferred binary.
-if command -v clang-format-21 >/dev/null 2>&1; then
-  CLANG_FORMAT_BIN="clang-format-21"
+if command -v clang-format-22 >/dev/null 2>&1; then
+  CLANG_FORMAT_BIN="clang-format-22"
 elif command -v clang-format >/dev/null 2>&1; then
   CLANG_FORMAT_BIN="clang-format"
 else
   printf "'clang-format' not found in current environment\n"
-  printf "Install clang-format-21 (recommended), clang, clang-tools, or clang-format depending on your distro/os and tooling requirements\n"
+  printf "Install clang-format-22 (recommended), clang, clang-tools, or clang-format depending on your distro/os and tooling requirements\n"
   exit 1
 fi
 
@@ -22,11 +22,14 @@ fi
 CLANG_FORMAT_VERSION_RAW="$(${CLANG_FORMAT_BIN} --version)"
 CLANG_FORMAT_MAJOR="$(printf '%s\n' "${CLANG_FORMAT_VERSION_RAW}" | grep -oE '[0-9]+' | head -n1)"
 
-# Guard against local binaries older than the repo formatting config.
-if [[ -z "${CLANG_FORMAT_MAJOR}" || "${CLANG_FORMAT_MAJOR}" -lt 21 ]]; then
-  echo "Error: ${CLANG_FORMAT_BIN} is too old: ${CLANG_FORMAT_VERSION_RAW}"
-  echo "This repository's .clang-format requires clang-format 21 or newer."
-  echo "Install clang-format-21 and rerun ./bin/clang-format-fix"
+# Guard against local binaries older than the repo formatting config. Pinned
+# to an exact major version (not just a floor) because clang-format's output
+# for some multi-line call-wrapping cases differs between 21 and 22 — a
+# contributor formatting with a different major version than CI would produce
+# a "clean" diff locally that still fails the CI clang-format check.
+if [[ -z "${CLANG_FORMAT_MAJOR}" || "${CLANG_FORMAT_MAJOR}" -ne 22 ]]; then
+  echo "Error: ${CLANG_FORMAT_BIN} is version ${CLANG_FORMAT_VERSION_RAW}, but CI uses clang-format 22."
+  echo "Install clang-format-22 and rerun ./bin/clang-format-fix"
   exit 1
 fi
 
