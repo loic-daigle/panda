@@ -30,8 +30,7 @@ class RadarHomeRenderer {
 
  private:
   static void drawCircle(GfxRenderer& r, int cx, int cy, int radius);
-  static void drawDashedLine(GfxRenderer& r, int x1, int y1, int x2, int y2, int dashLen, int gapLen);
-  static void drawRoundRectOutline(GfxRenderer& r, int x, int y, int w, int h, int radius);
-  static void fillRoundRect(GfxRenderer& r, int x, int y, int w, int h, int radius);
-  static void drawTextCenteredInRect(GfxRenderer& r, int rx, int ry, int rw, int rh, const char* text, bool blackText);
+  static void drawDashedLine(const GfxRenderer& r, int x1, int y1, int x2, int y2, int dashLen, int gapLen);
+  static void drawTextCenteredInRect(const GfxRenderer& r, int rx, int ry, int rw, int rh, const char* text,
+                                     bool blackText);
 };

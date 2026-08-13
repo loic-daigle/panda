@@ -431,7 +431,7 @@ void ChessActivity::botMove() {
     }
   }
   if (moveCount == 0) return;
-  auto& move = legalMoves[esp_random() % moveCount];
+  const auto& move = legalMoves[esp_random() % moveCount];
   doMove(move.fy, move.fx, move.ty, move.tx);
   whiteTurn = !whiteTurn;
   checkGameState();

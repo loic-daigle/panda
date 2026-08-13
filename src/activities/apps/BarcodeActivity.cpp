@@ -3,6 +3,8 @@
 #include <GfxRenderer.h>
 #include <I18n.h>
 
+#include <algorithm>
+
 #include "MappedInputManager.h"
 #include "activities/util/KeyboardEntryActivity.h"
 #include "components/UITheme.h"
@@ -617,11 +619,10 @@ void BarcodeActivity::renderEan13() const {
                               true);
     return;
   }
-  for (char c : inputText) {
-    if (c < '0' || c > '9') {
-      renderer.drawCenteredText(UI_10_FONT_ID, (headerBottom + footerTop) / 2 - 20, "EAN-13: digits only (0-9)", true);
-      return;
-    }
+  const bool hasNonDigit = std::any_of(inputText.begin(), inputText.end(), [](char c) { return c < '0' || c > '9'; });
+  if (hasNonDigit) {
+    renderer.drawCenteredText(UI_10_FONT_ID, (headerBottom + footerTop) / 2 - 20, "EAN-13: digits only (0-9)", true);
+    return;
   }
 
   int digits[13];

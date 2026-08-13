@@ -159,8 +159,6 @@ void EventLoggerActivity::renderList() const {
 
 void EventLoggerActivity::renderView() const {
   const auto& metrics = UITheme::getInstance().getMetrics();
-  const int pageWidth = renderer.getScreenWidth();
-  const int pageHeight = renderer.getScreenHeight();
   const int top = metrics.topPadding + metrics.headerHeight + 10;
 
   if (selectedIndex < 0 || selectedIndex >= (int)entries.size()) return;

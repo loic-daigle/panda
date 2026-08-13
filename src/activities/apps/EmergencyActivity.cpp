@@ -605,7 +605,6 @@ void EmergencyActivity::renderTriggered() const {
 
     if (broadcastMesh) {
       renderer.drawText(SMALL_FONT_ID, PAD, y, espnowInitialized ? "Mesh broadcast: active" : "Mesh broadcast: failed");
-      y += lineHSm + 3;
     }
   }
 

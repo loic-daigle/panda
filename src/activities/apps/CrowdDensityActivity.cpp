@@ -206,7 +206,7 @@ void CrowdDensityActivity::render(RenderLock&&) {
 
     if (chartHeight > 20) {
       const int chartWidth = pageWidth - leftPad * 2;
-      const int barW = (historyCount > 0) ? (chartWidth / historyCount) : chartWidth;
+      const int barW = chartWidth / historyCount;
 
       // Find max for scaling
       int maxVal = 1;

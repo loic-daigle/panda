@@ -5,6 +5,8 @@
 #include <WiFi.h>
 #include <esp_wifi.h>
 
+#include <algorithm>
+
 #include "MappedInputManager.h"
 #include "activities/util/KeyboardEntryActivity.h"
 #include "components/UITheme.h"
@@ -150,13 +152,8 @@ void SsidChannelActivity::doScan() {
       std::string payload = ssid.c_str() + prefixLen;
       std::string decoded = base64Decode(payload);
       if (!decoded.empty()) {
-        bool found = false;
-        for (const auto& m : received) {
-          if (m.text == decoded) {
-            found = true;
-            break;
-          }
-        }
+        bool found =
+            std::any_of(received.begin(), received.end(), [&decoded](const auto& m) { return m.text == decoded; });
         if (!found && static_cast<int>(received.size()) < MAX_RECEIVED) {
           received.push_back({decoded, static_cast<int8_t>(WiFi.RSSI(i)), millis()});
         }

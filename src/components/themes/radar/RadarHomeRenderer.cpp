@@ -47,7 +47,7 @@ void RadarHomeRenderer::drawCircle(GfxRenderer& r, int cx, int cy, int radius) {
   }
 }
 
-void RadarHomeRenderer::drawDashedLine(GfxRenderer& r, int x1, int y1, int x2, int y2, int dashLen, int gapLen) {
+void RadarHomeRenderer::drawDashedLine(const GfxRenderer& r, int x1, int y1, int x2, int y2, int dashLen, int gapLen) {
   const int dx = x2 - x1;
   const int dy = y2 - y1;
   const int adx = dx < 0 ? -dx : dx;
@@ -71,19 +71,7 @@ void RadarHomeRenderer::drawDashedLine(GfxRenderer& r, int x1, int y1, int x2, i
   }
 }
 
-void RadarHomeRenderer::drawRoundRectOutline(GfxRenderer& r, int x, int y, int w, int h, int radius) {
-  // Use the built-in renderer method which already exists
-  r.drawRoundedRect(x, y, w, h, 1, radius, true);
-}
-
-void RadarHomeRenderer::fillRoundRect(GfxRenderer& r, int x, int y, int w, int h, int radius) {
-  // Use bool state=true (theme-aware foreground) rather than Color::Black so
-  // the fill polarity follows the renderer's active theme instead of being
-  // hard-wired to a literal colour.
-  r.fillRect(x, y, w, h, true);
-}
-
-void RadarHomeRenderer::drawTextCenteredInRect(GfxRenderer& r, int rx, int ry, int rw, int rh, const char* text,
+void RadarHomeRenderer::drawTextCenteredInRect(const GfxRenderer& r, int rx, int ry, int rw, int rh, const char* text,
                                                bool blackText) {
   // Pass BOLD to getTextWidth so centering math matches the bold glyphs drawn below.
   int tw = r.getTextWidth(SMALL_FONT_ID, text, EpdFontFamily::BOLD);

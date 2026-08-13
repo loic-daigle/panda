@@ -20,6 +20,7 @@
 
 static NetworkMonitorActivity* activeNetworkMonitor = nullptr;
 
+// cppcheck-suppress constParameterCallback ; fixed ESP-IDF wifi_promiscuous_cb_t signature, can't add const
 static void networkMonitorPromiscuousCallback(void* buf, wifi_promiscuous_pkt_type_t type) {
   if (!activeNetworkMonitor || !buf) return;
   if (type != WIFI_PKT_MGMT) return;
@@ -188,20 +189,18 @@ void NetworkMonitorActivity::processRogueScanResults() {
       rec.channel = static_cast<uint8_t>(WiFi.channel(i));
       rec.encType = static_cast<uint8_t>(WiFi.encryptionType(i));
 
-      uint8_t* bssid = WiFi.BSSID(i);
+      const uint8_t* bssid = WiFi.BSSID(i);
       char buf[20];
       snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X", bssid[0], bssid[1], bssid[2], bssid[3], bssid[4],
                bssid[5]);
       rec.bssid = buf;
 
       // Deduplicate by BSSID — update RSSI if we already have this AP
-      bool found = false;
-      for (auto& existing : allAps) {
-        if (existing.bssid == rec.bssid) {
-          existing.rssi = rec.rssi;
-          found = true;
-          break;
-        }
+      auto existingIt = std::find_if(allAps.begin(), allAps.end(),
+                                     [&](const ApRecord& existing) { return existing.bssid == rec.bssid; });
+      bool found = existingIt != allAps.end();
+      if (found) {
+        existingIt->rssi = rec.rssi;
       }
       if (!found && static_cast<int>(allAps.size()) < 200) {
         allAps.push_back(std::move(rec));
@@ -228,13 +227,11 @@ void NetworkMonitorActivity::analyzeGroups() {
 
   // Group APs by SSID
   for (const auto& ap : allAps) {
-    bool found = false;
-    for (auto& g : ssidGroups) {
-      if (g.ssid == ap.ssid) {
-        g.apCount++;
-        found = true;
-        break;
-      }
+    auto groupIt =
+        std::find_if(ssidGroups.begin(), ssidGroups.end(), [&](const SsidGroup& g) { return g.ssid == ap.ssid; });
+    bool found = groupIt != ssidGroups.end();
+    if (found) {
+      groupIt->apCount++;
     }
     if (!found) {
       SsidGroup g;
@@ -279,9 +276,8 @@ void NetworkMonitorActivity::analyzeGroups() {
   }
 
   // Count suspicious groups
-  for (const auto& g : ssidGroups) {
-    if (g.suspicious) suspiciousCount++;
-  }
+  suspiciousCount = static_cast<int>(
+      std::count_if(ssidGroups.begin(), ssidGroups.end(), [](const SsidGroup& g) { return g.suspicious; }));
 
   // Sort: suspicious first, then by apCount descending
   std::sort(ssidGroups.begin(), ssidGroups.end(), [](const SsidGroup& a, const SsidGroup& b) {
@@ -391,7 +387,7 @@ void NetworkMonitorActivity::loop() {
     framesThisInterval = 0;
     portEXIT_CRITICAL(&dataMux);
 
-    framesPerSec = (elapsed > 0) ? (frames * 1000UL) / elapsed : 0;
+    framesPerSec = (frames * 1000UL) / elapsed;
 
     rateHistory[historyIndex] = static_cast<uint16_t>(framesPerSec > 0xFFFF ? 0xFFFF : framesPerSec);
     historyIndex = (historyIndex + 1) % GRAPH_POINTS;

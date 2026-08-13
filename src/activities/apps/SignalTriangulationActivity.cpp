@@ -63,7 +63,7 @@ void SignalTriangulationActivity::processInitialScan() {
         memcpy(ap.ssid, "(hidden)", 9);
       }
 
-      uint8_t* bssidBytes = WiFi.BSSID(i);
+      const uint8_t* bssidBytes = WiFi.BSSID(i);
       if (bssidBytes) {
         snprintf(ap.bssid, sizeof(ap.bssid), "%02X:%02X:%02X:%02X:%02X:%02X", bssidBytes[0], bssidBytes[1],
                  bssidBytes[2], bssidBytes[3], bssidBytes[4], bssidBytes[5]);
@@ -96,7 +96,7 @@ void SignalTriangulationActivity::processReadingScan() {
 
   if (result > 0) {
     for (int i = 0; i < result; i++) {
-      uint8_t* bssidBytes = WiFi.BSSID(i);
+      const uint8_t* bssidBytes = WiFi.BSSID(i);
       if (!bssidBytes) continue;
       char bssidStr[18];
       snprintf(bssidStr, sizeof(bssidStr), "%02X:%02X:%02X:%02X:%02X:%02X", bssidBytes[0], bssidBytes[1], bssidBytes[2],

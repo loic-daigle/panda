@@ -89,7 +89,7 @@ void SdFileBrowserActivity::navigateUp() {
   std::string previousDir;
   if (lastSlash != std::string::npos && lastSlash > 0) {
     previousDir = currentPath.substr(lastSlash + 1);
-    currentPath = currentPath.substr(0, lastSlash);
+    currentPath.resize(lastSlash);
   } else {
     currentPath = "/";
   }
@@ -166,18 +166,14 @@ bool SdFileBrowserActivity::isTextFile(const std::string& name) {
 
   std::string ext = name.substr(dotPos);
   // Convert to lowercase
-  for (char& c : ext) {
-    if (c >= 'A' && c <= 'Z') c = c + ('a' - 'A');
-  }
+  std::transform(ext.begin(), ext.end(), ext.begin(),
+                 [](char c) { return (c >= 'A' && c <= 'Z') ? static_cast<char>(c + ('a' - 'A')) : c; });
 
   static const char* const textExts[] = {
       ".txt", ".csv",  ".json", ".html", ".htm", ".md",  ".log", ".xml", ".ini", ".cfg",
       ".yml", ".yaml", ".toml", ".conf", ".sh",  ".bat", ".py",  ".js",  ".css",
   };
-  for (const char* e : textExts) {
-    if (ext == e) return true;
-  }
-  return false;
+  return std::any_of(std::begin(textExts), std::end(textExts), [&ext](const char* e) { return ext == e; });
 }
 
 void SdFileBrowserActivity::loop() {

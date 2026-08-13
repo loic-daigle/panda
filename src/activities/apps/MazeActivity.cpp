@@ -168,7 +168,9 @@ void MazeActivity::tracePath() {
     if (par < 0 || par == cur) break;
     cur = par;
   }
-  solvePath[solvePathLen++] = static_cast<int16_t>(startI);
+  if (solvePathLen < MAX_PATH) {
+    solvePath[solvePathLen++] = static_cast<int16_t>(startI);
+  }
 
   // Reverse so path goes from start to exit
   for (int i = 0, j = solvePathLen - 1; i < j; i++, j--) {

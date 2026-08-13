@@ -4,6 +4,8 @@
 #include <esp_wifi.h>
 #include <string.h>
 
+#include <algorithm>
+
 #include "MappedInputManager.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
@@ -75,16 +77,16 @@ void DeviceFingerprinterActivity::onProbePacket(const uint8_t* payload, uint16_t
   portENTER_CRITICAL(&dataMux);
 
   // Search for existing entry
-  for (auto& dev : devices) {
-    if (memcmp(dev.mac, srcMac, 6) == 0) {
-      dev.probeCount++;
-      dev.rssi = static_cast<int8_t>(rssi);
-      const char* os = estimateOs(srcMac, dev.probeCount);
-      strncpy(dev.estimatedOs, os, sizeof(dev.estimatedOs) - 1);
-      dev.estimatedOs[sizeof(dev.estimatedOs) - 1] = '\0';
-      portEXIT_CRITICAL(&dataMux);
-      return;
-    }
+  auto it =
+      std::find_if(devices.begin(), devices.end(), [&](const auto& dev) { return memcmp(dev.mac, srcMac, 6) == 0; });
+  if (it != devices.end()) {
+    it->probeCount++;
+    it->rssi = static_cast<int8_t>(rssi);
+    const char* os = estimateOs(srcMac, it->probeCount);
+    strncpy(it->estimatedOs, os, sizeof(it->estimatedOs) - 1);
+    it->estimatedOs[sizeof(it->estimatedOs) - 1] = '\0';
+    portEXIT_CRITICAL(&dataMux);
+    return;
   }
 
   // New device

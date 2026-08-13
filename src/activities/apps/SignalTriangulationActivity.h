@@ -36,7 +36,7 @@ class SignalTriangulationActivity final : public Activity {
   State state = SELECT_AP;
 
   // SELECT_AP state
-  VisibleAp apList[MAX_APS];
+  VisibleAp apList[MAX_APS] = {};
   int apCount = 0;
   int apIndex = 0;
   bool initialScanDone = false;

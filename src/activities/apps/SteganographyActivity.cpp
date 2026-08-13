@@ -137,12 +137,12 @@ bool SteganographyActivity::embedMessage(const char* path, const char* msg, int 
   }
 
   // Step 3: append STEG payload
-  dst.write((const uint8_t*)"STEG", 4);
+  dst.write(reinterpret_cast<const uint8_t*>("STEG"), 4);
 
   uint32_t len32 = (uint32_t)len;
-  dst.write((const uint8_t*)&len32, 4);
+  dst.write(reinterpret_cast<const uint8_t*>(&len32), 4);
 
-  dst.write((const uint8_t*)msg, (size_t)len);
+  dst.write(reinterpret_cast<const uint8_t*>(msg), (size_t)len);
 
   uint8_t checksum = 0;
   for (int i = 0; i < len; i++) checksum ^= (uint8_t)msg[i];

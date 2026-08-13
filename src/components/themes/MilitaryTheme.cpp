@@ -83,9 +83,8 @@ void MilitaryTheme::drawHeader(const GfxRenderer& renderer, Rect rect, const cha
   if (title) {
     // Convert title to uppercase
     std::string upperTitle(title);
-    for (auto& c : upperTitle) {
-      c = static_cast<char>(toupper(static_cast<unsigned char>(c)));
-    }
+    std::transform(upperTitle.begin(), upperTitle.end(), upperTitle.begin(),
+                   [](char c) { return static_cast<char>(toupper(static_cast<unsigned char>(c))); });
 
     int maxTitleWidth = rect.width - MilitaryMetrics::values.contentSidePadding * 2;
     auto truncatedTitle = renderer.truncatedText(UI_10_FONT_ID, upperTitle.c_str(), maxTitleWidth, EpdFontFamily::BOLD);
@@ -96,9 +95,8 @@ void MilitaryTheme::drawHeader(const GfxRenderer& renderer, Rect rect, const cha
 
   if (subtitle) {
     std::string upperSub(subtitle);
-    for (auto& c : upperSub) {
-      c = static_cast<char>(toupper(static_cast<unsigned char>(c)));
-    }
+    std::transform(upperSub.begin(), upperSub.end(), upperSub.begin(),
+                   [](char c) { return static_cast<char>(toupper(static_cast<unsigned char>(c))); });
     auto truncatedSubtitle =
         renderer.truncatedText(SMALL_FONT_ID, upperSub.c_str(),
                                rect.width - MilitaryMetrics::values.contentSidePadding * 2, EpdFontFamily::REGULAR);
@@ -125,9 +123,8 @@ void MilitaryTheme::drawSubHeader(const GfxRenderer& renderer, Rect rect, const 
 
   // Label in uppercase
   std::string upperLabel(label);
-  for (auto& c : upperLabel) {
-    c = static_cast<char>(toupper(static_cast<unsigned char>(c)));
-  }
+  std::transform(upperLabel.begin(), upperLabel.end(), upperLabel.begin(),
+                 [](char c) { return static_cast<char>(toupper(static_cast<unsigned char>(c))); });
   auto truncatedLabel =
       renderer.truncatedText(UI_10_FONT_ID, upperLabel.c_str(),
                              rect.width - MilitaryMetrics::values.contentSidePadding - rightSpace, EpdFontFamily::BOLD);
@@ -147,9 +144,8 @@ void MilitaryTheme::drawTabBar(const GfxRenderer& renderer, const Rect rect, con
   for (const auto& tab : tabs) {
     // Uppercase tab labels
     std::string upperLabel(tab.label);
-    for (auto& c : upperLabel) {
-      c = static_cast<char>(toupper(static_cast<unsigned char>(c)));
-    }
+    std::transform(upperLabel.begin(), upperLabel.end(), upperLabel.begin(),
+                   [](char c) { return static_cast<char>(toupper(static_cast<unsigned char>(c))); });
 
     const int textWidth = renderer.getTextWidth(UI_10_FONT_ID, upperLabel.c_str(),
                                                 tab.selected ? EpdFontFamily::BOLD : EpdFontFamily::REGULAR);
@@ -234,9 +230,8 @@ void MilitaryTheme::drawList(const GfxRenderer& renderer, Rect rect, int itemCou
     // Title
     auto itemName = rowTitle(i);
     // Uppercase for titles
-    for (auto& c : itemName) {
-      c = static_cast<char>(toupper(static_cast<unsigned char>(c)));
-    }
+    std::transform(itemName.begin(), itemName.end(), itemName.begin(),
+                   [](char c) { return static_cast<char>(toupper(static_cast<unsigned char>(c))); });
     auto font = (rowSubtitle != nullptr) ? UI_12_FONT_ID : UI_10_FONT_ID;
     auto item = renderer.truncatedText(font, itemName.c_str(), textWidth);
     renderer.drawText(font, textX, itemY, item.c_str(), !isSelected);
@@ -331,9 +326,8 @@ void MilitaryTheme::drawButtonMenu(GfxRenderer& renderer, Rect rect, int buttonC
 
     std::string labelStr = buttonLabel(i);
     // Uppercase
-    for (auto& c : labelStr) {
-      c = static_cast<char>(toupper(static_cast<unsigned char>(c)));
-    }
+    std::transform(labelStr.begin(), labelStr.end(), labelStr.begin(),
+                   [](char c) { return static_cast<char>(toupper(static_cast<unsigned char>(c))); });
 
     // Add > prefix for selected
     if (selected) {
@@ -356,9 +350,8 @@ Rect MilitaryTheme::drawPopup(const GfxRenderer& renderer, const char* message) 
 
   // Uppercase message
   std::string upperMsg(message);
-  for (auto& c : upperMsg) {
-    c = static_cast<char>(toupper(static_cast<unsigned char>(c)));
-  }
+  std::transform(upperMsg.begin(), upperMsg.end(), upperMsg.begin(),
+                 [](char c) { return static_cast<char>(toupper(static_cast<unsigned char>(c))); });
 
   const int textWidth = renderer.getTextWidth(UI_10_FONT_ID, upperMsg.c_str(), EpdFontFamily::BOLD);
   const int textHeight = renderer.getLineHeight(UI_10_FONT_ID);

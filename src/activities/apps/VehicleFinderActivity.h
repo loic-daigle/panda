@@ -20,7 +20,7 @@ class VehicleFinderActivity final : public Activity {
   };
 
   State state = IDLE;
-  Fingerprint savedAps[10];
+  Fingerprint savedAps[10]{};
   int savedApCount = 0;
   bool hasSavedSpot = false;
   float currentMatch = 0.0f;

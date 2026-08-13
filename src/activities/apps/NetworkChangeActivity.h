@@ -27,8 +27,8 @@ class NetworkChangeActivity final : public Activity {
 
   struct Snapshot {
     std::vector<Device> devices;
-    unsigned long timestamp;
-    char label[32];
+    unsigned long timestamp = 0;
+    char label[32] = {};
   };
 
   State state = MENU;

@@ -3,6 +3,7 @@
 #include <HalStorage.h>
 #include <I18n.h>
 
+#include <algorithm>
 #include <cstring>
 
 #include "MappedInputManager.h"
@@ -80,7 +81,8 @@ void AppCategoryActivity::loop() {
         snprintf(path, sizeof(path), "/biscuit/lastused_%d.txt", categoryIndex);
         HalFile file;
         if (Storage.openFileForWrite("APPS", path, file)) {
-          file.write((const uint8_t*)entries[selectorIndex].nameStrId, strlen(entries[selectorIndex].nameStrId));
+          file.write(reinterpret_cast<const uint8_t*>(entries[selectorIndex].nameStrId),
+                     strlen(entries[selectorIndex].nameStrId));
           file.close();
         }
       }
@@ -138,10 +140,8 @@ void AppCategoryActivity::render(RenderLock&&) {
 
   // Item count subtitle (exclude section headers)
   const int count = static_cast<int>(entries.size());
-  int appCount = 0;
-  for (const auto& e : entries) {
-    if (!e.isSectionHeader) appCount++;
-  }
+  const int appCount =
+      static_cast<int>(std::count_if(entries.begin(), entries.end(), [](const auto& e) { return !e.isSectionHeader; }));
   char countStr[16];
   snprintf(countStr, sizeof(countStr), "%d items", appCount);
 

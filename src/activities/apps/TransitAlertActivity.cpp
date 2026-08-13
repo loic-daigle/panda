@@ -115,7 +115,6 @@ void TransitAlertActivity::promptStopName() {
                                strncpy(s.name, text.c_str(), sizeof(s.name) - 1);
                                int n = WiFi.scanNetworks(false, true);
                                if (n > 0) {
-                                 int total = (n > 5) ? 5 : n;
                                  // Sort by RSSI descending
                                  static int order[20];
                                  int scanned = (n > 20) ? 20 : n;
@@ -127,7 +126,7 @@ void TransitAlertActivity::promptStopName() {
                                        order[i] = order[j];
                                        order[j] = tmp;
                                      }
-                                 total = (scanned < 5) ? scanned : 5;
+                                 int total = (scanned < 5) ? scanned : 5;
                                  s.apCount = total;
                                  for (int i = 0; i < total; i++) {
                                    memcpy(s.bssids[i], WiFi.BSSID(order[i]), 6);

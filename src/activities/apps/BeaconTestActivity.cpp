@@ -88,9 +88,8 @@ void BeaconTestActivity::loadCustomSsids() {
   char line[64];
   while (file.available() && ssids.size() < 50) {
     int len = 0;
-    char c;
     while (file.available() && len < 63) {
-      c = file.read();
+      char c = file.read();
       if (c == '\n') break;
       if (c != '\r') line[len++] = c;
     }
@@ -217,7 +216,7 @@ void BeaconTestActivity::render(RenderLock&&) {
     if (!ssids.empty() && currentSsidIndex < static_cast<int>(ssids.size())) {
       std::string displaySsid = ssids[currentSsidIndex];
       if (displaySsid.length() > 28) {
-        displaySsid = displaySsid.substr(0, 25) + "...";
+        displaySsid.replace(25, std::string::npos, "...");
       }
       renderer.drawCenteredText(UI_12_FONT_ID, centerY + 35, displaySsid.c_str(), true, EpdFontFamily::BOLD);
     }

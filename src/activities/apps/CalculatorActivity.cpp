@@ -23,7 +23,7 @@ const char* const CalculatorActivity::KEY_LABELS[GRID_ROWS][GRID_COLS] = {
 // Helpers
 // ----------------------------------------------------------------
 
-void CalculatorActivity::fillDithered25(GfxRenderer& r, int x, int y, int w, int h) {
+void CalculatorActivity::fillDithered25(const GfxRenderer& r, int x, int y, int w, int h) {
   for (int dy = 0; dy < h; dy += 2)
     for (int dx = ((dy / 2) % 2); dx < w; dx += 2) r.drawPixel(x + dx, y + dy, true);
 }

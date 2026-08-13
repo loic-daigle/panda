@@ -33,16 +33,16 @@ class WifiHeatMapActivity final : public Activity {
   ButtonNavigator buttonNavigator;
   int selectorIndex = 0;
 
-  ApReading currentReadings[MAX_CURRENT];
+  ApReading currentReadings[MAX_CURRENT] = {};
   int currentCount = 0;
 
-  char seenBssids[MAX_UNIQUE][18];
+  char seenBssids[MAX_UNIQUE][18] = {};
   int seenCount = 0;
 
   int totalDataPoints = 0;
   int sampleCount = 0;
 
-  char filename[64];
+  char filename[64] = {};
   unsigned long startTime = 0;
   unsigned long lastScanTime = 0;
   bool headerWriteFailed = false;

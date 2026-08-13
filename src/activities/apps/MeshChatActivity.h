@@ -44,7 +44,7 @@ class MeshChatActivity final : public Activity {
 
   // Messages (ring buffer using fixed array)
   static constexpr int MAX_MESSAGES = 30;
-  Message messages[MAX_MESSAGES];
+  Message messages[MAX_MESSAGES] = {};
   int messageCount = 0;
   int messageHead = 0;
   int scrollOffset = 0;
@@ -93,7 +93,7 @@ class MeshChatActivity final : public Activity {
 
   // MESH-004: relay queue — frames are queued in the callback and sent from loop()
   static constexpr int RELAY_QUEUE_SIZE = 4;
-  uint8_t relayQueue[RELAY_QUEUE_SIZE][FRAME_CHAT_SIZE];
+  uint8_t relayQueue[RELAY_QUEUE_SIZE][FRAME_CHAT_SIZE] = {};
   int relayLen[RELAY_QUEUE_SIZE] = {};
   volatile int relayHead = 0;
   volatile int relayCount = 0;

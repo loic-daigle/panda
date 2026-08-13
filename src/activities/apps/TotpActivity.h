@@ -29,7 +29,7 @@ class TotpActivity final : public Activity {
   static constexpr int MAX_ACCOUNTS = 16;
   static constexpr const char* SAVE_PATH = "/biscuit/totp.dat";
 
-  Account accounts[MAX_ACCOUNTS];
+  Account accounts[MAX_ACCOUNTS]{};
   int accountCount = 0;
   int selectedIndex = 0;
 

@@ -80,20 +80,18 @@ void WardrivingActivity::processScanResults() {
 
   if (result > 0) {
     for (int i = 0; i < result; i++) {
-      uint8_t* rawBssid = WiFi.BSSID(i);
+      const uint8_t* rawBssid = WiFi.BSSID(i);
       char bssidBuf[20];
       snprintf(bssidBuf, sizeof(bssidBuf), "%02X:%02X:%02X:%02X:%02X:%02X", rawBssid[0], rawBssid[1], rawBssid[2],
                rawBssid[3], rawBssid[4], rawBssid[5]);
 
       // Check if BSSID already seen
-      bool found = false;
-      for (auto& net : networks) {
-        if (net.bssid == bssidBuf) {
-          net.lastSeen = millis();
-          net.rssi = WiFi.RSSI(i);
-          found = true;
-          break;
-        }
+      auto existing = std::find_if(networks.begin(), networks.end(),
+                                   [&bssidBuf](const SeenNetwork& net) { return net.bssid == bssidBuf; });
+      bool found = existing != networks.end();
+      if (found) {
+        existing->lastSeen = millis();
+        existing->rssi = WiFi.RSSI(i);
       }
 
       if (!found && static_cast<int>(networks.size()) < MAX_NETWORKS) {

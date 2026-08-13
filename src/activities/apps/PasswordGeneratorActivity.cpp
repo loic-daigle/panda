@@ -114,7 +114,6 @@ void PasswordGeneratorActivity::render(RenderLock&&) {
   }
 
   // Show generated password
-  const int leftPad = metrics.contentSidePadding;
   int y = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing + 40;
 
   // Length indicator

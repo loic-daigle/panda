@@ -170,14 +170,12 @@ void MeshChatActivity::onDataRecv(const esp_now_recv_info_t* recvInfo, const uin
     peerName[15] = '\0';
 
     if (activeInstance->peersMux && xSemaphoreTake(activeInstance->peersMux, pdMS_TO_TICKS(10)) == pdTRUE) {
-      bool found = false;
-      for (auto& p : activeInstance->peers) {
-        if (memcmp(p.mac, mac, 6) == 0) {
-          memcpy(p.name, peerName, 16);
-          p.lastSeen = millis();
-          found = true;
-          break;
-        }
+      auto it = std::find_if(activeInstance->peers.begin(), activeInstance->peers.end(),
+                             [&](const Peer& p) { return memcmp(p.mac, mac, 6) == 0; });
+      bool found = it != activeInstance->peers.end();
+      if (found) {
+        memcpy(it->name, peerName, 16);
+        it->lastSeen = millis();
       }
       if (!found && activeInstance->peers.size() < 20) {
         Peer newPeer = {};

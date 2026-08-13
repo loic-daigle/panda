@@ -4,6 +4,7 @@
 #include <Logging.h>
 #include <WiFi.h>
 
+#include <algorithm>
 #include <cstring>
 
 #include "MappedInputManager.h"
@@ -62,7 +63,7 @@ void BreadcrumbTrailActivity::doScan(Crumb& out) {
         buf[j] = tmp;
       }
 
-  out.apCount = (total < 5) ? total : 5;
+  out.apCount = std::min(total, 5);
   for (int i = 0; i < out.apCount; i++) out.aps[i] = buf[i];
   WiFi.scanDelete();
 }

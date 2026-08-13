@@ -247,7 +247,6 @@ void CipherActivity::renderSelect() const {
 
 void CipherActivity::renderResult() const {
   const auto& metrics = UITheme::getInstance().getMetrics();
-  const int pageWidth = renderer.getScreenWidth();
   const int top = metrics.topPadding + metrics.headerHeight + 20;
 
   renderer.drawCenteredText(SMALL_FONT_ID, top, CIPHER_NAMES[cipherIndex]);

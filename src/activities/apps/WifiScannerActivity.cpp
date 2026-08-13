@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <climits>
+#include <numeric>
 #include <string>
 
 #include "MappedInputManager.h"
@@ -79,7 +80,7 @@ void WifiScannerActivity::processScanResults() {
       net.channel = WiFi.channel(i);
       net.encType = WiFi.encryptionType(i);
 
-      uint8_t* bssid = WiFi.BSSID(i);
+      const uint8_t* bssid = WiFi.BSSID(i);
       char buf[20];
       snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X", bssid[0], bssid[1], bssid[2], bssid[3], bssid[4],
                bssid[5]);
@@ -137,11 +138,12 @@ void WifiScannerActivity::saveToCsv() {
   char filename[64];
   snprintf(filename, sizeof(filename), "/biscuit/logs/wifi_scan_%lu.csv", millis());
 
-  String csv = "SSID,BSSID,RSSI,Channel,Encryption\n";
-  for (const auto& net : networks) {
-    csv += String(net.ssid.c_str()) + "," + net.bssid.c_str() + "," + String(net.rssi) + "," + String(net.channel) +
-           "," + encryptionString(net.encType) + "\n";
-  }
+  String csv = std::accumulate(networks.begin(), networks.end(), String("SSID,BSSID,RSSI,Channel,Encryption\n"),
+                               [this](String acc, const Network& net) {
+                                 acc += String(net.ssid.c_str()) + "," + net.bssid.c_str() + "," + String(net.rssi) +
+                                        "," + String(net.channel) + "," + encryptionString(net.encType) + "\n";
+                                 return acc;
+                               });
   Storage.writeFile(filename, csv);
   LOG_DBG("WSCAN", "Saved %zu networks to %s", networks.size(), filename);
 }
@@ -160,7 +162,7 @@ void WifiScannerActivity::doMeasurement() {
   int32_t found = -200;  // sentinel: not seen
   if (n > 0) {
     for (int i = 0; i < n; i++) {
-      uint8_t* bssidBytes = WiFi.BSSID(i);
+      const uint8_t* bssidBytes = WiFi.BSSID(i);
       if (!bssidBytes) continue;
       char bssidStr[20];
       snprintf(bssidStr, sizeof(bssidStr), "%02X:%02X:%02X:%02X:%02X:%02X", bssidBytes[0], bssidBytes[1], bssidBytes[2],

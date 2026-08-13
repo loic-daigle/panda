@@ -38,7 +38,7 @@ class SnakeActivity final : public Activity {
   int nextDirX = 1, nextDirY = 0;  // buffered next direction
 
   // Food
-  Point food;
+  Point food{0, 0};
 
   // Timing
   unsigned long lastStepMs = 0;

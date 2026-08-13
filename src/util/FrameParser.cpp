@@ -121,8 +121,7 @@ uint8_t FrameParser::extractAuthType(const uint8_t* data, uint16_t len) {
   //   [0-1]  version
   //   [2-5]  group cipher suite (4 bytes)
   //   [6-7]  pairwise cipher suite count
-  int offset = 6;
-  if (offset + 2 > tagLen) return 2;  // WPA fallback
+  int offset = 6;  // tagLen >= 8 (checked above) guarantees rsn[6..7] are in bounds
   uint16_t pairwiseCount = (uint16_t)(rsn[offset] | (rsn[offset + 1] << 8));
   offset += 2 + pairwiseCount * 4;
 
@@ -158,8 +157,7 @@ bool FrameParser::extractPMF(const uint8_t* data, uint16_t len) {
   if (!rsn || tagLen < 8) return false;
 
   // Skip version (2) + group cipher (4) + pairwise suite count+list
-  int offset = 6;
-  if (offset + 2 > tagLen) return false;
+  int offset = 6;  // tagLen >= 8 (checked above) guarantees rsn[6..7] are in bounds
   uint16_t pairwiseCount = (uint16_t)(rsn[offset] | (rsn[offset + 1] << 8));
   offset += 2 + pairwiseCount * 4;
 

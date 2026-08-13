@@ -16,6 +16,8 @@
 
 static ProbeSnifferActivity* activeSniffer = nullptr;
 
+// buf can't be const: this is a fixed-signature ESP-IDF wifi_promiscuous_cb_t callback.
+// cppcheck-suppress constParameterCallback
 static void probeSnifferCallback(void* buf, wifi_promiscuous_pkt_type_t type) {
   if (!activeSniffer || !buf) return;
   if (type != WIFI_PKT_MGMT) return;
@@ -34,14 +36,13 @@ static void probeSnifferCallback(void* buf, wifi_promiscuous_pkt_type_t type) {
 
   // Tagged parameters start at offset 24
   // SSID tag: tag number (byte), length (byte), then SSID bytes
+  // sig_len >= 28 (checked above) already covers the offset 24/25 reads here.
   char ssid[33] = {0};
-  if (sig_len >= 26) {
-    const uint8_t tag = payload[24];
-    const uint8_t tagLen = payload[25];
-    if (tag == 0 && tagLen > 0 && tagLen <= 32 && static_cast<uint16_t>(26 + tagLen) <= sig_len) {
-      memcpy(ssid, payload + 26, tagLen);
-      ssid[tagLen] = '\0';
-    }
+  const uint8_t tag = payload[24];
+  const uint8_t tagLen = payload[25];
+  if (tag == 0 && tagLen > 0 && tagLen <= 32 && static_cast<uint16_t>(26 + tagLen) <= sig_len) {
+    memcpy(ssid, payload + 26, tagLen);
+    ssid[tagLen] = '\0';
   }
 
   activeSniffer->onProbeRequest(srcMac, ssid, pkt->rx_ctrl.rssi);
@@ -51,14 +52,15 @@ void ProbeSnifferActivity::onProbeRequest(const uint8_t* srcMac, const char* ssi
   portENTER_CRITICAL(&dataMux);
 
   // Search for an existing entry matching both MAC and SSID
-  for (auto& entry : entries) {
-    if (memcmp(entry.mac, srcMac, 6) == 0 && entry.ssid == ssid) {
-      entry.count++;
-      entry.rssi = rssi;
-      entry.lastSeen = millis();
-      portEXIT_CRITICAL(&dataMux);
-      return;
-    }
+  auto it = std::find_if(entries.begin(), entries.end(), [&](const ProbeEntry& entry) {
+    return memcmp(entry.mac, srcMac, 6) == 0 && entry.ssid == ssid;
+  });
+  if (it != entries.end()) {
+    it->count++;
+    it->rssi = rssi;
+    it->lastSeen = millis();
+    portEXIT_CRITICAL(&dataMux);
+    return;
   }
 
   // New entry

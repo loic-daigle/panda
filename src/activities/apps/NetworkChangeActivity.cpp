@@ -5,6 +5,8 @@
 #include <WiFi.h>
 #include <string.h>
 
+#include <algorithm>
+
 #include "MappedInputManager.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
@@ -128,25 +130,15 @@ void NetworkChangeActivity::compareSnapshots() {
 
   // Devices in current but not in saved → NEW
   for (const auto& cd : current.devices) {
-    bool found = false;
-    for (const auto& sd : saved.devices) {
-      if (strcmp(cd.mac, sd.mac) == 0) {
-        found = true;
-        break;
-      }
-    }
+    bool found = std::any_of(saved.devices.begin(), saved.devices.end(),
+                             [&](const Device& sd) { return strcmp(cd.mac, sd.mac) == 0; });
     if (!found) newDevices.push_back(cd);
   }
 
   // Devices in saved but not in current → GONE
   for (const auto& sd : saved.devices) {
-    bool found = false;
-    for (const auto& cd : current.devices) {
-      if (strcmp(cd.mac, sd.mac) == 0) {
-        found = true;
-        break;
-      }
-    }
+    bool found = std::any_of(current.devices.begin(), current.devices.end(),
+                             [&](const Device& cd) { return strcmp(cd.mac, sd.mac) == 0; });
     if (!found) goneDevices.push_back(sd);
   }
 }

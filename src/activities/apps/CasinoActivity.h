@@ -118,7 +118,7 @@ class CasinoActivity final : public Activity {
   static constexpr const char* SUIT_CHARS[] = {"S", "H", "D", "C"};
   static constexpr const char* RANK_CHARS[] = {"", "A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"};
 
-  Card deck[52];
+  Card deck[52] = {};
   int deckPos = 0;
   std::vector<Card> playerHand;
   std::vector<Card> dealerHand;
@@ -152,8 +152,8 @@ class CasinoActivity final : public Activity {
   // ============ HIGHER / LOWER ============
   enum HLState { HL_BET, HL_PLAYING, HL_RESULT };
   HLState hlState = HL_BET;
-  Card hlCurrentCard;
-  Card hlNextCard;
+  Card hlCurrentCard = {};
+  Card hlNextCard = {};
   int hlStreak = 0;
   int hlPot = 0;
 

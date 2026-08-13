@@ -57,5 +57,5 @@ class CalculatorActivity final : public Activity {
   void drawKeypad();
   void drawHistory();
 
-  static void fillDithered25(GfxRenderer& r, int x, int y, int w, int h);
+  static void fillDithered25(const GfxRenderer& r, int x, int y, int w, int h);
 };

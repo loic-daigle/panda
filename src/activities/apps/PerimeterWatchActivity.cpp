@@ -3,6 +3,8 @@
 #include <HalStorage.h>
 #include <WiFi.h>
 
+#include <algorithm>
+
 #include "MappedInputManager.h"
 #include "components/UITheme.h"
 #include "fontIds.h"
@@ -44,10 +46,7 @@ void PerimeterWatchActivity::doBaselineScan() {
 }
 
 bool PerimeterWatchActivity::macInBaseline(const uint8_t* mac) const {
-  for (const auto& m : baseline) {
-    if (memcmp(m.bytes, mac, 6) == 0) return true;
-  }
-  return false;
+  return std::any_of(baseline.begin(), baseline.end(), [mac](const Mac& m) { return memcmp(m.bytes, mac, 6) == 0; });
 }
 
 void PerimeterWatchActivity::doWatchScan() {
@@ -58,13 +57,8 @@ void PerimeterWatchActivity::doWatchScan() {
     if (!bssid) continue;
     if (!macInBaseline(bssid) && static_cast<int>(intrusions.size()) < MAX_INTRUSIONS) {
       // Check if already logged
-      bool dup = false;
-      for (const auto& intr : intrusions) {
-        if (memcmp(intr.mac, bssid, 6) == 0) {
-          dup = true;
-          break;
-        }
-      }
+      bool dup = std::any_of(intrusions.begin(), intrusions.end(),
+                             [bssid](const Intrusion& intr) { return memcmp(intr.mac, bssid, 6) == 0; });
       if (!dup) {
         Intrusion intr;
         memcpy(intr.mac, bssid, 6);

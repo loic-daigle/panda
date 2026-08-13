@@ -6,6 +6,7 @@
 #include <WiFi.h>
 
 #include <algorithm>
+#include <iterator>
 #include <map>
 
 #include "MappedInputManager.h"
@@ -70,9 +71,9 @@ void WifiConnectActivity::processScanResults() {
   }
 
   networks.clear();
-  for (auto& pair : unique) {
-    networks.push_back(std::move(pair.second));
-  }
+  networks.reserve(unique.size());
+  std::transform(unique.begin(), unique.end(), std::back_inserter(networks),
+                 [](auto& pair) { return std::move(pair.second); });
   std::sort(networks.begin(), networks.end(), [](const ApInfo& a, const ApInfo& b) {
     if (a.saved != b.saved) return a.saved;
     return a.rssi > b.rssi;
@@ -86,7 +87,7 @@ void WifiConnectActivity::processScanResults() {
 
 void WifiConnectActivity::selectNetwork(int index) {
   if (index < 0 || index >= static_cast<int>(networks.size())) return;
-  auto& net = networks[index];
+  const auto& net = networks[index];
   selectedSSID = net.ssid;
   enteredPassword.clear();
 

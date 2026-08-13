@@ -40,7 +40,7 @@ constexpr const char* kDownloadTmpPath = "/biscuit/duckduckgo/download.tmp";
 
 std::string urlDecode(const std::string& src) {
   std::string ret;
-  int ii;
+  unsigned int ii;
   for (size_t i = 0; i < src.length(); i++) {
     if (src[i] == '%') {
       if (i + 2 < src.length()) {
@@ -267,13 +267,7 @@ bool parseDuckDuckGoResults(const std::string& htmlPath, std::vector<DuckLink>& 
                 }
 
                 if (targetUrl.rfind("http", 0) == 0) {
-                  bool dup = false;
-                  for (const auto& l : links) {
-                    if (l.url == targetUrl) {
-                      dup = true;
-                      break;
-                    }
-                  }
+                  bool dup = std::any_of(links.begin(), links.end(), [&](const auto& l) { return l.url == targetUrl; });
                   if (!dup) {
                     links.push_back({cleanText, targetUrl});
                   }
@@ -426,10 +420,15 @@ void DuckDuckGoActivity::onExit() {
   if (fetchTaskHandle != nullptr) {
     cancelFetch = true;
     int waitCount = 0;
+    // ddgFetchTaskFunc clears fetchTaskHandle to nullptr from its own task context when it
+    // finishes. cppcheck can't see that cross-task mutation, so it flags these re-checks as
+    // always true.
+    // cppcheck-suppress knownConditionTrueFalse
     while (fetchTaskHandle != nullptr && waitCount < 500) {
       delay(10);
       waitCount++;
     }
+    // cppcheck-suppress knownConditionTrueFalse
     if (fetchTaskHandle != nullptr) {
       LOG_ERR("DDG", "Task failed to cancel! Forcing kill.");
       TaskHandle_t tempHandle = static_cast<TaskHandle_t>(fetchTaskHandle);
@@ -649,10 +648,15 @@ void DuckDuckGoActivity::loop() {
       if (fetchTaskHandle != nullptr) {
         cancelFetch = true;
         int waitCount = 0;
+        // ddgFetchTaskFunc clears fetchTaskHandle to nullptr from its own task context when it
+        // finishes. cppcheck can't see that cross-task mutation, so it flags these re-checks as
+        // always true.
+        // cppcheck-suppress knownConditionTrueFalse
         while (fetchTaskHandle != nullptr && waitCount < 500) {
           delay(10);
           waitCount++;
         }
+        // cppcheck-suppress knownConditionTrueFalse
         if (fetchTaskHandle != nullptr) {
           LOG_ERR("DDG", "Task failed to cancel! Forcing kill.");
           TaskHandle_t tempHandle = static_cast<TaskHandle_t>(fetchTaskHandle);

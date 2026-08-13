@@ -87,14 +87,18 @@ void ClockActivity::ntpSync() {
 // ---------------------------------------------------------------------------
 
 const char* ClockActivity::dayOfWeekName(int wday) {
-  static const char* days[] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
-  if (wday >= 0 && wday <= 6) return days[wday];
+  if (wday >= 0 && wday <= 6) {
+    static const char* days[] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+    return days[wday];
+  }
   return "???";
 }
 
 const char* ClockActivity::monthName(int mon) {
-  static const char* months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
-  if (mon >= 0 && mon <= 11) return months[mon];
+  if (mon >= 0 && mon <= 11) {
+    static const char* months[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
+    return months[mon];
+  }
   return "???";
 }
 

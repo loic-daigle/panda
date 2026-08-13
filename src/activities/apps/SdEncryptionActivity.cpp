@@ -7,6 +7,7 @@
 #include <mbedtls/aes.h>
 #include <mbedtls/sha256.h>
 
+#include <algorithm>
 #include <cstring>
 
 #include "MappedInputManager.h"
@@ -86,10 +87,7 @@ bool SdEncryptionActivity::isEligibleExt(const char* name) {
 
   // Static table kept in flash
   static constexpr const char* EXT[] = {".dat", ".cfg", ".csv", ".json", ".txt"};
-  for (const char* e : EXT) {
-    if (strcmp(dot, e) == 0) return true;
-  }
-  return false;
+  return std::any_of(std::begin(EXT), std::end(EXT), [dot](const char* e) { return strcmp(dot, e) == 0; });
 }
 
 int SdEncryptionActivity::countEligible(bool forEncrypt) const {
@@ -787,7 +785,7 @@ void SdEncryptionActivity::renderProcessing() const {
     const int barH = 14;
     const int barX = metrics.contentSidePadding;
     renderer.drawRect(barX, y, barW, barH, true);
-    int fill = (totalFiles > 0) ? static_cast<int>((static_cast<long>(processedFiles) * (barW - 2)) / totalFiles) : 0;
+    int fill = static_cast<int>((static_cast<long>(processedFiles) * (barW - 2)) / totalFiles);
     if (fill > 0) renderer.fillRect(barX + 1, y + 1, fill, barH - 2, true);
   } else {
     renderer.drawCenteredText(UI_10_FONT_ID, y, "Please wait...");

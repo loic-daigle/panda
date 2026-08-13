@@ -193,7 +193,6 @@ void FlashcardActivity::renderDeckSelect() const {
 
 void FlashcardActivity::renderCardFront() const {
   const auto& metrics = UITheme::getInstance().getMetrics();
-  const int pageWidth = renderer.getScreenWidth();
   const int pageHeight = renderer.getScreenHeight();
   const int mid = (metrics.topPadding + metrics.headerHeight + pageHeight - metrics.buttonHintsHeight) / 2;
 
@@ -208,7 +207,6 @@ void FlashcardActivity::renderCardFront() const {
 
 void FlashcardActivity::renderCardBack() const {
   const auto& metrics = UITheme::getInstance().getMetrics();
-  const int pageWidth = renderer.getScreenWidth();
   const int pageHeight = renderer.getScreenHeight();
   const int mid = (metrics.topPadding + metrics.headerHeight + pageHeight - metrics.buttonHintsHeight) / 2;
 
@@ -221,7 +219,6 @@ void FlashcardActivity::renderCardBack() const {
 
 void FlashcardActivity::renderStats() const {
   const auto& metrics = UITheme::getInstance().getMetrics();
-  const int pageWidth = renderer.getScreenWidth();
   const int top = metrics.topPadding + metrics.headerHeight + 30;
 
   int total = 0, correct = 0, wrong = 0;

@@ -72,10 +72,7 @@ const CasinoActivity::SlotMachineType CasinoActivity::MACHINES[NUM_MACHINES] = {
 
 bool CasinoActivity::isRed(int n) {
   static constexpr int reds[] = {1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36};
-  for (int r : reds) {
-    if (r == n) return true;
-  }
-  return false;
+  return std::any_of(std::begin(reds), std::end(reds), [n](int r) { return r == n; });
 }
 
 // ================================================================
@@ -125,7 +122,7 @@ void CasinoActivity::loadCredits() {
 void CasinoActivity::saveCredits() {
   auto file = Storage.open(SAVE_PATH, O_WRITE | O_CREAT | O_TRUNC);
   if (file) {
-    uint8_t buf[4] = {
+    const uint8_t buf[4] = {
         (uint8_t)(credits & 0xFF),
         (uint8_t)((credits >> 8) & 0xFF),
         (uint8_t)((credits >> 16) & 0xFF),
@@ -352,7 +349,7 @@ void CasinoActivity::renderLobby() {
 
 // Draw a card suit shape using only primitives
 // suit: 0=Spades, 1=Hearts, 2=Diamonds, 3=Clubs
-static void drawSuitShape(GfxRenderer& r, int cx, int cy, int sz, int suit) {
+static void drawSuitShape(const GfxRenderer& r, int cx, int cy, int sz, int suit) {
   switch (suit) {
     case 0: {  // Spades: upward triangle + two bumps + stem
       // Upward pointing body
@@ -474,7 +471,7 @@ void CasinoActivity::drawCard(int x, int y, const Card& c, bool faceDown) {
 // SLOT MACHINE ICON DRAWING
 // ================================================================
 
-static void drawIcon7(GfxRenderer& r, int cx, int cy) {
+static void drawIcon7(const GfxRenderer& r, int cx, int cy) {
   // Thick "7" shape
   r.fillRect(cx - 18, cy - 25, 36, 7, true);
   r.fillRect(cx - 18, cy - 18, 7, 5, true);
@@ -485,7 +482,7 @@ static void drawIcon7(GfxRenderer& r, int cx, int cy) {
   }
 }
 
-static void drawIconBar(GfxRenderer& r, int cx, int cy) {
+static void drawIconBar(const GfxRenderer& r, int cx, int cy) {
   r.fillRect(cx - 30, cy - 14, 60, 28, true);
   r.fillRect(cx - 27, cy - 11, 54, 22, false);
   r.drawRect(cx - 27, cy - 11, 54, 22);
@@ -493,7 +490,7 @@ static void drawIconBar(GfxRenderer& r, int cx, int cy) {
   r.drawText(UI_10_FONT_ID, cx - tw / 2, cy - 8, "BAR", true, EpdFontFamily::BOLD);
 }
 
-static void drawIconCherry(GfxRenderer& r, int cx, int cy) {
+static void drawIconCherry(const GfxRenderer& r, int cx, int cy) {
   int cr = 10;
   int offX = 10;
   int offY = 6;
@@ -527,7 +524,7 @@ static void drawIconCherry(GfxRenderer& r, int cx, int cy) {
   }
 }
 
-static void drawIconBell(GfxRenderer& r, int cx, int cy) {
+static void drawIconBell(const GfxRenderer& r, int cx, int cy) {
   r.fillRect(cx - 2, cy - 26, 5, 5, true);
   for (int dy = -20; dy <= 8; dy++) {
     int halfW = 6 + (dy + 20) * 16 / 28;
@@ -537,7 +534,7 @@ static void drawIconBell(GfxRenderer& r, int cx, int cy) {
   r.fillRect(cx - 3, cy + 14, 7, 7, true);
 }
 
-static void drawIconStar(GfxRenderer& r, int cx, int cy) {
+static void drawIconStar(const GfxRenderer& r, int cx, int cy) {
   static constexpr int N = 10;
   static constexpr int vx[N] = {0, 5, 21, 8, 14, 0, -14, -8, -21, -5};
   static constexpr int vy[N] = {-22, -7, -7, 3, 18, 9, 18, 3, -7, -7};
@@ -561,7 +558,7 @@ static void drawIconStar(GfxRenderer& r, int cx, int cy) {
   }
 }
 
-static void drawIconDiamond(GfxRenderer& r, int cx, int cy) {
+static void drawIconDiamond(const GfxRenderer& r, int cx, int cy) {
   int crownTop = cy - 22;
   int girdle = cy - 4;
   int pavilionBottom = cy + 22;
@@ -591,7 +588,7 @@ static void drawIconDiamond(GfxRenderer& r, int cx, int cy) {
 
 // New icons for Fruit Frenzy and wild
 
-static void drawIconLemon(GfxRenderer& r, int cx, int cy) {
+static void drawIconLemon(const GfxRenderer& r, int cx, int cy) {
   // Oval lemon shape: wide ellipse with small nub at right end
   int hw = 26;  // half-width
   int hh = 18;  // half-height
@@ -610,7 +607,7 @@ static void drawIconLemon(GfxRenderer& r, int cx, int cy) {
   r.fillRect(cx + hw - 2, cy - hh - 7, 3, 4, true);
 }
 
-static void drawIconOrange(GfxRenderer& r, int cx, int cy) {
+static void drawIconOrange(const GfxRenderer& r, int cx, int cy) {
   // Large filled circle
   int cr = 22;
   int drawCy = cy + 2;
@@ -630,7 +627,7 @@ static void drawIconOrange(GfxRenderer& r, int cx, int cy) {
   r.fillRect(cx - cr / 2 - 2, drawCy - cr / 2, 6, 4, false);
 }
 
-static void drawIconGrape(GfxRenderer& r, int cx, int cy) {
+static void drawIconGrape(const GfxRenderer& r, int cx, int cy) {
   // Cluster of 6 small circles in 1-2-3 pyramid arrangement
   int gr = 8;           // grape circle radius
   int sp = gr * 2 + 2;  // spacing
@@ -673,7 +670,7 @@ static void drawIconGrape(GfxRenderer& r, int cx, int cy) {
   r.fillRect(cx - 1, cy - sp - gr - 5, 3, 6, true);
 }
 
-static void drawIconMelon(GfxRenderer& r, int cx, int cy) {
+static void drawIconMelon(const GfxRenderer& r, int cx, int cy) {
   // Half circle (flat top, dome at bottom) with stripe lines
   int cr = 24;
   int topY = cy - 6;
@@ -705,7 +702,7 @@ static void drawIconMelon(GfxRenderer& r, int cx, int cy) {
   }
 }
 
-static void drawIconPlum(GfxRenderer& r, int cx, int cy) {
+static void drawIconPlum(const GfxRenderer& r, int cx, int cy) {
   // Slightly tall oval with a small stem
   int hw = 20;
   int hh = 24;
@@ -725,7 +722,7 @@ static void drawIconPlum(GfxRenderer& r, int cx, int cy) {
   r.fillRect(cx - hw / 2, drawCy - hh / 2, 5, 4, false);
 }
 
-static void drawIcon7Outline(GfxRenderer& r, int cx, int cy) {
+static void drawIcon7Outline(const GfxRenderer& r, int cx, int cy) {
   // Outlined "7" — same geometry as drawIcon7 but using draw instead of fill
   // Top horizontal bar (outlined as rect)
   r.drawRect(cx - 18, cy - 25, 36, 7);
@@ -1408,7 +1405,7 @@ CasinoActivity::Card CasinoActivity::bjDraw() {
 
 int CasinoActivity::bjHandValue(const std::vector<Card>& hand) const {
   int total = 0, aces = 0;
-  for (auto& c : hand) {
+  for (const auto& c : hand) {
     if (c.rank == 1) {
       total += 11;
       aces++;

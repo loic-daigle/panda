@@ -9,13 +9,13 @@
 #include "fontIds.h"
 
 // 25% gray (light dither) for die face texture
-static void fillDithered25(GfxRenderer& r, int x, int y, int w, int h) {
+static void fillDithered25(const GfxRenderer& r, int x, int y, int w, int h) {
   for (int dy = 0; dy < h; dy += 2)
     for (int dx = ((dy / 2) % 2); dx < w; dx += 2) r.drawPixel(x + dx, y + dy, true);
 }
 
 // 50% gray (medium) — for shadow dithering
-static void fillDithered50(GfxRenderer& r, int x, int y, int w, int h) {
+static void fillDithered50(const GfxRenderer& r, int x, int y, int w, int h) {
   for (int dy = 0; dy < h; dy++)
     for (int dx = (dy % 2); dx < w; dx += 2) r.drawPixel(x + dx, y + dy, true);
 }
@@ -122,7 +122,7 @@ void DiceRollerActivity::loop() {
 // ---- visual dice rendering helpers ----
 
 // Draw a single pip (dot) as a filled circle approximation
-static void drawPip(GfxRenderer& r, int cx, int cy, int radius) {
+static void drawPip(const GfxRenderer& r, int cx, int cy, int radius) {
   // Draw filled circle using horizontal lines
   for (int dy = -radius; dy <= radius; dy++) {
     int dx = 0;

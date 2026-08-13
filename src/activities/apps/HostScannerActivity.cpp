@@ -17,7 +17,7 @@ constexpr uint16_t HostScannerActivity::COMMON_PORTS[];
 
 std::string HostScannerActivity::ipToString(uint32_t ip) const {
   char buf[16];
-  snprintf(buf, sizeof(buf), "%d.%d.%d.%d", ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF);
+  snprintf(buf, sizeof(buf), "%u.%u.%u.%u", ip & 0xFF, (ip >> 8) & 0xFF, (ip >> 16) & 0xFF, (ip >> 24) & 0xFF);
   return buf;
 }
 
@@ -46,9 +46,7 @@ void HostScannerActivity::startHostScan() {
   hosts.clear();
   scanProgress = 0;
 
-  uint32_t localIp = WiFi.localIP();
   uint32_t mask = WiFi.subnetMask();
-  uint32_t network = localIp & mask;
   scanTotal = (~mask & 0xFF) - 1;  // Number of host addresses
   if (scanTotal > 254) scanTotal = 254;
 }

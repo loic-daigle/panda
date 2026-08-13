@@ -24,14 +24,14 @@ class SteganographyActivity final : public Activity {
   Mode mode = EMBED;
 
   static constexpr int MAX_FILES = 30;
-  char fileNames[MAX_FILES][32];
+  char fileNames[MAX_FILES][32]{};
   int fileCount = 0;
   int fileIndex = 0;
 
-  char selectedPath[80];
+  char selectedPath[80]{};
 
   static constexpr int MAX_MSG_LEN = 2000;
-  char messageBuffer[MAX_MSG_LEN + 1];
+  char messageBuffer[MAX_MSG_LEN + 1]{};
   int messageLen = 0;
 
   int scrollOffset = 0;

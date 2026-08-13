@@ -193,9 +193,9 @@ void TargetDB::getSorted(TargetType type, Target** out, int maxOut, int& outCoun
     Target* key = out[i];
     int j = i - 1;
 
-    bool shouldSwap = false;
     while (j >= 0) {
       const Target* a = out[j];
+      bool shouldSwap;
       if (sortBy == 0) {
         // Live targets first, then lastSeen descending within each group
         int ai = static_cast<int>(a - cache);

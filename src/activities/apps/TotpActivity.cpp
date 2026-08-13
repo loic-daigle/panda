@@ -209,7 +209,6 @@ void TotpActivity::renderList() const {
 void TotpActivity::renderCode() const {
   const auto& metrics = UITheme::getInstance().getMetrics();
   const int pageWidth = renderer.getScreenWidth();
-  const int pageHeight = renderer.getScreenHeight();
   const int top = metrics.topPadding + metrics.headerHeight + 20;
 
   if (selectedIndex < 0 || selectedIndex >= accountCount) return;

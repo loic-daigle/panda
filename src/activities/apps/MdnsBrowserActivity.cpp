@@ -115,13 +115,7 @@ void MdnsBrowserActivity::queryService(const char* serviceType) {
     uint16_t port = MDNS.port(i);
 
     // Deduplicate by ip + port
-    bool dup = false;
-    for (const auto& r : results) {
-      if (r.ip == ip && r.port == port) {
-        dup = true;
-        break;
-      }
-    }
+    bool dup = std::any_of(results.begin(), results.end(), [&](const auto& r) { return r.ip == ip && r.port == port; });
     if (dup) continue;
 
     ServiceResult sr;

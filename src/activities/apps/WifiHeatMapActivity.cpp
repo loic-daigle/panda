@@ -83,7 +83,7 @@ void WifiHeatMapActivity::processScanResults() {
     HalFile f = Storage.open(filename, O_WRITE | O_CREAT | O_APPEND);
 
     for (int i = 0; i < result && i < MAX_CURRENT; i++) {
-      uint8_t* rawBssid = WiFi.BSSID(i);
+      const uint8_t* rawBssid = WiFi.BSSID(i);
       char bssidBuf[18];
       snprintf(bssidBuf, sizeof(bssidBuf), "%02X:%02X:%02X:%02X:%02X:%02X", rawBssid[0], rawBssid[1], rawBssid[2],
                rawBssid[3], rawBssid[4], rawBssid[5]);

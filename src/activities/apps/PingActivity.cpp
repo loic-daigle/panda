@@ -140,7 +140,7 @@ void PingActivity::renderPinging() const {
   y += lineH + 5;
 
   // Show recent results
-  for (auto& r : results) {
+  for (const auto& r : results) {
     char buf[64];
     if (r.success) {
       snprintf(buf, sizeof(buf), "Reply: %lu ms", r.rttMs);

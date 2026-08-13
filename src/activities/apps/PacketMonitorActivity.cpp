@@ -207,7 +207,8 @@ bool PacketMonitorActivity::isEapolPacket(const uint8_t* data, uint16_t len) con
   if (len < 36) return false;
   // Check both standard data frame offset (24+6=30) and QoS data frame offset (26+6=32)
   // LLC/SNAP header ends with ethertype at offset 30-31 or 32-33
-  for (int i = 30; i <= 33 && i + 1 < len; i++) {
+  // len >= 36 (checked above) already covers the max index used here (i+1 <= 34)
+  for (int i = 30; i <= 33; i++) {
     if (data[i] == 0x88 && data[i + 1] == 0x8E) return true;
   }
   return false;
@@ -332,7 +333,7 @@ void PacketMonitorActivity::render(RenderLock&&) {
   // Recording info
   if (pcapRecording) {
     char recStr[48];
-    snprintf(recStr, sizeof(recStr), "REC: %lu packets, %lu KB", static_cast<uint32_t>(packetsSaved),
+    snprintf(recStr, sizeof(recStr), "REC: %u packets, %u KB", static_cast<uint32_t>(packetsSaved),
              static_cast<uint32_t>(pcapFileSize) / 1024);
     renderer.drawText(UI_10_FONT_ID, leftPad, y, recStr, true, EpdFontFamily::BOLD);
     y += fontH + 6;
