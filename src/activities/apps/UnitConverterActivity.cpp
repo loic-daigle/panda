@@ -306,7 +306,7 @@ void UnitConverterActivity::renderResults() const {
   const auto pageHeight = renderer.getScreenHeight();
   const int lineH = renderer.getLineHeight(UI_10_FONT_ID);
 
-  auto& cat = getCategories()[categoryIndex];
+  const auto& cat = getCategories()[categoryIndex];
   const auto& unit = cat.units[unitIndex];
   int y = metrics.topPadding + metrics.headerHeight + metrics.verticalSpacing * 2;
 

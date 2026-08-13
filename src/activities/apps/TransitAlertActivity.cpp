@@ -4,6 +4,7 @@
 #include <Logging.h>
 #include <WiFi.h>
 
+#include <algorithm>
 #include <cstring>
 
 #include "MappedInputManager.h"
@@ -126,7 +127,7 @@ void TransitAlertActivity::promptStopName() {
                                        order[i] = order[j];
                                        order[j] = tmp;
                                      }
-                                 int total = (scanned < 5) ? scanned : 5;
+                                 int total = std::min(scanned, 5);
                                  s.apCount = total;
                                  for (int i = 0; i < total; i++) {
                                    memcpy(s.bssids[i], WiFi.BSSID(order[i]), 6);

@@ -137,7 +137,7 @@ static void drawPip(const GfxRenderer& r, int cx, int cy, int radius) {
 }
 
 // Draw d6 pip pattern inside a die face
-static void drawD6Pips(GfxRenderer& r, int x, int y, int size, int value) {
+static void drawD6Pips(const GfxRenderer& r, int x, int y, int size, int value) {
   const int pip = size / 7;  // pip radius — slightly larger for visibility
   const int margin = size / 4;
   const int left = x + margin;
