@@ -1,14 +1,14 @@
-# biscuit.
+# panda.
 
 Custom firmware for the **Xteink X4 and X3** e-paper devices. Turns a $40-70 e-ink reader into a smart device with wireless tools, security features, communication, games, and utilities — while keeping full e-reader functionality.
 
-Forked from [CrossPoint Reader](https://github.com/crosspoint-reader/crosspoint-reader). All core reading functionality comes from CrossPoint. Biscuit builds on top of it.
+Forked from [CrossPoint Reader](https://github.com/crosspoint-reader/crosspoint-reader). All core reading functionality comes from CrossPoint. Panda builds on top of it.
 
 ![Dashboard](./docs/images/homescreen.jpeg)
 
 ## What is this
 
-Biscuit treats the Xteink X4/X3 as a general-purpose smart device, not just an e-reader. The home screen is a tile-based dashboard with live system info (battery, heap, uptime, WiFi status). Reading is one of eight categories, not the main focus.
+Panda treats the Xteink X4/X3 as a general-purpose smart device, not just an e-reader. The home screen is a tile-based dashboard with live system info (battery, heap, uptime, WiFi status). Reading is one of eight categories, not the main focus.
 
 The e-ink display is readable in direct sunlight, retains its image without power, and gives the device days of battery life. Seven physical buttons provide navigation without a touchscreen. WiFi and BLE 5.0 enable wireless tools. A MicroSD card stores everything.
 
@@ -128,10 +128,10 @@ Ghost Mode is the headline entry — it rotates MAC, kills radios, and cleans up
 | Network Monitor | Detect rogue APs and suspicious frames |
 | Emergency SOS | SOS beacon (WiFi + BLE + Mesh) with dead man's switch |
 | Phone Tether | BLE proximity disconnect alert |
-| Quick Wipe | Erase all biscuit data from SD with verification |
+| Quick Wipe | Erase all panda data from SD with verification |
 | PIN Security | Lock device with PIN, duress PIN for fake profile |
 | Screen Decoy | Fake screen to hide activity |
-| SD Encryption | Encrypt biscuit data on SD with PIN |
+| SD Encryption | Encrypt panda data on SD with PIN |
 
 ### Comms — communicate and exchange
 
@@ -169,11 +169,21 @@ A single tile that merges the old Network section with crypto, productivity, tra
 | HTTP Client | Send GET/POST requests |
 | mDNS Browser | Discover local services |
 
+**Web**
+
+| App | What it does |
+|-----|-------------|
+| Weather | Local forecast, cached offline |
+| Wikipedia | Search and download articles |
+| DuckDuckGo | Search the web, results streamed from SD |
+
 **Productivity**
 
 | App | What it does |
 |-----|-------------|
 | Clock | NTP clock, stopwatch, pomodoro timer |
+| Calendar | Sync events from phone via Gadgetbridge |
+| Notifications | Mirror phone notifications via Gadgetbridge |
 | Calculator | Basic calculator |
 | QR Generator | Generate QR codes from text |
 | Morse Code | Encode and decode morse |
@@ -278,6 +288,8 @@ Three UI themes, selectable in Settings:
 - Calibre wireless connect flow
 - OPDS browser with saved servers (up to 8), search, pagination, and direct download
 - OTA update checks and installs from GitHub releases
+- Bangle.js/Gadgetbridge BLE protocol — phone pushes notifications and calendar events, and syncs clock/timezone, to the device (powers the Calendar and Notifications apps)
+- Bluetooth keyboard pairing (BLE HID host) for opt-in, offline text entry — Cipher, Password Generator, Medical Card, Habit Tracker, Morse Code, TOTP, Event Logger, QR Generator, SD Encryption
 
 ## Customization
 
@@ -306,13 +318,13 @@ USB port or browser before assuming the device is locked. Only reach for the unl
 
 > ### ⚠️ WARNING: READ THIS BEFORE USING THE UNLOCKER ⚠️
 >
-> **The only officially supported firmwares in the unlock tool are CrossPoint and CrossInk.** Biscuit is a third-party fork and is not listed there.
+> **The only officially supported firmwares in the unlock tool are CrossPoint and CrossInk.** Panda is a third-party fork and is not listed there.
 >
 > Flashing any unsupported firmware on a USB-locked device may **permanently brick the device** or leave it **permanently
 > stuck on that firmware with no recovery path**. Once USB flashing is re-locked, your only way back is via OTA, and if
 > the firmware you flashed doesn't support OTA, **there is no way out**.
 >
-> **Biscuit supports OTA updates** (see below), so a USB-locked device flashed with Biscuit can still be recovered/updated without re-unlocking. Confirm this still holds for the build you flash before relying on it.
+> **Panda supports OTA updates** (see below), so a USB-locked device flashed with Panda can still be recovered/updated without re-unlocking. Confirm this still holds for the build you flash before relying on it.
 
 ## Install firmware
 
@@ -351,8 +363,8 @@ Adjust `/dev/ttyACM0` to match your system.
 ### Manual
 
 ```bash
-git clone --recursive https://github.com/yattsu/biscuit
-cd biscuit
+git clone --recursive https://github.com/loic-daigle/panda
+cd panda
 pio run --target upload
 ```
 
@@ -389,14 +401,14 @@ Conversion runs the firmware repo's `lib/EpdFont/scripts/fontconvert_sdcard.py` 
 
 - [pioarduino](https://github.com/pioarduino/pioarduino) or VS Code + pioarduino plugin
 - Python 3.8+
-- `clang-format` 21
+- `clang-format` 22
 - USB-C cable supporting data transfer
 
 ### Setup
 
 ```bash
-git clone --recursive https://github.com/yattsu/biscuit
-cd biscuit
+git clone --recursive https://github.com/loic-daigle/panda
+cd panda
 
 # if cloned without --recursive:
 git submodule update --init --recursive
@@ -510,7 +522,7 @@ See [architecture docs](./docs/contributing/architecture.md) for the full overvi
 
 ## Upstream
 
-Biscuit tracks CrossPoint Reader as upstream. To sync:
+Panda tracks CrossPoint Reader as upstream. To sync:
 
 ```bash
 git remote add upstream https://github.com/crosspoint-reader/crosspoint-reader.git
@@ -520,7 +532,7 @@ git merge upstream/master
 
 ## Credits
 
-Built on [CrossPoint Reader](https://github.com/crosspoint-reader/crosspoint-reader) by the CrossPoint contributors. CrossPoint was inspired by [diy-esp32-epub-reader](https://github.com/atomic14/diy-esp32-epub-reader) by atomic14.
+Built on [CrossPoint Reader](https://github.com/crosspoint-reader/crosspoint-reader) by the CrossPoint contributors, via [Biscuit](https://github.com/yattsu/biscuit). CrossPoint was inspired by [diy-esp32-epub-reader](https://github.com/atomic14/diy-esp32-epub-reader) by atomic14.
 
 ## License
 
@@ -538,7 +550,7 @@ Everyone here is a volunteer, so please be respectful and patient. For governanc
 
 ## Community forks
 
-One of the best things about open source is that anyone can take the code in a different direction. Biscuit itself is one such fork — if you need something outside Biscuit's or CrossPoint's [scope](./SCOPE.md), check out the community forks:
+One of the best things about open source is that anyone can take the code in a different direction. Panda itself is one such fork — if you need something outside Panda's or CrossPoint's [scope](./SCOPE.md), check out the community forks:
 
 - [CrossInk](https://github.com/uxjulia/CrossInk) — Typography and reading tracking: Bionic Reading (bolds word stems to create fixation points), guide dots between words, improved paragraph indents, and replaces the default fonts with ChareInk/Lexend/Bitter.
 
@@ -556,12 +568,12 @@ One of the best things about open source is that anyone can take the code in a d
 
 - [t5s3-reader](https://github.com/ShallowGreen123/t5s3-reader) — Crosspoint port for LilyGo T5 ePaper S3 / T5S3 4.7-inch e-paper device.
 
-**Note:** Many CrossPoint fork features will make their way into Biscuit over time as we sync upstream.
+**Note:** Many CrossPoint fork features will make their way into Panda over time as we sync upstream.
 
 Want to build your own device? Be sure to check out the [de-link](https://github.com/iandchasse/de-link) project.
 
 ---
 
-Biscuit is **not affiliated with Xteink, CrossPoint Reader, or any device manufacturer**.
+Panda is **not affiliated with Xteink, CrossPoint Reader, or any device manufacturer**.
 
 Huge shoutout to [diy-esp32-epub-reader](https://github.com/atomic14/diy-esp32-epub-reader), which inspired this project.
