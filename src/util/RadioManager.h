@@ -1,5 +1,8 @@
 #pragma once
+#include <HalPowerManager.h>
+
 #include <cstdint>
+#include <memory>
 
 /**
  * Manages WiFi/BLE radio coexistence on ESP32-C3.
@@ -34,6 +37,19 @@ class RadioManager {
   // way it does for ensureBle()'s raw BLEDevice calls.
   bool ensureBleHidHost(const char* hostName = "panda");
 
+  // Call every loop() tick while the BLE HID host is in use (e.g. from
+  // KeyboardEntryActivity/BleKeyboardPairingActivity): drains BleKeyboardHost's
+  // own poll() and holds a HalPowerManager::Lock for as long as a peripheral is
+  // actually connected. Idle CPU-frequency scaling only exempts WiFi, not BLE
+  // (see BangleGadgetbridgeServer's powerLock, which hit this same failure
+  // mode first) -- a frequency drop mid-connection desyncs the BLE
+  // controller's connection-interval timing, observed on real hardware as the
+  // keyboard silently dropping after ~a minute idle (HalPowerManager's
+  // IDLE_POWER_SAVING_MS) and NimBLE later failing to cleanly terminate the
+  // already-desynced link ("ble_hs_stop: failed to terminate connection").
+  // No-op when the BLE HID host isn't the active radio.
+  void pollBleHidHost();
+
   // Shut down all radios
   void shutdown();
 
@@ -46,6 +62,7 @@ class RadioManager {
  private:
   RadioManager() = default;
   RadioState state = RadioState::OFF;
+  std::unique_ptr<HalPowerManager::Lock> bleHidPowerLock;
 
   void deinitWifi();
   void deinitBle();

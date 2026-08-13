@@ -54,6 +54,25 @@ bool RadioManager::ensureBleHidHost(const char* hostName) {
   return true;
 }
 
+void RadioManager::pollBleHidHost() {
+  if (state != RadioState::BLE_HID_HOST) return;
+
+  BleHid.poll();
+
+  // Retry every tick until actually held, not just once on the connect
+  // transition -- HalPowerManager::Lock has a single mutex slot shared with
+  // the display renderer's own brief per-render Lock, so a single attempt can
+  // lose that race at the exact instant a connection completes (same
+  // reasoning as BangleGadgetbridgeServer::poll()'s powerLock handling).
+  if (BleHid.isConnected()) {
+    if (!bleHidPowerLock || !bleHidPowerLock->held()) {
+      bleHidPowerLock = std::make_unique<HalPowerManager::Lock>();
+    }
+  } else if (bleHidPowerLock) {
+    bleHidPowerLock.reset();
+  }
+}
+
 void RadioManager::shutdown() {
   if (state == RadioState::WIFI) deinitWifi();
   if (state == RadioState::BLE) deinitBle();
@@ -89,6 +108,28 @@ void RadioManager::deinitBle() {
 }
 
 void RadioManager::deinitBleHidHost() {
+  bleHidPowerLock.reset();  // safety net if torn down without a clean disconnect
+
+  // Wait for a real Link Layer disconnect before end() calls
+  // NimBLEDevice::deinit() internally. end() only gives a stray still-
+  // connected peer ~600ms before deiniting anyway; on a slow/lossy link
+  // that's not always enough, and racing ahead into deinit() while the host
+  // still considers the connection live makes NimBLE's own internal stop
+  // timeout force-terminate it instead ("ble_hs_stop_terminate_timeout_cb, 1
+  // connection(s) still up" / "ble_hs_stop: failed to terminate connection"),
+  // which left the stack flaky for the next begin()/connect(). Done here via
+  // BleKeyboardHost's public API (disconnect()/isConnected()) rather than
+  // patching end()'s own wait, since freeink-sdk is a submodule we don't
+  // modify.
+  if (BleHid.isConnected()) {
+    BleHid.disconnect();
+    const uint32_t waitStart = millis();
+    while (BleHid.isConnected() && millis() - waitStart < 2000) {
+      delay(10);
+    }
+    delay(300);  // let DISCONNECTING settle to DISCONNECTED
+  }
+
   BleHid.end();
   delay(50);
   LOG_DBG("RADIO", "BLE HID host deinitialized");

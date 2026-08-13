@@ -153,6 +153,14 @@ void KeyboardEntryActivity::onEnter() {
   interactionsReady = false;
   if (allowBleKeyboard) {
     RADIO.ensureBleHidHost();
+    // BleKeyboardHost::poll() only attempts a reconnect to a bonded device on
+    // its own multi-second backoff timer (meant for continuous idle-time
+    // reconnect), which can leave a short-lived screen like this one showing
+    // no connection attempt at all if the timer hasn't come due yet. Kick an
+    // immediate connect to the first bonded device instead of waiting on it.
+    if (!BleHid.isConnected() && !BleHid.isConnecting() && BleHid.pairedCount() > 0) {
+      BleHid.connect(BleHid.paired(0).addr);
+    }
   }
   requestUpdate();
 }
@@ -273,7 +281,7 @@ bool KeyboardEntryActivity::backspaceUtf8() {
 
 bool KeyboardEntryActivity::handleBleKeyEvents() {
   if (!allowBleKeyboard) return false;
-  BleHid.poll();
+  RADIO.pollBleHidHost();
   if (!BleHid.isConnected()) return false;
 
   bool changed = false;

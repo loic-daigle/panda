@@ -93,6 +93,15 @@ void BleKeyboardPairingActivity::connectToSelected() {
 }
 
 void BleKeyboardPairingActivity::loop() {
+  // RADIO.pollBleHidHost() drains BleHid.poll() (which refreshes
+  // isScanning()/isConnecting()/isConnected() from the live NimBLE state and
+  // drives auto-reconnect -- nothing else in this activity pumps it, so every
+  // state below would see stale, never-updated flags without this, most
+  // visibly the SCANNING state never noticing the scan actually finished) and
+  // also holds a HalPowerManager::Lock for as long as a peripheral stays
+  // connected, so idle CPU-frequency scaling can't desync the connection.
+  RADIO.pollBleHidHost();
+
   if (state == State::SCANNING) {
     if (mappedInput.wasPressed(MappedInputManager::Button::Back)) {
       BleHid.stopScan();
