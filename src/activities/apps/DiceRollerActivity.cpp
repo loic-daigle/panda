@@ -188,7 +188,7 @@ static void drawD6Pips(const GfxRenderer& r, int x, int y, int size, int value) 
 }
 
 // Draw a single die face at given position
-static void drawDieFace(GfxRenderer& r, int x, int y, int size, int value, int sides) {
+static void drawDieFace(const GfxRenderer& r, int x, int y, int size, int value, int sides) {
   // Shadow (dithered 50% for more natural look)
   fillDithered50(r, x + 4, y + 4, size, size);
   // White face
