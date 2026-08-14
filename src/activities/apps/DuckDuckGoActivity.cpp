@@ -5,7 +5,6 @@
 #include <HalStorage.h>
 #include <I18n.h>
 #include <Logging.h>
-#include <Txt.h>
 #include <WiFi.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
@@ -466,10 +465,7 @@ std::string DuckDuckGoActivity::websiteFilePathForTitle(const std::string& title
 }
 
 void DuckDuckGoActivity::openOfflinePage(const std::string& filepath) {
-  auto txt = std::unique_ptr<Txt>(new Txt(filepath, "/.crosspoint"));
-  if (txt && txt->load()) {
-    activityManager.pushActivity(std::make_unique<TxtReaderActivity>(renderer, mappedInput, std::move(txt), 1));
-  }
+  activityManager.pushActivity(std::make_unique<TxtReaderActivity>(renderer, mappedInput, filepath, true));
 }
 
 void DuckDuckGoActivity::performBackgroundSearch() {

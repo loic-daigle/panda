@@ -252,16 +252,26 @@ void BleKeyboardPairingActivity::loop() {
     const int contentTop =
         screen.y + metrics.topPadding + metrics.headerHeight + metrics.tabBarHeight + metrics.verticalSpacing;
     const int contentHeight = screen.height - contentTop - metrics.verticalSpacing * 2;
-    int touchSel = static_cast<int>(selectedIndex);
-    const auto listTouch =
-        handleListTouch(touchSel, static_cast<int>(entries.size()), contentTop, contentHeight, false);
-    if (listTouch != ListTouchResult::None) {
-      selectedIndex = static_cast<size_t>(touchSel);
-      if (listTouch == ListTouchResult::Activated) connectToSelected();
+    const int pageItems = GUI.getListPageItems(contentHeight, false);
+    const int itemCount = static_cast<int>(entries.size());
+    const int pageStart = static_cast<int>(selectedIndex) / pageItems * pageItems;
+    const int rowsOnPage = std::min(pageItems, itemCount - pageStart);
+    const int rowStep = GUI.getListRowStep(false);
+    int touchRow = -1;
+    // Mirrors BaseTheme::drawList's own pagination math so the hit-test lines
+    // up with what's actually drawn on screen.
+    const auto rowResult = mappedInput.rowTouch(touchRow, contentTop, rowStep, rowsOnPage, 0, INT32_MAX, rowStep);
+    if (rowResult != MappedInputManager::RowTouch::None) {
+      const auto touchedIndex = static_cast<size_t>(pageStart + touchRow);
+      if (rowResult == MappedInputManager::RowTouch::Tap) {
+        selectedIndex = touchedIndex;
+        connectToSelected();
+      } else if (selectedIndex != touchedIndex) {
+        selectedIndex = touchedIndex;
+        requestUpdate();
+      }
       return;
     }
-
-    const int pageItems = GUI.getListPageItems(contentHeight, false);
     const auto swipe = mappedInput.wasSwipe();
     if (swipe == MappedInputManager::SwipeDir::Up) {
       selectedIndex = ButtonNavigator::nextPageIndex(selectedIndex, entries.size(), pageItems);

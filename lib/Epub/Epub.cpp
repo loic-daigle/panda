@@ -13,6 +13,11 @@
 #include "Epub/parsers/TocNavParser.h"
 #include "Epub/parsers/TocNcxParser.h"
 
+namespace {
+// Needs to be increased if an update needs to regenerate the cover bmp
+constexpr char coverBmpVersion[] = "_v2";
+}  // namespace
+
 bool Epub::findContentOpfFile(std::string* contentOpfFile) const {
   const auto containerPath = "META-INF/container.xml";
   size_t containerSize;
@@ -556,7 +561,7 @@ const std::string& Epub::getLanguage() const {
 }
 
 std::string Epub::getCoverBmpPath(bool cropped) const {
-  const auto coverFileName = std::string("cover") + (cropped ? "_crop" : "");
+  const auto coverFileName = std::string("cover") + coverBmpVersion + (cropped ? "_crop" : "");
   return cachePath + "/" + coverFileName + ".bmp";
 }
 
@@ -802,7 +807,12 @@ int Epub::getSpineItemsCount() const {
   return bookMetadataCache->getSpineCount();
 }
 
-size_t Epub::getCumulativeSpineItemSize(const int spineIndex) const { return getSpineItem(spineIndex).cumulativeSize; }
+size_t Epub::getCumulativeSpineItemSize(const int spineIndex) const {
+  if (!bookMetadataCache || !bookMetadataCache->isLoaded()) {
+    return 0;
+  }
+  return bookMetadataCache->getCumulativeSize(spineIndex);
+}
 
 BookMetadataCache::SpineEntry Epub::getSpineItem(const int spineIndex) const {
   if (!bookMetadataCache || !bookMetadataCache->isLoaded()) {
