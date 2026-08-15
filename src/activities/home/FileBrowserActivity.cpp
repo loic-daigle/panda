@@ -470,25 +470,25 @@ void FileBrowserActivity::buildScreen(UiScreen& screen) {
   props.action = ACTION_ROW;
   // Tap opens/navigates; long-press prompts delete (physical buttons stay in loop()).
   props.inputMask = fui::InputTouch | fui::InputLongPress;
-  props.valueInset = 8;  // air between the extension and the row edge
-  // File names in the small font, wrapping onto a second line inside the same
-  // row height (rowHeight is derived from the small font itself: two of its
-  // lines plus 8, so two small lines always fit), so long names show more
-  // text. maxLines=2 doubles as the caller-owned marker: an all-default
-  // smallText fails textStyleUnset and Screen::list() would substitute
-  // bodyText back (FONT_SLOT_SMALL is 0).
   fui::TextStyle label = screen.theme().smallText;
-  label.maxLines = 2;
-  // Library mode has no extension badge to balance against, and reads more
-  // like a book title in bold (mirrors RecentBooksActivity's row styling).
-  if (mode == Mode::Library) label.bold = true;
+  if (mode == Mode::Library) {
+    // Same row styling as RecentBooksActivity: single-line bold title, author
+    // subtitle underneath, no extension badge/path bar to balance against.
+    label.bold = true;
+  } else {
+    props.valueInset = 8;  // air between the extension and the row edge
+    // File names in the small font, wrapping onto a second line inside the
+    // same row height (rowHeight is derived from the small font itself: two
+    // of its lines plus 8, so two small lines always fit), so long names show
+    // more text. maxLines=2 doubles as the caller-owned marker: an
+    // all-default smallText fails textStyleUnset and Screen::list() would
+    // substitute bodyText back (FONT_SLOT_SMALL is 0).
+    label.maxLines = 2;
+    // The trailing value here is just the short extension: skip the balanced
+    // 60%-band wrap cap and let both name lines run the full width before it.
+    props.balanceWrappedLabelWithValue = false;
+  }
   props.labelText = label;
-  // The trailing value here is just the short extension: skip the balanced
-  // 60%-band wrap cap and let both name lines run the full width before it.
-  props.balanceWrappedLabelWithValue = false;
-  // Library rows carry an author subtitle (when known) under a taller row;
-  // maxLines=2 above only takes effect on rows without one (folders, or
-  // books with no cached author), so long names on those still wrap.
   syncListViewport(screen, props, /*hasSubtitle=*/mode == Mode::Library);
   screen.list(props);
 }
