@@ -8,8 +8,10 @@
 
 class FileBrowserActivity final : public UiListActivity {
  public:
-  // Books = standard reader browser; PickFirmware = filter to .bin only and return path via ActivityResult.
-  enum class Mode { Books, PickFirmware };
+  // Books = standard reader browser; Library = same filtering/navigation as Books,
+  // styled as a clean book list (no path bar/extension badges) for the "Open Book"
+  // entry point; PickFirmware = filter to .bin only and return path via ActivityResult.
+  enum class Mode { Books, Library, PickFirmware };
 
  private:
   // Deletion
@@ -29,6 +31,9 @@ class FileBrowserActivity final : public UiListActivity {
   // 500 strings per repaint instead of once per directory load.
   std::vector<std::string> rowNames;
   std::vector<std::string> rowExtensions;
+  // Library mode only: author subtitle, read from a book's cached metadata
+  // (see rebuildRowItems()) when one exists. Empty otherwise.
+  std::vector<std::string> rowAuthors;
   std::vector<freeink::ui::ListItem> rowItems;
   // getFileName()'s "[folder]" bracket formatting depends on the active
   // theme's showsFileIcons(); tracked so a theme change while this activity is

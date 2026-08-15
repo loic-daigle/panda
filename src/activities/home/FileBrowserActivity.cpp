@@ -1,10 +1,12 @@
 #include "FileBrowserActivity.h"
 
+#include <Epub.h>
 #include <FsHelpers.h>
 #include <GfxRenderer.h>
 #include <HalStorage.h>
 #include <I18n.h>
 #include <Memory.h>
+#include <Xtc.h>
 
 #include <algorithm>
 
@@ -67,10 +69,16 @@ void FileBrowserActivity::loadFiles() {
         if (FsHelpers::checkFileExtension(filename, ".bin")) {
           files.emplace_back(filename);
         }
-      } else if (FsHelpers::hasEpubExtension(filename) || FsHelpers::hasXtcExtension(filename) ||
-                 FsHelpers::hasTxtExtension(filename) || FsHelpers::hasMarkdownExtension(filename) ||
-                 FsHelpers::hasBmpExtension(filename) || FsHelpers::hasPngExtension(filename)) {
-        files.emplace_back(filename);
+      } else {
+        const bool isBookFile = FsHelpers::hasEpubExtension(filename) || FsHelpers::hasXtcExtension(filename) ||
+                                FsHelpers::hasTxtExtension(filename) || FsHelpers::hasMarkdownExtension(filename);
+        // Library mode is books only; Books mode (Browse Files) also surfaces
+        // standalone images since it doubles as a general SD viewer.
+        const bool isImageFile =
+            mode != Mode::Library && (FsHelpers::hasBmpExtension(filename) || FsHelpers::hasPngExtension(filename));
+        if (isBookFile || isImageFile) {
+          files.emplace_back(filename);
+        }
       }
     }
   }
@@ -87,15 +95,42 @@ void FileBrowserActivity::rebuildRowItems() {
   rowsUseFileIcons = UITheme::getInstance().getTheme().showsFileIcons();
   rowNames.resize(files.size());
   rowExtensions.resize(files.size());
+  rowAuthors.assign(files.size(), std::string());
   rowItems.clear();
   rowItems.reserve(files.size());
+  std::string cleanBasePath = basepath;
+  if (cleanBasePath.back() != '/') cleanBasePath += "/";
   for (size_t i = 0; i < files.size(); i++) {
     rowNames[i] = getFileName(files[i]);
     rowExtensions[i] = getFileExtension(files[i]);
+
+    // Library mode: pull real title/author from a book's cached metadata when
+    // one exists (cheap disk read, no ZIP/EPUB parse — see BookMetadataCache),
+    // falling back to the filename-derived name above for never-opened books.
+    if (mode == Mode::Library && files[i].back() != '/') {
+      const std::string fullPath = cleanBasePath + files[i];
+      if (FsHelpers::hasEpubExtension(files[i])) {
+        Epub epub(fullPath, "/.crosspoint");
+        if (epub.load(/*buildIfMissing=*/false, /*skipLoadingCss=*/true)) {
+          if (!epub.getTitle().empty()) rowNames[i] = epub.getTitle();
+          rowAuthors[i] = epub.getAuthor();
+        }
+      } else if (FsHelpers::hasXtcExtension(files[i])) {
+        Xtc xtc(fullPath, "/.crosspoint");
+        if (xtc.load()) {
+          if (!xtc.getTitle().empty()) rowNames[i] = xtc.getTitle();
+          rowAuthors[i] = xtc.getAuthor();
+        }
+      }
+    }
+
     fui::ListItem item;
     item.label = rowNames[i].c_str();
-    if (!rowExtensions[i].empty()) item.value = rowExtensions[i].c_str();
-    item.icon = listIconFor(UITheme::getFileIcon(files[i]));
+    // Library mode drops the extension badge: it's a book list, not a file manager.
+    if (mode != Mode::Library && !rowExtensions[i].empty()) item.value = rowExtensions[i].c_str();
+    if (mode == Mode::Library && !rowAuthors[i].empty()) item.subtitle = rowAuthors[i].c_str();
+    // Subtitle rows carry the larger icon (mirrors RecentBooksActivity).
+    item.icon = listIconFor(UITheme::getFileIcon(files[i]), mode == Mode::Library ? 32 : 24);
     item.actionValue = static_cast<int16_t>(i);
     rowItems.push_back(item);
   }
@@ -133,6 +168,7 @@ void FileBrowserActivity::onExit() {
   files.clear();
   rowNames.clear();
   rowExtensions.clear();
+  rowAuthors.clear();
   rowItems.clear();
   fileNameBuffer.reset();
 }
@@ -251,7 +287,7 @@ void FileBrowserActivity::activateSelected(const bool forceDelete) {
     return;
   }
 
-  if (mode == Mode::Books && (forceDelete || mappedInput.getHeldTime() >= GO_HOME_MS)) {
+  if (mode != Mode::PickFirmware && (forceDelete || mappedInput.getHeldTime() >= GO_HOME_MS)) {
     // --- LONG PRESS ACTION: DELETE FILE OR DIRECTORY ---
     std::string cleanBasePath = basepath;
     if (cleanBasePath.back() != '/') cleanBasePath += "/";
@@ -304,7 +340,7 @@ void FileBrowserActivity::activateSelected(const bool forceDelete) {
 bool FileBrowserActivity::handleCustomInput() {
   // Long press BACK (1s+) goes to root folder (Books mode only).
   // In firmware-pick mode we keep navigation simple: short Back = up dir / cancel.
-  if (mode == Mode::Books && mappedInput.wasReleased(MappedInputManager::Button::Back) &&
+  if (mode != Mode::PickFirmware && mappedInput.wasReleased(MappedInputManager::Button::Back) &&
       mappedInput.getHeldTime() >= GO_HOME_MS && basepath != "/") {
     basepath = "/";
     loadFiles();
@@ -384,8 +420,10 @@ void FileBrowserActivity::buildScreen(UiScreen& screen) {
   screen.spacer(static_cast<int16_t>(metrics.verticalSpacing));
 
   // Full path band at the bottom: separator on top, left-truncated so the
-  // deepest directory stays visible.
-  {
+  // deepest directory stays visible. Skipped in Library mode: the header
+  // already names the current folder, and a raw filesystem path reads as a
+  // file manager rather than a book list.
+  if (mode != Mode::Library) {
     const int pathLineHeight = renderer.getLineHeight(SMALL_FONT_ID);
     const fui::Rect band = screen.takeBottom(static_cast<int16_t>(pathLineHeight + metrics.verticalSpacing));
     screen.target().fill(fui::Rect{band.x, band.y, band.width, 3}, fui::Paint::solid(fui::Color::Black));
@@ -441,11 +479,17 @@ void FileBrowserActivity::buildScreen(UiScreen& screen) {
   // bodyText back (FONT_SLOT_SMALL is 0).
   fui::TextStyle label = screen.theme().smallText;
   label.maxLines = 2;
+  // Library mode has no extension badge to balance against, and reads more
+  // like a book title in bold (mirrors RecentBooksActivity's row styling).
+  if (mode == Mode::Library) label.bold = true;
   props.labelText = label;
   // The trailing value here is just the short extension: skip the balanced
   // 60%-band wrap cap and let both name lines run the full width before it.
   props.balanceWrappedLabelWithValue = false;
-  syncListViewport(screen, props);
+  // Library rows carry an author subtitle (when known) under a taller row;
+  // maxLines=2 above only takes effect on rows without one (folders, or
+  // books with no cached author), so long names on those still wrap.
+  syncListViewport(screen, props, /*hasSubtitle=*/mode == Mode::Library);
   screen.list(props);
 }
 
@@ -453,10 +497,16 @@ void FileBrowserActivity::drawChrome() {
   const auto pageWidth = renderer.getScreenWidth();
   const auto& metrics = UITheme::getInstance().getMetrics();
 
-  std::string folderName =
-      (mode == Mode::PickFirmware)
-          ? std::string(tr(STR_SELECT_FIRMWARE_FILE))
-          : ((basepath == "/") ? std::string(tr(STR_SD_CARD)) : basepath.substr(basepath.rfind('/') + 1));
+  std::string folderName;
+  if (mode == Mode::PickFirmware) {
+    folderName = tr(STR_SELECT_FIRMWARE_FILE);
+  } else if (basepath != "/") {
+    folderName = basepath.substr(basepath.rfind('/') + 1);
+  } else if (mode == Mode::Library) {
+    folderName = tr(STR_OPEN_BOOK);
+  } else {
+    folderName = tr(STR_SD_CARD);
+  }
   // Header via GUI.drawHeader (already FreeInkUI-themed) for the battery
   // indicator; the rest of the screen renders through the app.
   GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, folderName.c_str());
