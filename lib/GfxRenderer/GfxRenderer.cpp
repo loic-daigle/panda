@@ -1377,10 +1377,6 @@ void GfxRenderer::drawBitmap(const Bitmap& bitmap, const int x, const int y, con
         drawPixel(screenX, screenY, false);
       } else if (renderMode == GRAYSCALE_LSB && val == 1) {
         drawPixel(screenX, screenY, false);
-      } else if (renderMode == FACTORY_GRAY_LSB && !(val & 1)) {
-        drawPixel(screenX, screenY, false);
-      } else if (renderMode == FACTORY_GRAY_MSB && val < 2) {
-        drawPixel(screenX, screenY, false);
       }
     }
   }
@@ -1420,9 +1416,6 @@ void GfxRenderer::drawBitmap1Bit(const Bitmap& bitmap, const int x, const int y,
     return;
   }
 
-  // Factory grayscale inverts the pixel values
-  const bool full = !(renderMode == FACTORY_GRAY_LSB || renderMode == FACTORY_GRAY_MSB);
-
   for (int bmpY = 0; bmpY < bitmap.getHeight(); bmpY++) {
     // Read rows sequentially using readNextRow
     if (bitmap.readNextRow(outputRow, rowBytes) != BmpReaderError::Ok) {
@@ -1457,7 +1450,7 @@ void GfxRenderer::drawBitmap1Bit(const Bitmap& bitmap, const int x, const int y,
       // For 1-bit source: 0 or 1 -> map to black (0,1,2) or white (3)
       // val < 3 means black pixel (draw it)
       if (val < 3) {
-        drawPixel(screenX, screenY, full);
+        drawPixel(screenX, screenY, true);
       }
       // White pixels (val == 3) are not drawn (leave background)
     }
@@ -1621,21 +1614,14 @@ void GfxRenderer::invertScreen() const {
 void GfxRenderer::displayBuffer(const HalDisplay::RefreshMode refreshMode) const {
   auto elapsed = millis() - start_ms;
   LOG_DBG("GFX", "Time = %lu ms from clearScreen to displayBuffer", elapsed);
-  // After a factory LUT render, RED RAM still contains the grayscale MSB plane.
-  // Promote the first normal FAST refresh to HALF so both RAM banks are rebased
-  // before differential updates resume.
-  const bool afterFactoryLut = displayState == DisplayState::FactoryLut;
-  const auto effectiveRefreshMode =
-      afterFactoryLut && refreshMode == HalDisplay::FAST_REFRESH ? HalDisplay::HALF_REFRESH : refreshMode;
   if (inverted) {
     invertScreen();
   }
-  display.displayBuffer(effectiveRefreshMode, fadingFix);
+  display.displayBuffer(refreshMode, fadingFix);
   if (inverted) {
     // Restore so the next frame's drawing starts from a clean (non-inverted) state
     invertScreen();
   }
-  displayState = DisplayState::BW;
 }
 
 void GfxRenderer::displayBufferAsync(const HalDisplay::RefreshMode refreshMode) const {
@@ -2179,18 +2165,13 @@ void GfxRenderer::copyGrayscaleLsbBuffers() const { display.copyGrayscaleLsbBuff
 
 void GfxRenderer::copyGrayscaleMsbBuffers() const { display.copyGrayscaleMsbBuffers(frameBuffer); }
 
-void GfxRenderer::displayGrayBuffer(const unsigned char* lut, bool factoryMode) const {
+void GfxRenderer::displayGrayBuffer() const {
   if (inverted) {
     invertScreen();
   }
-  display.displayGrayBuffer(fadingFix, lut, factoryMode);
+  display.displayGrayBuffer(fadingFix);
   if (inverted) {
     invertScreen();
-  }
-  if (factoryMode) {
-    displayState = DisplayState::FactoryLut;
-  } else {
-    displayState = DisplayState::BW;
   }
 }
 
@@ -2201,6 +2182,8 @@ void GfxRenderer::writeGrayscalePlaneStrip(bool lsbPlane, const uint8_t* scratch
 }
 
 bool GfxRenderer::supportsStripGrayscale() const { return display.supportsStripGrayscale(); }
+
+bool GfxRenderer::combinesGrayscaleBase() const { return display.combinesGrayscaleBase(); }
 
 void GfxRenderer::freeBwBufferChunks() {
   for (auto& bwBufferChunk : bwBufferChunks) {

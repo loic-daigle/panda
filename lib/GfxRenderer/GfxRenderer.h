@@ -28,13 +28,7 @@ enum Color : uint8_t { Clear = 0x00, White = 0x01, LightGray = 0x05, DarkGray = 
 
 class GfxRenderer {
  public:
-  enum RenderMode {
-    BW,                // 1-bit black/white
-    GRAYSCALE_LSB,     // Differential gray: mark pixels for LSB plane (clearScreen(0x00) + drawPixel(false))
-    GRAYSCALE_MSB,     // Differential gray: mark pixels for MSB plane (clearScreen(0x00) + drawPixel(false))
-    FACTORY_GRAY_LSB,  // Factory absolute gray: encode BW RAM = bit0 (clearScreen(0x00) + drawPixel(false))
-    FACTORY_GRAY_MSB,  // Factory absolute gray: encode RED RAM = bit1 (clearScreen(0x00) + drawPixel(false))
-  };
+  enum RenderMode { BW, GRAYSCALE_LSB, GRAYSCALE_MSB };
 
   // Logical screen orientation from the perspective of callers
   enum Orientation {
@@ -43,12 +37,6 @@ class GfxRenderer {
     PortraitInverted,          // 480x800 logical coordinates, inverted
     LandscapeCounterClockwise  // 800x480 logical coordinates, native panel orientation
   };
-
-  // Display state — tracks whether the physical display was last updated via a factory LUT render.
-  // BW: frameBuffer mirrors the display (menus, EPUB reader).
-  // FactoryLut: display holds a grayscale image; frameBuffer has been reset to white by
-  // cleanupGrayscaleWithFrameBuffer() and no longer represents what is visually shown.
-  enum class DisplayState { BW, FactoryLut };
 
  private:
   static constexpr size_t BW_BUFFER_CHUNK_SIZE = 8000;  // 8KB chunks to allow for non-contiguous memory
@@ -65,7 +53,6 @@ class GfxRenderer {
   uint32_t frameBufferSize = HalDisplay::BUFFER_SIZE;
   std::vector<uint8_t*> bwBufferChunks;
   std::map<int, EpdFontFamily> fontMap;
-  mutable DisplayState displayState = DisplayState::BW;
   // Mutable because ensureSdCardFontReady() is const (called from layout code
   // that holds a const GfxRenderer&) but triggers SD card reads and heap
   // allocation inside the SdCardFont objects. Same pragmatic compromise as
@@ -300,8 +287,6 @@ class GfxRenderer {
                            EpdFontFamily::Style style = EpdFontFamily::REGULAR) const;
   int getTextHeight(int fontId) const;
 
-  DisplayState getDisplayState() const { return displayState; }
-
   // Grayscale functions
   void setRenderMode(const RenderMode mode) { this->renderMode = mode; }
   RenderMode getRenderMode() const { return renderMode; }
@@ -317,13 +302,16 @@ class GfxRenderer {
   void displayGrayscaleBase(HalDisplay::RefreshMode fallback = HalDisplay::HALF_REFRESH) const;
   void copyGrayscaleLsbBuffers() const;
   void copyGrayscaleMsbBuffers() const;
-  void displayGrayBuffer(const unsigned char* lut = nullptr, bool factoryMode = false) const;
+  void displayGrayBuffer() const;
 
   // Tiled grayscale (X4): stream one band of a plane straight to controller RAM
   // from `scratch` (panelWidthBytes * numRows, physical rows [yStart, yStart+
   // numRows)), bypassing the framebuffer. supportsStripGrayscale() gates use.
   void writeGrayscalePlaneStrip(bool lsbPlane, const uint8_t* scratch, int yStart, int numRows) const;
   bool supportsStripGrayscale() const;
+  // Paper Mono: the base activation is deferred so base + gray planes go out
+  // as one waveform. Route the base through displayGrayscaleBase() when true.
+  bool combinesGrayscaleBase() const;
   bool storeBwBuffer();    // Returns true if buffer was stored successfully
   void restoreBwBuffer();  // Restore and free the stored buffer
   void cleanupGrayscaleWithFrameBuffer() const;

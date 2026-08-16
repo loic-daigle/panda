@@ -320,10 +320,12 @@ void TxtReaderActivity::renderPage(GfxRenderer& renderer) {
   // BW rendering
   renderLines();
   renderStatusBar();
-  ReaderUtils::displayWithRefreshCycle(renderer, pagesUntilFullRefresh);
 
   if (SETTINGS.textAntiAliasing) {
+    ReaderUtils::displayBaseWithRefreshCycle(renderer, pagesUntilFullRefresh);
     ReaderUtils::renderAntiAliased(renderer, [&renderLines]() { renderLines(); });
+  } else {
+    ReaderUtils::displayWithRefreshCycle(renderer, pagesUntilFullRefresh);
   }
 }
 
@@ -361,7 +363,10 @@ bool TxtReaderActivity::skipPages(int amount) {
   }
   int newPage = currentPage + amount;
   if (newPage < 0) newPage = 0;
-  if (newPage >= totalPages) newPage = totalPages - 1;
+  // Clamp to totalPages, not totalPages - 1: pageTurn() lets currentPage reach
+  // totalPages and isAtEndOfBook() treats that as the end-of-book sentinel, so
+  // a forward skip must be able to reach it too.
+  if (newPage > totalPages) newPage = totalPages;
   if (newPage != currentPage) {
     currentPage = newPage;
     return true;
