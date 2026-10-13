@@ -14,7 +14,20 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
+          ref: ${{ github.event.release.tag_name }}
           submodules: recursive
+
+      - name: Validate release version
+        env:
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: |
+          version="${RELEASE_TAG#v}"
+          configured_version="$(sed -n 's/^version = //p' platformio.ini | head -n1)"
+          if [ "${{ github.event.release.prerelease }}" = "true" ]; then
+            test "$version" = "${configured_version}rc"
+          else
+            test "$version" = "$configured_version"
+          fi
 
       - uses: actions/setup-python@v6
         with:
@@ -29,12 +42,17 @@ jobs:
       - name: Install PlatformIO Core
         run: uv pip install --system -U https://github.com/pioarduino/platformio-core/archive/refs/tags/v6.1.19.zip
 
-      - name: Cache PlatformIO packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.platformio
-          key: pio-${{ runner.os }}-${{ hashFiles('platformio.ini') }}
-          restore-keys: pio-${{ runner.os }}-
+      - name: Pin pioarduino core inside the platform penv
+        env:
+          PIO_ENV: ${{ github.event.release.prerelease && matrix.rc_env || matrix.release_env }}
+        run: |
+          set -euo pipefail
+          # Envs with custom_sdkconfig run a nested `pio run` from
+          # ~/.platformio/penv. Keep that core on the same version as the outer core.
+          # See https://github.com/pioarduino/platform-espressif32/issues/529
+          pio pkg install -e "$PIO_ENV"
+          uv pip install --python ~/.platformio/penv/bin/python "pioarduino==6.1.19"
+          ~/.platformio/penv/bin/pio --version
 
       - name: Build Panda
         run: pio run -e gh_release
@@ -51,8 +69,8 @@ jobs:
             .pio/build/gh_release/bootloader.bin
             .pio/build/gh_release/partitions.bin
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+      - name: Stage firmware asset
+        uses: actions/upload-artifact@v6
         with:
           name: Panda-${{ github.ref_name }}
           path: |

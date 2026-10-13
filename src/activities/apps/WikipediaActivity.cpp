@@ -15,7 +15,7 @@
 
 #include "MappedInputManager.h"
 #include "activities/ActivityManager.h"
-#include "activities/reader/TxtReaderActivity.h"
+#include "activities/reader/ReaderActivity.h"
 #include "activities/util/DownloadWatchdog.h"
 #include "activities/util/KeyboardEntryActivity.h"
 #include "activities/util/WifiConnectHelper.h"
@@ -422,7 +422,12 @@ std::string WikipediaActivity::articleFilePathFor(const std::string& title) cons
 
 void WikipediaActivity::openArticle(const std::string& title) {
   const std::string filepath = articleFilePathFor(title);
-  activityManager.pushActivity(std::make_unique<TxtReaderActivity>(renderer, mappedInput, filepath, true));
+  auto activity = ReaderActivity::create(renderer, mappedInput, filepath, /*allowFastInitialRefresh=*/true);
+  if (!activity) {
+    LOG_ERR("WIKI", "OOM: reader activity");
+    return;
+  }
+  activityManager.pushActivity(std::move(activity));
 }
 
 // ---------------------------------------------------------------------------

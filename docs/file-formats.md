@@ -90,6 +90,69 @@ if (parsedSize != fileSize) {
 
 ## `section.bin`
 
+### Version 55
+
+Each TextBlock adds a uint16 `paragraphStartWord` after `textBytes`. It is the
+visual index of the paragraph's first logical word, or `UINT16_MAX` for a
+continuation line. Clipping uses this marker independently of source-offset
+gaps. Older completed and partial section caches rebuild automatically;
+book metadata and reading progress are kept.
+
+### Version 54
+
+The serialized layout is unchanged. Word source ranges and split offsets now
+include codepoints absorbed by NFC composition. The high bit of each word's
+style byte marks a discretionary hyphen, so clipping can remove it independently
+of source length. Rebuild completed and partial section caches to correct
+clipping spaces and anchors for decomposed text.
+
+### Version 53
+
+Each TextBlock arena starts with one 8-byte source range per word (two uint32
+chapter-visible Unicode-codepoint offsets, start inclusive and end exclusive).
+Ranges follow words through BiDi ordering and line wrapping. This version also
+includes the version 52 redaction layout changes. Older completed and partial
+section caches are rebuilt automatically; book and progress files are kept.
+
+### Version 52
+
+The serialized layout is unchanged. Missing full-block (`U+2588`) and black-square
+(`U+25A0`) symbols now use font-sized solid rectangles instead of replacement
+glyphs. Rebuild older sections so cached line breaks and word positions match
+their new widths.
+
+### Version 50
+
+The header adds `paragraphIndentSpaces` after `extraParagraphSpacing`. The value
+participates in cache validation, so sections with different indentation settings
+are rebuilt. Version 49 was used by pre-release builds with a different header
+layout and is skipped to prevent reuse of those caches.
+
+### Version 48
+
+Version 48 keeps the version 47 serialized layout unchanged. It was bumped
+because Hangul text no longer has implicit line-break opportunities between
+syllables: Korean words wrap at spaces (like CSS `word-break: keep-all`), and
+with hyphenation enabled a word may also split at the end of a line wherever the
+CJK line-breaking rules allow, without an inserted hyphen. Justification stretches only word spaces. Cached line breaks and word
+positions from version 47 no longer match.
+
+### Version 47
+
+The section header adds signed `characterSpacing` (pixels) and unsigned
+`wordSpacingPercent` after `focusReadingEnabled`; both participate in cache
+validation. Each TextBlock's BlockStyle stores only `characterSpacing` after
+`directionDefined`. Word spacing is resolved into cached word positions during
+layout. Sections from earlier versions are rebuilt.
+
+### Version 46
+
+Version 46 keeps the version 45 serialized layout unchanged. It was bumped
+because ordered lists now number their items, `list-style-type: none`
+suppresses list markers, and `<ul>`/`<ol>` containers contribute their own
+margins and padding to child block insets, changing cached word contents and
+page layout.
+
 ### Version 45
 
 Version 45 keeps the version 44 serialized layout unchanged. It was bumped
@@ -175,7 +238,7 @@ import std.mem;
 import std.string;
 import std.core;
 
-#define EXPECTED_VERSION 41
+#define EXPECTED_VERSION 50
 #define MAX_STRING_LENGTH 65535
 #define FOOTNOTE_NUMBER_LEN 32
 #define FOOTNOTE_HREF_LEN 256
@@ -232,6 +295,7 @@ struct BlockStyle {
     bool textIndentDefined;
     bool isRtl;
     bool directionDefined;
+    s8 characterSpacing;
 };
 
 struct TextBlock {
@@ -331,6 +395,7 @@ struct SectionBin {
     s32 fontId;
     float lineCompression;
     bool extraParagraphSpacing;
+    u8 paragraphIndentSpaces;
     u8 paragraphAlignment;
     u16 viewportWidth;
     u16 viewportHeight;
@@ -338,6 +403,8 @@ struct SectionBin {
     bool embeddedStyle;
     u8 imageRendering;
     bool focusReadingEnabled;
+    s8 characterSpacing;
+    u8 wordSpacingPercent;
 
     u16 pageCount;
     u32 pageLutOffset;
@@ -380,3 +447,124 @@ if (parsedSize != fileSize) {
     std::warning(std::format("Unparsed data detected: {} bytes remaining at offset 0x{:X}", fileSize - parsedSize, parsedSize));
 }
 ```
+
+## CLX1 — library index (`.crosspoint/library.idx`)
+
+Written by `lib/LibraryIndex/LibraryBuilder.cpp`, read by `LibraryIndexFile`. One
+file describing every book on the card, so the shelf can sort and search
+thousands of titles without opening any of them.
+
+Format version 2. An index written by another version fails validation on open
+and is rebuilt; that is the entire migration mechanism.
+
+### Layout
+
+| Section | Offset | Contents |
+|---|---|---|
+| Header | 0 | 64 bytes, `ClixHeader` |
+| Folders | `folderStart` | length-prefixed paths, one per folder |
+| Records | `recordStart` | `bookCount` × 128-byte `ClixRecord` |
+| Permutations | `permStart` | `bookCount` u16 author order, then `bookCount` u16 arrival order |
+| Name blob | `nameStart` | per record: path hash, name, canonical author, title, source author (see below) |
+
+The arrival permutation runs oldest first, keyed by the record's FAT
+modification time (when the file landed on the card); `firstSeen` — the
+build-assigned discovery counter — breaks ties and carries books whose
+filesystem reports no time. Fold version 3 introduced the timestamp key; a
+fold bump rebuilds ranks while preserving `firstSeen`.
+Fold version 4 preserves leading articles in title sort and search keys.
+
+Sections are 512-byte aligned so each starts on an SD block boundary.
+
+### Records are exactly 128 bytes
+
+A fixed stride is what lets the reader seek straight to record *n* without an
+offset table, and read a screenful in one 4 KB block. `static_assert` enforces it.
+
+Each record carries `fold[96]`, the title normalised for search and sorting —
+accents stripped, case dropped, leading articles preserved — and `authorKey[12]`,
+the author's words folded and sorted so that "Victor Hugo" and "Hugo Victor" group as
+one person. `authorKey` is a GROUPING key, not an ordering one: the shelf orders by
+surname, derived separately from the display name.
+
+The byte before the folded title records metadata extraction status: not
+attempted, extracted, or failed. The final four bytes contain the packed FAT
+modification date and time returned by SdFat. A zero timestamp is not trusted.
+These fields occupy the alignment and reserved bytes from version 1, so the
+record remains exactly 128 bytes.
+
+The header records whether EPUB metadata extraction was enabled for the build.
+This prevents a metadata-disabled rebuild from making filename fallbacks look
+fresh to a later metadata-enabled build.
+
+### The name blob
+
+Per record, at `nameStart + nameOff`:
+
+```text
+[u64 pathHash]    FNV-1a fingerprint of the complete path
+[nameLen bytes]  filename, without the directory
+[u8][author]     display author, one spelling chosen per authorKey across the library
+[u8][title]      the book's own title, or length 0 if it never gave one
+[u8][source]     cleaned author spelling before the library-wide spelling vote
+```
+
+The filename must stay the first textual field and stay the filename: `readPath`
+rebuilds a book's path from it, so writing the display title there makes the book
+impossible to open. That was a real defect, and it is why title has its own field.
+
+The source author is separate from the displayed canonical author so a later
+rebuild can repeat the spelling vote after books are added or removed. Existing
+display reads still stop at the author or title fields and retain their offsets.
+
+### Freshness and unchanged rebuilds
+
+Reconciliation treats the persisted 64-bit complete-path fingerprint as the
+book identity. Metadata is reused only when the fingerprint, size, nonzero FAT
+timestamp, fold version, metadata mode, and expected extraction status agree.
+EPUBs with a zero timestamp or a previous extraction failure are parsed again.
+
+If every current record reuses metadata, the old and new counts agree, and no
+unreadable entry was seen, the staging files are discarded and the live index is
+left byte-for-byte unchanged. A normal rebuild action is therefore a freshness
+check, not a forced metadata reread.
+
+### Header flags
+
+`RANKS_DEGRADED` says one or more orders fell back to walk order because a
+checked sort allocation failed. Title and author each use a phase-local
+`SortKey[bookCount]` allocation (14 bytes per book, 57,344 bytes at the 4,096-book
+format ceiling); the first array is released before the second is requested.
+Sorting is therefore best effort through the full format limit rather than
+being disabled at an arbitrary library size.
+
+`DEDUP_DEGRADED` says a directory exceeded the fixed 1024-entry duplicate-key
+buffer, or that its fallible 8 KiB allocation failed. The walk still indexes
+every enumerated book; it only stops remembering additional identities for
+duplicate-dirent detection, so a damaged FAT may expose duplicates but cannot
+make a real book disappear.
+
+`selfSize` is the expected file size. Comparing it against the real one is a free
+truncation guard: a build cut short by a power failure cannot pass.
+
+## Clipping store (`/.crosspoint/clippings/epub_<path-hash>.bin`)
+
+Version 4 retains the version 3 header and page-local range fields. After each
+record's layout signature it stores `startOffset` and `endOffset` (uint32 chapter
+codepoint range, end exclusive; UINT32_MAX means unavailable), `syncRevision`
+(uint64), `pendingUpload` (one byte), and a 65-byte NUL-terminated sync ID. The
+chapter title, text length, and text follow. Versions 1–3 remain readable.
+
+Stable IDs are saved before upload. A sibling `.deleted` file stores fixed
+65-byte IDs awaiting server acknowledgement. Deletions are queued before the
+local record is removed and retried on the next enabled manual sync. A `.bak`
+file is recovered if power interrupted replacement of the main store.
+
+Clipping header strings are limited to 4 KiB on both reads and writes. A failed
+load leaves no usable index and disables writes until a successful load. The
+index is allocated with checked, bounded growth and released on unload.
+
+Book moves rename the store and its `.deleted` journal (plus recovery sidecars)
+together. The stored source path is informational and is refreshed on the next
+save; the current file path selects the store. Local book deletion cleans up all
+of these sidecars but preserves the independent `My Clippings.txt` export.
