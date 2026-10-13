@@ -98,7 +98,7 @@
 #include "WikipediaActivity.h"
 #include "activities/browser/OpdsBookBrowserActivity.h"
 #include "activities/home/FileBrowserActivity.h"
-#include "activities/home/RecentBooksActivity.h"
+#include "activities/library/LibraryListActivity.h"
 #include "activities/network/NetworkModeSelectionActivity.h"
 #include "activities/settings/OpdsServerListActivity.h"
 #include "activities/settings/SettingsActivity.h"
@@ -369,7 +369,7 @@ void AppsMenuActivity::loop() {
                  return std::make_unique<FileBrowserActivity>(r, m, "/", FileBrowserActivity::Mode::Library);
                }},
               {"Recent Books", "Continue where you left off", UIIcon::Recent,
-               [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<RecentBooksActivity>(r, m); }},
+               [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<LibraryListActivity>(r, m); }},
               {"OPDS Browser", "Download books from OPDS servers", UIIcon::Library,
                [](GfxRenderer& r, MappedInputManager& m) -> std::unique_ptr<Activity> {
                  const auto& servers = OPDS_STORE.getServers();
@@ -693,7 +693,7 @@ void AppsMenuActivity::loop() {
                return std::make_unique<FileBrowserActivity>(r, m, "/", FileBrowserActivity::Mode::Library);
              }},
             {"Recent Books", "Continue where you left off", UIIcon::Recent,
-             [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<RecentBooksActivity>(r, m); }},
+             [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<LibraryListActivity>(r, m); }},
             {"OPDS Browser", "Download books from OPDS servers", UIIcon::Library,
              [](GfxRenderer& r, MappedInputManager& m) -> std::unique_ptr<Activity> {
                const auto& servers = OPDS_STORE.getServers();
@@ -806,7 +806,7 @@ void AppsMenuActivity::refreshSystemInfo() {
 
   clockAvailable = halClock.isAvailable();
   if (clockAvailable) {
-    halClock.formatTime(clockStr, sizeof(clockStr), SETTINGS.clockUtcOffsetQ, SETTINGS.clockFormat != 0);
+    halClock.formatTime(clockStr, sizeof(clockStr), SETTINGS.clockFormat != 0);
   }
 }
 

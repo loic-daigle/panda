@@ -1,0 +1,5 @@
+# git apply/patch matches patch files against vendored dependency sources
+# byte-for-byte; a CRLF conversion on checkout (core.autocrlf=true, common on
+# Windows) breaks every context line and fails the apply. Patch files must
+# stay LF regardless of the checking-out machine's line-ending settings.
+*.patch text eol=lf

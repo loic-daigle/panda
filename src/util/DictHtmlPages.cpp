@@ -161,7 +161,7 @@ bool writeNormalizedXhtml(const std::string& html, HalFile& file) {
       const bool closing = html[i + 1] == '/';
       const size_t nameStart = i + (closing ? 2 : 1);
       size_t nameEnd = nameStart;
-      char nameBuf[16];
+      char nameBuf[16] = {};
       size_t nameLen = 0;
       while (nameEnd < j && std::isalnum(static_cast<unsigned char>(html[nameEnd]))) {
         if (nameLen < sizeof(nameBuf) - 1) {
@@ -275,6 +275,8 @@ bool buildDictionaryHtmlPages(GfxRenderer& renderer, const std::string& definiti
     if (!parser) {
       LOG_ERR("DHTML", "OOM: ChapterHtmlSlimParser");
     } else {
+      parser->setTextSpacing(SETTINGS.getCharacterSpacing(), SETTINGS.wordSpacing);
+      parser->setParagraphIndentSpaces(SETTINGS.paragraphIndentSpaces);
       ok = parser->parseAndBuildPages();  // closes the file on both outcomes
     }
   }
@@ -284,6 +286,11 @@ bool buildDictionaryHtmlPages(GfxRenderer& renderer, const std::string& definiti
     LOG_ERR("DHTML", "Styled definition exceeded page heap budget");
   }
   if (!ok || resourceLimitHit || pagesOut.empty()) {
+    if (!ok) {
+      LOG_ERR("DHTML", "Definition parse/layout failed");
+    } else if (!resourceLimitHit && pagesOut.empty()) {
+      LOG_ERR("DHTML", "Definition produced no styled pages");
+    }
     pagesOut.clear();
     return false;
   }

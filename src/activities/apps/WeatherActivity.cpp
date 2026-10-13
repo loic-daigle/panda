@@ -431,7 +431,15 @@ bool fetchWeather(double lat, double lon, double& tempOut, double& windspeedOut,
   snprintf(url, sizeof(url), "http://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f&current_weather=true",
            lat, lon);
   std::string response;
-  if (!HttpDownloader::fetchUrl(url, response)) {
+  // Open-Meteo's forecast JSON is a few hundred bytes; cap well above that so
+  // a malformed or unexpectedly large reply can't grow this string unbounded.
+  constexpr size_t kMaxResponseBytes = 8192;
+  const bool fetched = HttpDownloader::fetchUrl(url, [&](const uint8_t* data, const size_t len) {
+    if (response.size() + len > kMaxResponseBytes) return false;
+    response.append(reinterpret_cast<const char*>(data), len);
+    return true;
+  });
+  if (!fetched) {
     return false;
   }
   JsonDocument doc;

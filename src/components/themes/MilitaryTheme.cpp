@@ -68,7 +68,11 @@ void drawDashedLine(const GfxRenderer& renderer, int x1, int x2, int y, int dash
 }  // namespace
 
 // --- Header: inverted full-width bar with UPPERCASE monospace title ---
-void MilitaryTheme::drawHeader(const GfxRenderer& renderer, Rect rect, const char* title, const char* subtitle) const {
+void MilitaryTheme::drawHeader(const GfxRenderer& renderer, Rect rect, const char* title, const char* subtitle,
+                               bool /*backButton*/) const {
+  // This theme draws a fully custom header bar (no FreeInkUI frame), so it has
+  // no tappable back button to wire up; backButton is accepted only to match
+  // the base signature.
   // Fill header bar black (inverted)
   renderer.fillRect(rect.x, rect.y, rect.width, rect.height);
 

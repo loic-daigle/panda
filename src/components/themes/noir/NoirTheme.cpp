@@ -79,7 +79,11 @@ const uint8_t* iconForName(UIIcon icon, int size) {
 }
 }  // namespace
 
-void NoirTheme::drawHeader(const GfxRenderer& renderer, Rect rect, const char* title, const char* subtitle) const {
+void NoirTheme::drawHeader(const GfxRenderer& renderer, Rect rect, const char* title, const char* subtitle,
+                           bool /*backButton*/) const {
+  // This theme draws a fully custom header bar (no FreeInkUI frame), so it has
+  // no tappable back button to wire up; backButton is accepted only to match
+  // the base signature.
   // Fill entire header area with black
   renderer.fillRect(rect.x, rect.y, rect.width, rect.height, true);
 
