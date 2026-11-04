@@ -17,7 +17,7 @@
 #include "MappedInputManager.h"
 #include "SilentRestart.h"
 #include "activities/ActivityManager.h"
-#include "activities/reader/TxtReaderActivity.h"
+#include "activities/reader/ReaderActivity.h"
 #include "activities/util/DownloadWatchdog.h"
 #include "activities/util/KeyboardEntryActivity.h"
 #include "activities/util/WifiConnectHelper.h"
@@ -300,7 +300,7 @@ bool parseDuckDuckGoResults(const std::string& htmlPath, std::vector<DuckLink>& 
 // Streams a downloaded HTML page from srcPath to a plain-text destPath,
 // stripping tags and decoding entities as it goes. There is no HTML renderer
 // on this device — downloaded pages are always converted to plain text so
-// TxtReaderActivity can display them. Reads/writes a byte at a time to keep
+// the reader can display them. Reads/writes a byte at a time to keep
 // RAM usage flat regardless of page size.
 bool convertHtmlFileToText(const std::string& srcPath, const std::string& destPath) {
   HalFile in;
@@ -465,7 +465,10 @@ std::string DuckDuckGoActivity::websiteFilePathForTitle(const std::string& title
 }
 
 void DuckDuckGoActivity::openOfflinePage(const std::string& filepath) {
-  activityManager.pushActivity(std::make_unique<TxtReaderActivity>(renderer, mappedInput, filepath, true));
+  // .txt opens in the shared reflowable reader; pushed so Back returns here.
+  auto reader = ReaderActivity::create(renderer, mappedInput, filepath, true);
+  if (!reader) return;  // create() already logged the OOM
+  activityManager.pushActivity(std::move(reader));
 }
 
 void DuckDuckGoActivity::performBackgroundSearch() {

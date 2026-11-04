@@ -12,7 +12,7 @@ enum class WikiState { OfflineList, SearchResults, Loading };
 // Wikipedia app: searches the Wikipedia API (action=opensearch), then lets
 // the user download an article's plain-text extract (action=query&prop=
 // extracts&explaintext) and save it to SD for offline reading via
-// TxtReaderActivity. The network fetch runs on a background FreeRTOS task so
+// the reader. The network fetch runs on a background FreeRTOS task so
 // the render/input loop never blocks on WiFi/HTTP -- mirrors
 // DuckDuckGoActivity / WeatherActivity's structure in this codebase.
 class WikipediaActivity final : public Activity {

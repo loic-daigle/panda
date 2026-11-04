@@ -15,7 +15,7 @@
 
 #include "MappedInputManager.h"
 #include "activities/ActivityManager.h"
-#include "activities/reader/TxtReaderActivity.h"
+#include "activities/reader/ReaderActivity.h"
 #include "activities/util/DownloadWatchdog.h"
 #include "activities/util/KeyboardEntryActivity.h"
 #include "activities/util/WifiConnectHelper.h"
@@ -422,7 +422,10 @@ std::string WikipediaActivity::articleFilePathFor(const std::string& title) cons
 
 void WikipediaActivity::openArticle(const std::string& title) {
   const std::string filepath = articleFilePathFor(title);
-  activityManager.pushActivity(std::make_unique<TxtReaderActivity>(renderer, mappedInput, filepath, true));
+  // .txt opens in the shared reflowable reader; pushed so Back returns here.
+  auto reader = ReaderActivity::create(renderer, mappedInput, filepath, true);
+  if (!reader) return;  // create() already logged the OOM
+  activityManager.pushActivity(std::move(reader));
 }
 
 // ---------------------------------------------------------------------------

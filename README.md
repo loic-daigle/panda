@@ -300,8 +300,6 @@ Three UI themes, selectable in Settings:
 ### Coming soon
 
 - More themes.
-- Web plugins.
-- Bluetooth pageturner.
 - Much more! stay tuned.
 
 ---
@@ -576,7 +574,7 @@ One of the best things about open source is that anyone can take the code in a d
 
 **Note:** Many CrossPoint fork features will make their way into Panda over time as we sync upstream.
 
-Want to build your own device? Be sure to check out the [de-link](https://github.com/iandchasse/de-link) project or [OnePage Reader](https://github.com/MoveCall/onepage-reader).
+Want to build your own device? Be sure to check out the [Silkscreen](https://silkscreenreader.com) project or [OnePage Reader](https://github.com/MoveCall/onepage-reader).
 
 ---
 

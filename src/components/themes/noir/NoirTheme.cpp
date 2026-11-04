@@ -79,7 +79,8 @@ const uint8_t* iconForName(UIIcon icon, int size) {
 }
 }  // namespace
 
-void NoirTheme::drawHeader(const GfxRenderer& renderer, Rect rect, const char* title, const char* subtitle) const {
+void NoirTheme::drawHeader(const GfxRenderer& renderer, Rect rect, const char* title, const char* subtitle,
+                           bool /*backButton*/) const {
   // Fill entire header area with black
   renderer.fillRect(rect.x, rect.y, rect.width, rect.height, true);
 

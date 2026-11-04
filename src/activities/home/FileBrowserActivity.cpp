@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <functional>
 
+#include "ClippingStore.h"
 #include "CrossPointSettings.h"
 #include "CrossPointState.h"
 #include "MappedInputManager.h"
@@ -132,7 +133,7 @@ void FileBrowserActivity::loadFiles() {
           files.emplace_back(filename);
         }
       } else if (FsHelpers::hasReflowableBookExtension(filename) || FsHelpers::hasXtcExtension(filename) ||
-                 FsHelpers::hasBmpExtension(filename) || FsHelpers::hasPngExtension(filename)) {
+                 FsHelpers::hasImageExtension(filename)) {
         files.emplace_back(filename);
       }
     }
@@ -243,8 +244,7 @@ bool FileBrowserActivity::removeDirFile(const std::string& fullPath) {
 
   if (!file.isDirectory()) {
     file.close();
-    clearBookCache(fullPath);
-    return Storage.remove(fullPath.c_str());
+    return removeBookFile(fullPath);
   }
   file.close();
 
@@ -301,8 +301,7 @@ bool FileBrowserActivity::removeDirFile(const std::string& fullPath) {
       if (isDir) {
         stack.push_back({std::move(entryPath), false});
       } else {
-        clearBookCache(entryPath);
-        if (!Storage.remove(entryPath.c_str())) {
+        if (!removeBookFile(entryPath)) {
           LOG_ERR("FileBrowser", "Failed to remove file: %s", entryPath.c_str());
           return false;
         }
@@ -330,6 +329,13 @@ void FileBrowserActivity::onRowLongPress(const int index) {
     activateSelected();
   }
 }
+
+#if FREEINK_CAP_TOUCH
+void FileBrowserActivity::swipeDelete(const int index) {
+  nav.selected = index;
+  deleteSelected();
+}
+#endif
 
 void FileBrowserActivity::activateSelected() {
   if (files.empty()) return;
@@ -426,8 +432,8 @@ void FileBrowserActivity::deleteSelected() {
     requestUpdate(true);
   };
 
-  const std::string heading = tr(STR_DELETE) + std::string("? ");
-  auto confirmation = makeUniqueNoThrow<ConfirmationActivity>(renderer, mappedInput, heading, utf8ComposeNfc(entry));
+  auto confirmation = makeUniqueNoThrow<ConfirmationActivity>(renderer, mappedInput, tr(STR_DELETE_ITEM_CONFIRM),
+                                                              utf8ComposeNfc(entry));
   if (!confirmation) {
     LOG_ERR("FileBrowser", "OOM: delete confirmation");
     return;
@@ -487,7 +493,7 @@ void FileBrowserActivity::renameSelectedFile(const std::string& oldPath, const s
     rollBackStatePath(oldCachePath, newCachePath, cacheMoved);
     return;
   }
-  if (!Storage.rename(oldPath.c_str(), newPath.c_str())) {
+  if (!ClippingStore::moveBook(oldPath, newPath)) {
     LOG_ERR("FileBrowser", "Failed to rename file: %s -> %s", oldPath.c_str(), newPath.c_str());
     rollBackStatePath(oldBookmarkPath, newBookmarkPath, bookmarksMoved);
     rollBackStatePath(oldCachePath, newCachePath, cacheMoved);
@@ -676,6 +682,9 @@ void FileBrowserActivity::buildScreen(UiScreen& screen) {
   // follow/clamping to nav.top) before the list resolves rows through the
   // provider.
   prewarmRowGlyphs(nav.top);
+#if FREEINK_CAP_TOUCH
+  if (mode == Mode::Books) configureSwipeDelete(screen, props);
+#endif
   screen.list(props);
 }
 

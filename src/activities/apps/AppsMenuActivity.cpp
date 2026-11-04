@@ -4,6 +4,7 @@
 #include <HalPowerManager.h>
 #include <HalStorage.h>
 #include <I18n.h>
+#include <Memory.h>
 #include <WiFi.h>
 #include <esp_system.h>
 #include <esp_timer.h>
@@ -98,10 +99,11 @@
 #include "WikipediaActivity.h"
 #include "activities/browser/OpdsBookBrowserActivity.h"
 #include "activities/home/FileBrowserActivity.h"
-#include "activities/home/RecentBooksActivity.h"
+#include "activities/library/LibraryListActivity.h"
 #include "activities/network/NetworkModeSelectionActivity.h"
 #include "activities/settings/OpdsServerListActivity.h"
 #include "activities/settings/SettingsActivity.h"
+#include "activities/settings/SettingsListActivity.h"
 #include "components/UITheme.h"
 #include "components/icons/book.h"
 #include "components/icons/crosshair.h"
@@ -369,7 +371,7 @@ void AppsMenuActivity::loop() {
                  return std::make_unique<FileBrowserActivity>(r, m, "/", FileBrowserActivity::Mode::Library);
                }},
               {"Recent Books", "Continue where you left off", UIIcon::Recent,
-               [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<RecentBooksActivity>(r, m); }},
+               [](GfxRenderer& r, MappedInputManager& m) { return makeUniqueNoThrow<LibraryListActivity>(r, m); }},
               {"OPDS Browser", "Download books from OPDS servers", UIIcon::Library,
                [](GfxRenderer& r, MappedInputManager& m) -> std::unique_ptr<Activity> {
                  const auto& servers = OPDS_STORE.getServers();
@@ -390,7 +392,7 @@ void AppsMenuActivity::loop() {
           std::vector<AppCategoryActivity::AppEntry> e = {
               AppCategoryActivity::SectionHeader("PREFERENCES"),
               {"Settings", "Display, reader, controls, system", UIIcon::Settings,
-               [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<SettingsActivity>(r, m); }},
+               [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<SettingsListActivity>(r, m); }},
               AppCategoryActivity::SectionHeader("FILE TRANSFER"),
               {"WiFi Transfer", "Upload/download via WiFi", UIIcon::Transfer,
                [](GfxRenderer& r, MappedInputManager& m) {
@@ -693,7 +695,7 @@ void AppsMenuActivity::loop() {
                return std::make_unique<FileBrowserActivity>(r, m, "/", FileBrowserActivity::Mode::Library);
              }},
             {"Recent Books", "Continue where you left off", UIIcon::Recent,
-             [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<RecentBooksActivity>(r, m); }},
+             [](GfxRenderer& r, MappedInputManager& m) { return makeUniqueNoThrow<LibraryListActivity>(r, m); }},
             {"OPDS Browser", "Download books from OPDS servers", UIIcon::Library,
              [](GfxRenderer& r, MappedInputManager& m) -> std::unique_ptr<Activity> {
                const auto& servers = OPDS_STORE.getServers();
@@ -715,7 +717,7 @@ void AppsMenuActivity::loop() {
         std::vector<AppCategoryActivity::AppEntry> e = {
             AppCategoryActivity::SectionHeader("PREFERENCES"),
             {"Settings", "Display, reader, controls, system", UIIcon::Settings,
-             [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<SettingsActivity>(r, m); }},
+             [](GfxRenderer& r, MappedInputManager& m) { return std::make_unique<SettingsListActivity>(r, m); }},
             AppCategoryActivity::SectionHeader("FILE TRANSFER"),
             {"WiFi Transfer", "Upload/download via WiFi", UIIcon::Transfer,
              [](GfxRenderer& r, MappedInputManager& m) {

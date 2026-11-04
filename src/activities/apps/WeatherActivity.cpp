@@ -19,20 +19,10 @@
 #include "network/HttpDownloader.h"
 #include "util/RadioManager.h"
 
-// OMIT_FONTS drops the Noto Sans family entirely (see builtinFonts/all.h) —
-// the weather card's hardcoded sizes fall back to the same-size Noto Serif,
-// which stays compiled in at every size.
-#ifdef OMIT_FONTS
-#define WEATHER_FONT_18 NOTOSERIF_18_FONT_ID
-#define WEATHER_FONT_16 NOTOSERIF_16_FONT_ID
-#define WEATHER_FONT_14 NOTOSERIF_14_FONT_ID
-#define WEATHER_FONT_12 NOTOSERIF_12_FONT_ID
-#else
 #define WEATHER_FONT_18 NOTOSANS_18_FONT_ID
 #define WEATHER_FONT_16 NOTOSANS_16_FONT_ID
 #define WEATHER_FONT_14 NOTOSANS_14_FONT_ID
 #define WEATHER_FONT_12 NOTOSANS_12_FONT_ID
-#endif
 
 namespace {
 
