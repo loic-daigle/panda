@@ -367,9 +367,7 @@ void AppsMenuActivity::loop() {
         case 6: {
           std::vector<AppCategoryActivity::AppEntry> e = {
               {"Open Book", "Browse and open an ebook", UIIcon::Book,
-               [](GfxRenderer& r, MappedInputManager& m) {
-                 return std::make_unique<FileBrowserActivity>(r, m, "/", FileBrowserActivity::Mode::Library);
-               }},
+               [](GfxRenderer& r, MappedInputManager& m) { return makeUniqueNoThrow<LibraryListActivity>(r, m); }},
               {"Recent Books", "Continue where you left off", UIIcon::Recent,
                [](GfxRenderer& r, MappedInputManager& m) { return makeUniqueNoThrow<LibraryListActivity>(r, m); }},
               {"OPDS Browser", "Download books from OPDS servers", UIIcon::Library,
@@ -691,9 +689,7 @@ void AppsMenuActivity::loop() {
         // READER
         std::vector<AppCategoryActivity::AppEntry> e = {
             {"Open Book", "Browse and open an ebook", UIIcon::Book,
-             [](GfxRenderer& r, MappedInputManager& m) {
-               return std::make_unique<FileBrowserActivity>(r, m, "/", FileBrowserActivity::Mode::Library);
-             }},
+             [](GfxRenderer& r, MappedInputManager& m) { return makeUniqueNoThrow<LibraryListActivity>(r, m); }},
             {"Recent Books", "Continue where you left off", UIIcon::Recent,
              [](GfxRenderer& r, MappedInputManager& m) { return makeUniqueNoThrow<LibraryListActivity>(r, m); }},
             {"OPDS Browser", "Download books from OPDS servers", UIIcon::Library,

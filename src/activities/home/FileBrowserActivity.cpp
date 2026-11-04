@@ -1,6 +1,5 @@
 #include "FileBrowserActivity.h"
 
-#include <Epub.h>
 #include <FsHelpers.h>
 #include <GfxRenderer.h>
 #include <HalStorage.h>
@@ -520,7 +519,7 @@ bool FileBrowserActivity::handleCustomInput() {
 
   // Long press BACK (1s+) goes to root folder (Books mode only).
   // In firmware-pick mode we keep navigation simple: short Back = up dir / cancel.
-  if (mode != Mode::PickFirmware && mappedInput.wasReleased(MappedInputManager::Button::Back) &&
+  if (mode == Mode::Books && mappedInput.wasReleased(MappedInputManager::Button::Back) &&
       mappedInput.getHeldTime() >= GO_HOME_MS && basepath != "/") {
     {
       // buildScreen() runs on the render task and reads basepath plus `files`
@@ -609,10 +608,8 @@ void FileBrowserActivity::buildScreen(UiScreen& screen) {
   screen.spacer(static_cast<int16_t>(metrics.verticalSpacing));
 
   // Full path band at the bottom: separator on top, left-truncated so the
-  // deepest directory stays visible. Skipped in Library mode: the header
-  // already names the current folder, and a raw filesystem path reads as a
-  // file manager rather than a book list.
-  if (mode != Mode::Library) {
+  // deepest directory stays visible.
+  {
     const int pathLineHeight = renderer.getLineHeight(SMALL_FONT_ID);
     const fui::Rect band = screen.takeBottom(static_cast<int16_t>(pathLineHeight + metrics.verticalSpacing));
     screen.target().fill(fui::Rect{band.x, band.y, band.width, 3}, fui::Paint::solid(fui::Color::Black));
@@ -655,23 +652,7 @@ void FileBrowserActivity::buildScreen(UiScreen& screen) {
   props.valueInset = 8;  // air between the extension and the row edge
   // Names use up to two small-font lines; shared list layout sizes each row.
   fui::TextStyle label = screen.theme().smallText;
-  if (mode == Mode::Library) {
-    // Same row styling as RecentBooksActivity: single-line bold title, author
-    // subtitle underneath, no extension badge/path bar to balance against.
-    label.bold = true;
-  } else {
-    props.valueInset = 8;  // air between the extension and the row edge
-    // File names in the small font, wrapping onto a second line inside the
-    // same row height (rowHeight is derived from the small font itself: two
-    // of its lines plus 8, so two small lines always fit), so long names show
-    // more text. maxLines=2 doubles as the caller-owned marker: an
-    // all-default smallText fails textStyleUnset and Screen::list() would
-    // substitute bodyText back (FONT_SLOT_SMALL is 0).
-    label.maxLines = 2;
-    // The trailing value here is just the short extension: skip the balanced
-    // 60%-band wrap cap and let both name lines run the full width before it.
-    props.balanceWrappedLabelWithValue = false;
-  }
+  label.maxLines = 2;
   props.labelText = label;
 
   // The trailing value here is just the short extension: skip the balanced
@@ -692,16 +673,10 @@ void FileBrowserActivity::drawChrome() {
   const auto pageWidth = renderer.getScreenWidth();
   const auto& metrics = UITheme::getInstance().getMetrics();
 
-  std::string folderName;
-  if (mode == Mode::PickFirmware) {
-    folderName = tr(STR_SELECT_FIRMWARE_FILE);
-  } else if (basepath != "/") {
-    folderName = basepath.substr(basepath.rfind('/') + 1);
-  } else if (mode == Mode::Library) {
-    folderName = tr(STR_OPEN_BOOK);
-  } else {
-    folderName = tr(STR_SD_CARD);
-  }
+  std::string folderName =
+      (mode == Mode::PickFirmware)
+          ? std::string(tr(STR_SELECT_FIRMWARE_FILE))
+          : ((basepath == "/") ? std::string(tr(STR_SD_CARD)) : basepath.substr(basepath.rfind('/') + 1));
   // Header via GUI.drawHeader (already FreeInkUI-themed) for the battery
   // indicator; the rest of the screen renders through the app.
   GUI.drawHeader(renderer, Rect{0, metrics.topPadding, pageWidth, metrics.headerHeight}, folderName.c_str());

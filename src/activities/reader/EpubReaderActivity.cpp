@@ -9,7 +9,6 @@
 #include <HalDisplay.h>
 #include <HalFrontlight.h>
 #include <HalGPIO.h>
-#include <HalPowerManager.h>
 #include <HalStorage.h>
 #include <I18n.h>
 #include <Logging.h>
@@ -437,14 +436,7 @@ void EpubReaderActivity::backgroundBuildTick() {
   // A build step can lend the framebuffer (image probes), which hands it back white while the
   // panel still shows the page; redraw so nothing is later painted over the blank buffer.
   const uint32_t loansBefore = renderer.frameBufferLoanCount();
-  bool built;
-  {
-    // The main-loop task inherits the idle downclock (as low as 10 MHz)
-    // unless raised here; the build must run at full speed to stay ahead
-    // of normal reading pace.
-    HalPowerManager::Lock powerLock;
-    built = section->buildSomeMore(BACKGROUND_BUILD_PAGES_PER_TICK, &buttonContactClosed);
-  }
+  const bool built = section->buildSomeMore(BACKGROUND_BUILD_PAGES_PER_TICK, &buttonContactClosed);
   if (renderer.frameBufferLoanCount() != loansBefore) {
     pageBufferStale = true;
     requestUpdate();

@@ -9,10 +9,8 @@
 
 class FileBrowserActivity final : public UiListActivity {
  public:
-  // Books = standard reader browser; Library = same filtering/navigation as Books,
-  // styled as a clean book list (no path bar/extension badges) for the "Open Book"
-  // entry point; PickFirmware = filter to .bin only and return path via ActivityResult.
-  enum class Mode { Books, Library, PickFirmware };
+  // Books = standard reader browser; PickFirmware = filter to .bin only and return path via ActivityResult.
+  enum class Mode { Books, PickFirmware };
 
  private:
   // File actions
